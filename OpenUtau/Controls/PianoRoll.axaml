@@ -214,7 +214,7 @@
               HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
               IsHitTestVisible="False" ClipToBounds="True">
         <Image x:Name="PortraitImageNotes" Source="{Binding NotesViewModel.Portrait}"
-               OpacityMask="{Binding NotesViewModel.PortraitMask}" Stretch="None"
+               OpacityMask="{Binding NotesViewModel.PortraitMask}" Stretch="Uniform"
                RenderOptions.BitmapInterpolationMode="HighQuality"/>
       </Canvas>
       <c:TickBackground Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" IsHitTestVisible="False" ZIndex="0"
@@ -732,7 +732,7 @@
                   HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                   IsHitTestVisible="False" ClipToBounds="True">
             <Image x:Name="PortraitImagePhoneme" Source="{Binding NotesViewModel.Portrait}"
-                   OpacityMask="{Binding NotesViewModel.PortraitMask}" Stretch="None"
+                   OpacityMask="{Binding NotesViewModel.PortraitMask}" Stretch="Uniform"
                    RenderOptions.BitmapInterpolationMode="HighQuality"/>
           </Canvas>
           <c:TickBackground IsHitTestVisible="False" ZIndex="0"
@@ -843,7 +843,7 @@
                   HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                   IsHitTestVisible="False" ClipToBounds="True">
             <Image x:Name="PortraitImageExp" Source="{Binding NotesViewModel.Portrait}"
-                   OpacityMask="{Binding NotesViewModel.PortraitMask}" Stretch="None"
+                   OpacityMask="{Binding NotesViewModel.PortraitMask}" Stretch="Uniform"
                    RenderOptions.BitmapInterpolationMode="HighQuality"/>
           </Canvas>
           <c:TickBackground IsHitTestVisible="False" ZIndex="0"
