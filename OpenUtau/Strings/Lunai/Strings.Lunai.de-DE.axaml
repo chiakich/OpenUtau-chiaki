@@ -28,7 +28,6 @@
 
   <system:String x:Key="dialogs.about.close">Schließen</system:String>
   <system:String x:Key="dialogs.about.contributors.embedded">Eingebettete Mitwirkendenliste wird angezeigt.</system:String>
-  <system:String x:Key="dialogs.about.contributors.intro">Diese Personen haben zum ursprünglichen OpenUtau-Repository auf GitHub beigetragen. OpenUtau Lunai baut auf ihrer Arbeit auf. Vielen Dank an alle Genannten!</system:String>
   <system:String x:Key="dialogs.about.contributors.loading">Mitwirkende werden von GitHub geladen...</system:String>
   <system:String x:Key="dialogs.about.contributors.title">Mitwirkende</system:String>
   <system:String x:Key="dialogs.about.contributors.unavailable">Mitwirkende konnten nicht geladen werden. Prüfe deine Internetverbindung und versuche es erneut.</system:String>
@@ -36,8 +35,6 @@
   <system:String x:Key="dialogs.about.contributors.upstream">OpenUtau ({0})</system:String>
   <system:String x:Key="dialogs.about.github.lunai">OpenUtau Lunai auf GitHub</system:String>
   <system:String x:Key="dialogs.about.github.upstream">OpenUtau auf GitHub</system:String>
-  <system:String x:Key="dialogs.about.license">OpenUtau und OpenUtau Lunai sind freie Open-Source-Software unter der MIT-Lizenz.</system:String>
-  <system:String x:Key="dialogs.about.lunai.message">Du verwendest OpenUtau Lunai, einen Fork, der DiffSinger einfacher und angenehmer machen soll. Klassische UTAU-Banks und alle anderen von OpenUtau bereits unterstützten Voicebank-Typen funktionieren weiterhin wie gewohnt. Enthalten sind außerdem viele Funktionen aus Upstream-Pull-Requests, die noch nicht veröffentlicht oder in das originale OpenUtau übernommen wurden.</system:String>
   <system:String x:Key="dialogs.about.message">OpenUtau soll eine Open-Source-Editing-Umgebung für die UTAU-Community sein – mit modernem Nutzungserlebnis und intelligenter phonologischer Unterstützung. Besuche uns auf Github.</system:String>
   <system:String x:Key="dialogs.about.upstream.message">OpenUtau soll eine Open-Source-Editing-Umgebung für die UTAU-Community sein – mit modernem Nutzungserlebnis und intelligenter phonologischer Unterstützung.</system:String>
   <system:String x:Key="dialogs.dropproject.caption">Projekt öffnen oder importieren</system:String>
@@ -77,15 +74,6 @@
   <system:String x:Key="dialogs.importproject.timesig">Taktarten</system:String>
   <system:String x:Key="dialogs.messagebox.openlink">Download-Seite öffnen</system:String>
   <system:String x:Key="dialogs.messagebox.openpackages">Paketverwaltung</system:String>
-  <system:String x:Key="dialogs.reportissue.discord.description">Tritt unserem Server bei und beschreibe den Fehler in #help. Hänge bei Bedarf ein Log unter Hilfe → Speicherort der Logs öffnen an.</system:String>
-  <system:String x:Key="dialogs.reportissue.discord.open">Discord öffnen</system:String>
-  <system:String x:Key="dialogs.reportissue.discord.title">Discord</system:String>
-  <system:String x:Key="dialogs.reportissue.email.address">lunaiproject@gmail.com</system:String>
-  <system:String x:Key="dialogs.reportissue.email.copy">Adresse kopieren</system:String>
-  <system:String x:Key="dialogs.reportissue.email.description">Schreibe uns und hänge ein Log an, wenn sich das Problem schwer reproduzieren lässt.</system:String>
-  <system:String x:Key="dialogs.reportissue.email.title">E-Mail</system:String>
-  <system:String x:Key="dialogs.reportissue.email.write">E-Mail schreiben</system:String>
-  <system:String x:Key="dialogs.reportissue.message">Beschreibe, was schiefgelaufen ist. Am besten über Discord #help, damit wir schnell antworten können; füge bei Bedarf eine Logdatei bei. Du kannst uns auch eine E-Mail senden.</system:String>
 
   <system:String x:Key="harmony.interval.fifthabove">5+</system:String>
   <system:String x:Key="harmony.interval.fifthbelow">5-</system:String>
@@ -96,52 +84,8 @@
   <system:String x:Key="key.picker.analyzing">Analysiere...</system:String>
   <system:String x:Key="key.picker.suggested">Vorgeschlagene Tonarten</system:String>
 
-  <system:String x:Key="lunai.caption">Singer Hub</system:String>
-  <system:String x:Key="lunai.col.action">Aktion</system:String>
-  <system:String x:Key="lunai.col.installed">Installiert</system:String>
-  <system:String x:Key="lunai.col.name">Name</system:String>
-  <system:String x:Key="lunai.col.version">Version</system:String>
-  <system:String x:Key="lunai.company">LUNAI Project</system:String>
-  <system:String x:Key="lunai.confirm.install.caption">Sänger installieren</system:String>
-  <system:String x:Key="lunai.confirm.install.message">{0} installieren?</system:String>
-  <system:String x:Key="lunai.confirm.install.tos">Dieser Sänger hat Nutzungsbedingungen. Mit Klick auf Ja stimmst du diesen Bedingungen zu.</system:String>
-  <system:String x:Key="lunai.confirm.uninstall.caption">Sänger deinstallieren</system:String>
-  <system:String x:Key="lunai.confirm.uninstall.message">{0} deinstallieren?</system:String>
-  <system:String x:Key="lunai.confirm.update.caption">Sänger aktualisieren</system:String>
-  <system:String x:Key="lunai.confirm.update.message">{0} auf Version {1} aktualisieren?</system:String>
-  <system:String x:Key="lunai.install">Installieren</system:String>
-  <system:String x:Key="lunai.installed">Installiert</system:String>
-  <system:String x:Key="lunai.latest">Aktuell</system:String>
-  <system:String x:Key="lunai.newversionavailable">Neue Version verfügbar</system:String>
-  <system:String x:Key="lunai.notinstalled">Nicht installiert</system:String>
-  <system:String x:Key="lunai.outdated">Veraltet</system:String>
-  <system:String x:Key="lunai.refresh">Aktualisieren</system:String>
   <system:String x:Key="lunai.search">Suchen...</system:String>
-  <system:String x:Key="lunai.section.installed">Installiert</system:String>
-  <system:String x:Key="lunai.section.notinstalled">Nicht installiert</system:String>
-  <system:String x:Key="lunai.section.updatesavailable">Updates verfügbar</system:String>
-  <system:String x:Key="lunai.status.error">Fehler</system:String>
-  <system:String x:Key="lunai.status.fetching">Liste wird geladen...</system:String>
-  <system:String x:Key="lunai.status.installfailed">Installation fehlgeschlagen</system:String>
-  <system:String x:Key="lunai.status.installfinished">Installation abgeschlossen</system:String>
-  <system:String x:Key="lunai.status.installing">Installiere {0}...</system:String>
-  <system:String x:Key="lunai.status.listing">Installierte werden gescannt...</system:String>
-  <system:String x:Key="lunai.status.offline">Bereit (zwischengespeicherte Liste, Netzwerk nicht verfügbar)</system:String>
-  <system:String x:Key="lunai.status.ready">Bereit</system:String>
-  <system:String x:Key="lunai.status.uninstallfailed">Deinstallation fehlgeschlagen</system:String>
-  <system:String x:Key="lunai.status.uninstallfinished">Deinstallation abgeschlossen</system:String>
-  <system:String x:Key="lunai.status.uninstalling">Deinstalliere {0}...</system:String>
-  <system:String x:Key="lunai.status.updatefinished">Update abgeschlossen</system:String>
-  <system:String x:Key="lunai.status.updating">Aktualisiere {0}...</system:String>
   <system:String x:Key="lunai.tab.all">Alle</system:String>
-  <system:String x:Key="lunai.tab.brapa">BRAPA</system:String>
-  <system:String x:Key="lunai.tab.lunai">LUNAI</system:String>
-  <system:String x:Key="lunai.tab.ufr">UFR</system:String>
-  <system:String x:Key="lunai.uninstall">Deinstallieren</system:String>
-  <system:String x:Key="lunai.unknownversion">unbekannt</system:String>
-  <system:String x:Key="lunai.update">Aktualisieren</system:String>
-  <system:String x:Key="lunai.uptodate">Aktuell</system:String>
-  <system:String x:Key="lunai.website">Website</system:String>
 
   <system:String x:Key="menu.file.exportds.v2">DiffSinger-Skripte exportieren nach (v2)</system:String>
   <system:String x:Key="menu.file.exportds.v2withoutpitch">DiffSinger-Skripte exportieren nach (v2, ohne Pitch-Kurve)</system:String>

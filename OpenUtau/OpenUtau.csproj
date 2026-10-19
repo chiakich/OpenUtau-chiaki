@@ -88,7 +88,7 @@
     <ProjectReference Include="..\OpenUtau.Plugin.Builtin\OpenUtau.Plugin.Builtin.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <!-- Bundled voicebanks (stored with Git LFS), found via PathManager.BundledSingersPath. -->
+    <!-- Bundled voicebanks fetched by scripts/fetch-voicebank.sh, found via PathManager.BundledSingersPath. -->
     <None Include="..\Singers\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" LinkBase="Singers\" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)'=='DEBUG'">

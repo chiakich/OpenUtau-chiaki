@@ -28,7 +28,6 @@
 
   <system:String x:Key="dialogs.about.close">Закрити</system:String>
   <system:String x:Key="dialogs.about.contributors.embedded">Показано вбудований список учасників.</system:String>
-  <system:String x:Key="dialogs.about.contributors.intro">Нижче перелічені учасники оригінального репозиторію OpenUtau на GitHub. OpenUtau Lunai базується на їхній роботі. Дякуємо всім зі списку!</system:String>
   <system:String x:Key="dialogs.about.contributors.loading">Завантаження списку учасників з GitHub...</system:String>
   <system:String x:Key="dialogs.about.contributors.title">Учасники</system:String>
   <system:String x:Key="dialogs.about.contributors.unavailable">Не вдалося завантажити список. Перевірте з’єднання з інтернетом і спробуйте знову.</system:String>
@@ -36,8 +35,6 @@
   <system:String x:Key="dialogs.about.contributors.upstream">OpenUtau ({0})</system:String>
   <system:String x:Key="dialogs.about.github.lunai">OpenUtau Lunai на GitHub</system:String>
   <system:String x:Key="dialogs.about.github.upstream">OpenUtau на GitHub</system:String>
-  <system:String x:Key="dialogs.about.license">OpenUtau та OpenUtau Lunai — вільне програмне забезпечення з відкритим кодом за ліцензією MIT.</system:String>
-  <system:String x:Key="dialogs.about.lunai.message">Ви використовуєте OpenUtau Lunai — форк, створений, щоб зробити DiffSinger зручнішим і приємнішим у роботі. Класичні банки UTAU та всі інші типи голосових бібліотек, які вже підтримує OpenUtau, працюють як раніше. Також включено багато функцій із pull request’ів upstream, які ще не випущені або не злиті в оригінальний OpenUtau.</system:String>
   <system:String x:Key="dialogs.about.message">OpenUtau — це відкрите середовище редагування для спільноти UTAU з сучасним інтерфейсом і розумною підтримкою фонетики. Відвідайте нас на Github.</system:String>
   <system:String x:Key="dialogs.about.upstream.message">OpenUtau — відкрите середовище редагування для спільноти UTAU з сучасним інтерфейсом і розумною підтримкою фонетики.</system:String>
   <system:String x:Key="dialogs.dropproject.caption">Відкрити або імпортувати проєкт</system:String>
@@ -77,15 +74,6 @@
   <system:String x:Key="dialogs.importproject.timesig">Розміри такту</system:String>
   <system:String x:Key="dialogs.messagebox.openlink">Відкрити сторінку завантаження</system:String>
   <system:String x:Key="dialogs.messagebox.openpackages">Менеджер пакетів</system:String>
-  <system:String x:Key="dialogs.reportissue.discord.description">Зайдіть на сервер і опишіть помилку в #help. За потреби додайте лог через Довідка → Відкрити розташування логів.</system:String>
-  <system:String x:Key="dialogs.reportissue.discord.open">Відкрити Discord</system:String>
-  <system:String x:Key="dialogs.reportissue.discord.title">Discord</system:String>
-  <system:String x:Key="dialogs.reportissue.email.address">lunaiproject@gmail.com</system:String>
-  <system:String x:Key="dialogs.reportissue.email.copy">Скопіювати адресу</system:String>
-  <system:String x:Key="dialogs.reportissue.email.description">Напишіть нам і за потреби додайте лог, якщо проблему складно відтворити.</system:String>
-  <system:String x:Key="dialogs.reportissue.email.title">Ел. пошта</system:String>
-  <system:String x:Key="dialogs.reportissue.email.write">Написати листа</system:String>
-  <system:String x:Key="dialogs.reportissue.message">Опишіть, що пішло не так. Зручніше через Discord у каналі #help — так ми швидше відповімо; за потреби додайте лог. Можна також написати нам на пошту.</system:String>
 
   <system:String x:Key="harmony.interval.fifthabove">5+</system:String>
   <system:String x:Key="harmony.interval.fifthbelow">5-</system:String>
@@ -96,52 +84,8 @@
   <system:String x:Key="key.picker.analyzing">Аналіз...</system:String>
   <system:String x:Key="key.picker.suggested">Запропоновані тональності</system:String>
 
-  <system:String x:Key="lunai.caption">Центр виконавців</system:String>
-  <system:String x:Key="lunai.col.action">Дія</system:String>
-  <system:String x:Key="lunai.col.installed">Встановлено</system:String>
-  <system:String x:Key="lunai.col.name">Назва</system:String>
-  <system:String x:Key="lunai.col.version">Версія</system:String>
-  <system:String x:Key="lunai.company">LUNAI Project</system:String>
-  <system:String x:Key="lunai.confirm.install.caption">Встановити виконавця</system:String>
-  <system:String x:Key="lunai.confirm.install.message">Встановити {0}?</system:String>
-  <system:String x:Key="lunai.confirm.install.tos">У цього виконавця є умови використання. Натискаючи «Так», ви погоджуєтесь із цими умовами.</system:String>
-  <system:String x:Key="lunai.confirm.uninstall.caption">Видалити виконавця</system:String>
-  <system:String x:Key="lunai.confirm.uninstall.message">Видалити {0}?</system:String>
-  <system:String x:Key="lunai.confirm.update.caption">Оновити виконавця</system:String>
-  <system:String x:Key="lunai.confirm.update.message">Оновити {0} до версії {1}?</system:String>
-  <system:String x:Key="lunai.install">Встановити</system:String>
-  <system:String x:Key="lunai.installed">Встановлено</system:String>
-  <system:String x:Key="lunai.latest">Остання</system:String>
-  <system:String x:Key="lunai.newversionavailable">Доступна нова версія</system:String>
-  <system:String x:Key="lunai.notinstalled">Не встановлено</system:String>
-  <system:String x:Key="lunai.outdated">Застаріла версія</system:String>
-  <system:String x:Key="lunai.refresh">Оновити</system:String>
   <system:String x:Key="lunai.search">Пошук...</system:String>
-  <system:String x:Key="lunai.section.installed">Встановлені</system:String>
-  <system:String x:Key="lunai.section.notinstalled">Не встановлені</system:String>
-  <system:String x:Key="lunai.section.updatesavailable">Доступні оновлення</system:String>
-  <system:String x:Key="lunai.status.error">Помилка</system:String>
-  <system:String x:Key="lunai.status.fetching">Завантаження списку...</system:String>
-  <system:String x:Key="lunai.status.installfailed">Помилка встановлення</system:String>
-  <system:String x:Key="lunai.status.installfinished">Встановлення завершено</system:String>
-  <system:String x:Key="lunai.status.installing">Встановлення {0}...</system:String>
-  <system:String x:Key="lunai.status.listing">Сканування встановлених...</system:String>
-  <system:String x:Key="lunai.status.offline">Готово (кеш, мережа недоступна)</system:String>
-  <system:String x:Key="lunai.status.ready">Готово</system:String>
-  <system:String x:Key="lunai.status.uninstallfailed">Помилка видалення</system:String>
-  <system:String x:Key="lunai.status.uninstallfinished">Видалення завершено</system:String>
-  <system:String x:Key="lunai.status.uninstalling">Видалення {0}...</system:String>
-  <system:String x:Key="lunai.status.updatefinished">Оновлення завершено</system:String>
-  <system:String x:Key="lunai.status.updating">Оновлення {0}...</system:String>
   <system:String x:Key="lunai.tab.all">Усі</system:String>
-  <system:String x:Key="lunai.tab.brapa">BRAPA</system:String>
-  <system:String x:Key="lunai.tab.lunai">LUNAI</system:String>
-  <system:String x:Key="lunai.tab.ufr">UFR</system:String>
-  <system:String x:Key="lunai.uninstall">Видалити</system:String>
-  <system:String x:Key="lunai.unknownversion">невідомо</system:String>
-  <system:String x:Key="lunai.update">Оновити</system:String>
-  <system:String x:Key="lunai.uptodate">Актуальна версія</system:String>
-  <system:String x:Key="lunai.website">Сайт</system:String>
 
   <system:String x:Key="menu.file.exportds.v2">Експортувати скрипти DiffSinger до (v2)</system:String>
   <system:String x:Key="menu.file.exportds.v2withoutpitch">Експортувати скрипти DiffSinger до (v2, без кривої pitch)</system:String>

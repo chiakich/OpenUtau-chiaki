@@ -5,9 +5,9 @@ ManifestDPIAware true
 ; HM NIS Edit Wizard helper defines
 !define PRODUCT_NAME "OpenUtau Chiaki"
 !define PRODUCT_PUBLISHER "keirokeer"
-!define PRODUCT_WEB_SITE "https://lunaiproject.github.io/editor"
+!define PRODUCT_WEB_SITE "https://github.com/chiakich/OpenUtau-chiaki"
 !define PRODUCT_EXE "OpenUtau-Chiaki.exe"
-!define PRODUCT_PROGID "OpenUtauLunaiFile"
+!define PRODUCT_PROGID "OpenUtauChiakiFile"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 !define PRODUCT_UNINST_ROOT_KEY "HKLM"
 
@@ -154,7 +154,7 @@ Section Uninstall
   Delete "$SMPROGRAMS\OpenUtau Chiaki.lnk"
   Delete "$DESKTOP\OpenUtau Chiaki.lnk"
 
-  ; Only clear .ustx association if it still points at Lunai.
+  ; Only clear .ustx association if it still points at this app.
   ReadRegStr $0 HKCR ".ustx" ""
   StrCmp $0 "${PRODUCT_PROGID}" 0 skip_ustx
   DeleteRegKey HKCR ".ustx"

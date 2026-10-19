@@ -13,35 +13,14 @@
     <Border Classes="singerHubRow" Padding="12" CornerRadius="6" BorderThickness="0">
       <StackPanel Spacing="8">
         <TextBlock FontWeight="SemiBold"
-                   Text="{DynamicResource dialogs.reportissue.discord.title}"/>
+                   Text="{DynamicResource dialogs.reportissue.github.title}"/>
         <TextBlock TextWrapping="Wrap" Opacity="0.85"
-                   Text="{DynamicResource dialogs.reportissue.discord.description}"/>
+                   Text="{DynamicResource dialogs.reportissue.github.description}"/>
         <Button Classes="singerHubActionButton"
                 HorizontalAlignment="Left"
                 MinWidth="140" Height="28" MinHeight="28"
-                Content="{DynamicResource dialogs.reportissue.discord.open}"
-                Click="OnOpenDiscord"/>
-      </StackPanel>
-    </Border>
-
-    <Border Classes="singerHubRow" Padding="12" CornerRadius="6" BorderThickness="0">
-      <StackPanel Spacing="8">
-        <TextBlock FontWeight="SemiBold"
-                   Text="{DynamicResource dialogs.reportissue.email.title}"/>
-        <TextBlock TextWrapping="Wrap" Opacity="0.85"
-                   Text="{DynamicResource dialogs.reportissue.email.description}"/>
-        <TextBlock FontFamily="Consolas,Courier New,monospace"
-                   Text="{DynamicResource dialogs.reportissue.email.address}"/>
-        <StackPanel Orientation="Horizontal" Spacing="8">
-          <Button Classes="singerHubActionButton"
-                  MinWidth="140" Height="28" MinHeight="28"
-                  Content="{DynamicResource dialogs.reportissue.email.write}"
-                  Click="OnWriteEmail"/>
-          <Button Classes="singerHubActionButton"
-                  MinWidth="140" Height="28" MinHeight="28"
-                  Content="{DynamicResource dialogs.reportissue.email.copy}"
-                  Click="OnCopyEmail"/>
-        </StackPanel>
+                Content="{DynamicResource dialogs.reportissue.github.open}"
+                Click="OnOpenIssues"/>
       </StackPanel>
     </Border>
 

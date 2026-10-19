@@ -13,11 +13,9 @@ using Velopack.Sources;
 
 namespace OpenUtau.App.ViewModels {
     public partial class UpdaterViewModel : ViewModelBase {
-        public const string LunaiRepository = "keirokeer/OpenUtau-lunai";
-        public const string LunaiDiscordInviteUrl = "https://discord.gg/GKSxrSd7mB";
-        public const string LunaiSupportEmail = "lunaiproject@gmail.com";
         public const string UpdateRepoUrl = "https://github.com/chiakich/OpenUtau-chiaki";
         public const string UpdateReleasesUrl = UpdateRepoUrl + "/releases";
+        public const string IssuesUrl = UpdateRepoUrl + "/issues";
         // The update repo is private, so Velopack needs a GitHub token to list its releases.
         public const string UpdateTokenEnvVar = "OPENUTAU_CHIAKI_GITHUB_TOKEN";
         public const string VelopackPackId = "OpenUtau.Chiaki";

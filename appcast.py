@@ -22,7 +22,7 @@ def main():
     <item>
     <title>OpenUtau Chiaki %s</title>
     <pubDate>%s</pubDate>
-    <enclosure url="https://github.com/keirokeer/OpenUtau-lunai/releases/download/%s/%s"
+    <enclosure url="https://github.com/chiakich/OpenUtau-chiaki/releases/download/%s/%s"
                 sparkle:version="%s"
                 sparkle:shortVersionString="%s"
                 sparkle:os="%s"

@@ -28,7 +28,6 @@
 
   <system:String x:Key="dialogs.about.close">ปิด</system:String>
   <system:String x:Key="dialogs.about.contributors.embedded">กำลังแสดงรายชื่อผู้ร่วมพัฒนาแบบฝังตัว</system:String>
-  <system:String x:Key="dialogs.about.contributors.intro">บุคคลเหล่านี้มีส่วนร่วมในที่เก็บ OpenUtau ต้นทางบน GitHub. OpenUtau Lunai สร้างต่อจากผลงานของพวกเขา ขอขอบคุณทุกคนในรายชื่อ!</system:String>
   <system:String x:Key="dialogs.about.contributors.loading">กำลังโหลดผู้ร่วมพัฒนาจาก GitHub...</system:String>
   <system:String x:Key="dialogs.about.contributors.title">ผู้ร่วมพัฒนา</system:String>
   <system:String x:Key="dialogs.about.contributors.unavailable">โหลดรายชื่อผู้ร่วมพัฒนาไม่สำเร็จ โปรดตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วลองอีกครั้ง</system:String>
@@ -36,8 +35,6 @@
   <system:String x:Key="dialogs.about.contributors.upstream">OpenUtau ({0})</system:String>
   <system:String x:Key="dialogs.about.github.lunai">OpenUtau Lunai บน GitHub</system:String>
   <system:String x:Key="dialogs.about.github.upstream">OpenUtau บน GitHub</system:String>
-  <system:String x:Key="dialogs.about.license">OpenUtau และ OpenUtau Lunai เป็นซอฟต์แวร์โอเพนซอร์สฟรีภายใต้สัญญาอนุญาต MIT</system:String>
-  <system:String x:Key="dialogs.about.lunai.message">คุณกำลังใช้ OpenUtau Lunai ซึ่งเป็นฟอร์กที่มุ่งให้ DiffSinger ใช้งานง่ายและสนุกยิ่งขึ้น แบงก์ UTAU คลาสสิกและประเภทไลบรารีเสียงอื่นทั้งหมดที่ OpenUtau รองรับอยู่แล้วยังใช้งานได้ตามปกติ นอกจากนี้ยังรวมฟีเจอร์จำนวนมากจากพูลรีเควสต์ต้นทางที่ยังไม่ได้เผยแพร่หรือรวมเข้า OpenUtau ต้นฉบับ</system:String>
   <system:String x:Key="dialogs.about.message">OpenUtau มุ่งเป็นสภาพแวดล้อมแก้ไขโอเพนซอร์สสำหรับชุมชน UTAU พร้อมประสบการณ์ใช้งานที่ทันสมัยและการรองรับสัทศาสตร์อย่างชาญฉลาด เยี่ยมชมเราได้บน Github</system:String>
   <system:String x:Key="dialogs.about.upstream.message">OpenUtau มุ่งเป็นสภาพแวดล้อมแก้ไขโอเพนซอร์สสำหรับชุมชน UTAU พร้อมประสบการณ์ใช้งานที่ทันสมัยและการรองรับสัทศาสตร์อย่างชาญฉลาด</system:String>
   <system:String x:Key="dialogs.dropproject.caption">เปิดหรือนำเข้าโปรเจกต์</system:String>
@@ -77,15 +74,6 @@
   <system:String x:Key="dialogs.importproject.timesig">อัตราจังหวะ</system:String>
   <system:String x:Key="dialogs.messagebox.openlink">เปิดหน้าดาวน์โหลด</system:String>
   <system:String x:Key="dialogs.messagebox.openpackages">ตัวจัดการแพ็กเกจ</system:String>
-  <system:String x:Key="dialogs.reportissue.discord.description">เข้าร่วมเซิร์ฟเวอร์ของเราแล้วอธิบายบั๊กใน #help หากจำเป็น ให้แนบไฟล์บันทึกจาก ความช่วยเหลือ → เปิดตำแหน่งไฟล์บันทึก</system:String>
-  <system:String x:Key="dialogs.reportissue.discord.open">เปิด Discord</system:String>
-  <system:String x:Key="dialogs.reportissue.discord.title">Discord</system:String>
-  <system:String x:Key="dialogs.reportissue.email.address">lunaiproject@gmail.com</system:String>
-  <system:String x:Key="dialogs.reportissue.email.copy">คัดลอกที่อยู่</system:String>
-  <system:String x:Key="dialogs.reportissue.email.description">เขียนถึงเราและแนบไฟล์บันทึกหากปัญหาจำลองได้ยาก</system:String>
-  <system:String x:Key="dialogs.reportissue.email.title">อีเมล</system:String>
-  <system:String x:Key="dialogs.reportissue.email.write">เขียนอีเมล</system:String>
-  <system:String x:Key="dialogs.reportissue.message">บอกเราว่าเกิดอะไรขึ้น แนะนำให้ใช้ Discord #help เพื่อให้เราตอบได้เร็ว รวมไฟล์บันทึกเมื่อช่วยได้ คุณยังสามารถส่งอีเมลถึงเราได้</system:String>
 
   <system:String x:Key="harmony.interval.fifthabove">5+</system:String>
   <system:String x:Key="harmony.interval.fifthbelow">5-</system:String>
@@ -96,52 +84,8 @@
   <system:String x:Key="key.picker.analyzing">กำลังวิเคราะห์...</system:String>
   <system:String x:Key="key.picker.suggested">คีย์ที่แนะนำ</system:String>
 
-  <system:String x:Key="lunai.caption">Singer Hub</system:String>
-  <system:String x:Key="lunai.col.action">การดำเนินการ</system:String>
-  <system:String x:Key="lunai.col.installed">ติดตั้งแล้ว</system:String>
-  <system:String x:Key="lunai.col.name">ชื่อ</system:String>
-  <system:String x:Key="lunai.col.version">เวอร์ชัน</system:String>
-  <system:String x:Key="lunai.company">LUNAI Project</system:String>
-  <system:String x:Key="lunai.confirm.install.caption">ติดตั้งนักร้อง</system:String>
-  <system:String x:Key="lunai.confirm.install.message">ติดตั้ง {0}?</system:String>
-  <system:String x:Key="lunai.confirm.install.tos">นักร้องนี้มีข้อกำหนดการใช้งาน การคลิก ใช่ หมายความว่าคุณยอมรับข้อกำหนดเหล่านี้</system:String>
-  <system:String x:Key="lunai.confirm.uninstall.caption">ถอนการติดตั้งนักร้อง</system:String>
-  <system:String x:Key="lunai.confirm.uninstall.message">ถอนการติดตั้ง {0}?</system:String>
-  <system:String x:Key="lunai.confirm.update.caption">อัปเดตนักร้อง</system:String>
-  <system:String x:Key="lunai.confirm.update.message">อัปเดต {0} เป็นเวอร์ชัน {1}?</system:String>
-  <system:String x:Key="lunai.install">ติดตั้ง</system:String>
-  <system:String x:Key="lunai.installed">ติดตั้งแล้ว</system:String>
-  <system:String x:Key="lunai.latest">ล่าสุด</system:String>
-  <system:String x:Key="lunai.newversionavailable">มีเวอร์ชันใหม่</system:String>
-  <system:String x:Key="lunai.notinstalled">ยังไม่ได้ติดตั้ง</system:String>
-  <system:String x:Key="lunai.outdated">ล้าสมัย</system:String>
-  <system:String x:Key="lunai.refresh">รีเฟรช</system:String>
   <system:String x:Key="lunai.search">ค้นหา...</system:String>
-  <system:String x:Key="lunai.section.installed">ติดตั้งแล้ว</system:String>
-  <system:String x:Key="lunai.section.notinstalled">ยังไม่ได้ติดตั้ง</system:String>
-  <system:String x:Key="lunai.section.updatesavailable">มีอัปเดต</system:String>
-  <system:String x:Key="lunai.status.error">ข้อผิดพลาด</system:String>
-  <system:String x:Key="lunai.status.fetching">กำลังดึงรายการ...</system:String>
-  <system:String x:Key="lunai.status.installfailed">ติดตั้งไม่สำเร็จ</system:String>
-  <system:String x:Key="lunai.status.installfinished">ติดตั้งเสร็จสิ้น</system:String>
-  <system:String x:Key="lunai.status.installing">กำลังติดตั้ง {0}...</system:String>
-  <system:String x:Key="lunai.status.listing">กำลังสแกนรายการที่ติดตั้ง...</system:String>
-  <system:String x:Key="lunai.status.offline">พร้อม (รายการแคช เครือข่ายไม่พร้อมใช้)</system:String>
-  <system:String x:Key="lunai.status.ready">พร้อม</system:String>
-  <system:String x:Key="lunai.status.uninstallfailed">ถอนการติดตั้งไม่สำเร็จ</system:String>
-  <system:String x:Key="lunai.status.uninstallfinished">ถอนการติดตั้งเสร็จสิ้น</system:String>
-  <system:String x:Key="lunai.status.uninstalling">กำลังถอนการติดตั้ง {0}...</system:String>
-  <system:String x:Key="lunai.status.updatefinished">อัปเดตเสร็จสิ้น</system:String>
-  <system:String x:Key="lunai.status.updating">กำลังอัปเดต {0}...</system:String>
   <system:String x:Key="lunai.tab.all">ทั้งหมด</system:String>
-  <system:String x:Key="lunai.tab.brapa">BRAPA</system:String>
-  <system:String x:Key="lunai.tab.lunai">LUNAI</system:String>
-  <system:String x:Key="lunai.tab.ufr">UFR</system:String>
-  <system:String x:Key="lunai.uninstall">ถอนการติดตั้ง</system:String>
-  <system:String x:Key="lunai.unknownversion">ไม่ทราบ</system:String>
-  <system:String x:Key="lunai.update">อัปเดต</system:String>
-  <system:String x:Key="lunai.uptodate">เป็นเวอร์ชันล่าสุด</system:String>
-  <system:String x:Key="lunai.website">เว็บไซต์</system:String>
 
   <system:String x:Key="menu.file.exportds.v2">ส่งออกสคริปต์ DiffSinger ไปยัง (v2)</system:String>
   <system:String x:Key="menu.file.exportds.v2withoutpitch">ส่งออกสคริปต์ DiffSinger ไปยัง (v2 ไม่มีเส้นโค้งระดับเสียง)</system:String>

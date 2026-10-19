@@ -30,7 +30,7 @@
 
   <system:String x:Key="dialogs.about.close">Close</system:String>
   <system:String x:Key="dialogs.about.contributors.embedded">Showing the embedded contributor list.</system:String>
-  <system:String x:Key="dialogs.about.contributors.intro">These people contributed to the original OpenUtau repository on GitHub. OpenUtau Lunai builds on their work. Thank you to everyone listed!</system:String>
+  <system:String x:Key="dialogs.about.contributors.intro">These people contributed to the original OpenUtau repository on GitHub. OpenUtau Lunai and this build are based on their work. Thank you to everyone listed!</system:String>
   <system:String x:Key="dialogs.about.contributors.loading">Loading contributors from GitHub...</system:String>
   <system:String x:Key="dialogs.about.contributors.title">Contributors</system:String>
   <system:String x:Key="dialogs.about.contributors.unavailable">Could not load contributors. Check your internet connection and try again.</system:String>
@@ -38,8 +38,8 @@
   <system:String x:Key="dialogs.about.contributors.upstream">OpenUtau ({0})</system:String>
   <system:String x:Key="dialogs.about.github.lunai">OpenUtau Lunai on GitHub</system:String>
   <system:String x:Key="dialogs.about.github.upstream">OpenUtau on GitHub</system:String>
-  <system:String x:Key="dialogs.about.license">OpenUtau and OpenUtau Lunai are free open-source software under the MIT license.</system:String>
-  <system:String x:Key="dialogs.about.lunai.message">You are running OpenUtau Lunai, a fork aimed at making DiffSinger easier and more enjoyable to use. Classic UTAU banks and all other voicebank types OpenUtau already supports still work as usual. It also includes many features from upstream pull requests that are not yet released or merged into the original OpenUtau.</system:String>
+  <system:String x:Key="dialogs.about.license">OpenUtau and OpenUtau Lunai, which this build is based on, are free open-source software under the MIT license.</system:String>
+  <system:String x:Key="dialogs.about.lunai.message">You are running OpenUtau Chiaki, a personal build of OpenUtau Lunai with the Chiaki DiffSinger voicebank and the DiffSinger Finnish phonemizer built in. OpenUtau Lunai is a fork aimed at making DiffSinger easier and more enjoyable to use.</system:String>
   <system:String x:Key="dialogs.about.message">OpenUtau aims to be an open source editing environment for UTAU community, with a modern user experience and intelligent phonological support. Visit us on Github.</system:String>
   <system:String x:Key="dialogs.about.upstream.message">OpenUtau aims to be an open source editing environment for the UTAU community, with a modern user experience and intelligent phonological support.</system:String>
   <system:String x:Key="dialogs.dropproject.caption">Open or import project</system:String>
@@ -79,15 +79,10 @@
   <system:String x:Key="dialogs.importproject.timesig">Time signatures</system:String>
   <system:String x:Key="dialogs.messagebox.openlink">Open download page</system:String>
   <system:String x:Key="dialogs.messagebox.openpackages">Package Manager</system:String>
-  <system:String x:Key="dialogs.reportissue.discord.description">Join our server and describe the bug in #help. Attach a log from Help → Open Logs Location if needed.</system:String>
-  <system:String x:Key="dialogs.reportissue.discord.open">Open Discord</system:String>
-  <system:String x:Key="dialogs.reportissue.discord.title">Discord</system:String>
-  <system:String x:Key="dialogs.reportissue.email.address">lunaiproject@gmail.com</system:String>
-  <system:String x:Key="dialogs.reportissue.email.copy">Copy address</system:String>
-  <system:String x:Key="dialogs.reportissue.email.description">Write to us and attach a log if the problem is hard to reproduce.</system:String>
-  <system:String x:Key="dialogs.reportissue.email.title">Email</system:String>
-  <system:String x:Key="dialogs.reportissue.email.write">Write email</system:String>
-  <system:String x:Key="dialogs.reportissue.message">Tell us what went wrong. Prefer Discord #help so we can reply quickly; include a log file when it helps. You can also email us.</system:String>
+  <system:String x:Key="dialogs.reportissue.message">Report problems as GitHub issues. Attach a log file when it helps.</system:String>
+  <system:String x:Key="dialogs.reportissue.github.description">Describe what went wrong and how to reproduce it. Attach a log from Help → Open Logs Location if needed.</system:String>
+  <system:String x:Key="dialogs.reportissue.github.open">Open issues</system:String>
+  <system:String x:Key="dialogs.reportissue.github.title">GitHub Issues</system:String>
 
   <system:String x:Key="harmony.interval.fifthabove">5+</system:String>
   <system:String x:Key="harmony.interval.fifthbelow">5-</system:String>
@@ -98,52 +93,8 @@
   <system:String x:Key="key.picker.analyzing">Analyzing...</system:String>
   <system:String x:Key="key.picker.suggested">Suggested keys</system:String>
 
-  <system:String x:Key="lunai.caption">Singer Hub</system:String>
-  <system:String x:Key="lunai.col.action">Action</system:String>
-  <system:String x:Key="lunai.col.installed">Installed</system:String>
-  <system:String x:Key="lunai.col.name">Name</system:String>
-  <system:String x:Key="lunai.col.version">Version</system:String>
-  <system:String x:Key="lunai.company">LUNAI Project</system:String>
-  <system:String x:Key="lunai.confirm.install.caption">Install Singer</system:String>
-  <system:String x:Key="lunai.confirm.install.message">Install {0}?</system:String>
-  <system:String x:Key="lunai.confirm.install.tos">This singer has terms of use. By clicking Yes you agree to these terms.</system:String>
-  <system:String x:Key="lunai.confirm.uninstall.caption">Uninstall singer</system:String>
-  <system:String x:Key="lunai.confirm.uninstall.message">Uninstall {0}?</system:String>
-  <system:String x:Key="lunai.confirm.update.caption">Update singer</system:String>
-  <system:String x:Key="lunai.confirm.update.message">Update {0} to version {1}?</system:String>
-  <system:String x:Key="lunai.install">Install</system:String>
-  <system:String x:Key="lunai.installed">Installed</system:String>
-  <system:String x:Key="lunai.latest">Latest</system:String>
-  <system:String x:Key="lunai.newversionavailable">New version available</system:String>
-  <system:String x:Key="lunai.notinstalled">Not installed</system:String>
-  <system:String x:Key="lunai.outdated">Outdated</system:String>
-  <system:String x:Key="lunai.refresh">Refresh</system:String>
   <system:String x:Key="lunai.search">Search...</system:String>
-  <system:String x:Key="lunai.section.installed">Installed</system:String>
-  <system:String x:Key="lunai.section.notinstalled">Not installed</system:String>
-  <system:String x:Key="lunai.section.updatesavailable">Updates available</system:String>
-  <system:String x:Key="lunai.status.error">Error</system:String>
-  <system:String x:Key="lunai.status.fetching">Fetching list...</system:String>
-  <system:String x:Key="lunai.status.installfailed">Install failed</system:String>
-  <system:String x:Key="lunai.status.installfinished">Install finished</system:String>
-  <system:String x:Key="lunai.status.installing">Installing {0}...</system:String>
-  <system:String x:Key="lunai.status.listing">Scanning installed...</system:String>
-  <system:String x:Key="lunai.status.offline">Ready (cached list, network unavailable)</system:String>
-  <system:String x:Key="lunai.status.ready">Ready</system:String>
-  <system:String x:Key="lunai.status.uninstallfailed">Uninstall failed</system:String>
-  <system:String x:Key="lunai.status.uninstallfinished">Uninstall finished</system:String>
-  <system:String x:Key="lunai.status.uninstalling">Uninstalling {0}...</system:String>
-  <system:String x:Key="lunai.status.updatefinished">Update finished</system:String>
-  <system:String x:Key="lunai.status.updating">Updating {0}...</system:String>
   <system:String x:Key="lunai.tab.all">All</system:String>
-  <system:String x:Key="lunai.tab.brapa">BRAPA</system:String>
-  <system:String x:Key="lunai.tab.lunai">LUNAI</system:String>
-  <system:String x:Key="lunai.tab.ufr">UFR</system:String>
-  <system:String x:Key="lunai.uninstall">Uninstall</system:String>
-  <system:String x:Key="lunai.unknownversion">unknown</system:String>
-  <system:String x:Key="lunai.update">Update</system:String>
-  <system:String x:Key="lunai.uptodate">Up to date</system:String>
-  <system:String x:Key="lunai.website">Website</system:String>
 
   <system:String x:Key="menu.file.exportds.v2">Export DiffSinger Scripts To (v2)</system:String>
   <system:String x:Key="menu.file.exportds.v2withoutpitch">Export DiffSinger Scripts To (v2, without pitch curve)</system:String>
@@ -303,7 +254,7 @@
   <system:String x:Key="progress.diffsinger.loading.variance">loading variance model…</system:String>
 
   <system:String x:Key="errors.unhandled.message">An unexpected error occurred. The application will try to continue. Save your work if you can.</system:String>
-  <system:String x:Key="errors.unhandled.fatal">A fatal error occurred and OpenUtau Lunai must close. Details were written to the log.</system:String>
+  <system:String x:Key="errors.unhandled.fatal">A fatal error occurred and OpenUtau Chiaki must close. Details were written to the log.</system:String>
 
   <system:String x:Key="shortcut.ClearSelection">Clear Selection</system:String>
   <system:String x:Key="shortcut.Copy">Copy</system:String>

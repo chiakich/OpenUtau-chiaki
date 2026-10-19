@@ -28,7 +28,6 @@
 
   <system:String x:Key="dialogs.about.close">关闭</system:String>
   <system:String x:Key="dialogs.about.contributors.embedded">正在显示内嵌的贡献者列表。</system:String>
-  <system:String x:Key="dialogs.about.contributors.intro">以下人员为 GitHub 上原始 OpenUtau 仓库做出了贡献。OpenUtau Lunai 建立在他们的工作之上。感谢所有列出的贡献者！</system:String>
   <system:String x:Key="dialogs.about.contributors.loading">正在从 GitHub 加载贡献者...</system:String>
   <system:String x:Key="dialogs.about.contributors.title">贡献者</system:String>
   <system:String x:Key="dialogs.about.contributors.unavailable">无法加载贡献者。请检查网络连接后重试。</system:String>
@@ -36,8 +35,6 @@
   <system:String x:Key="dialogs.about.contributors.upstream">OpenUtau ({0})</system:String>
   <system:String x:Key="dialogs.about.github.lunai">GitHub 上的 OpenUtau Lunai</system:String>
   <system:String x:Key="dialogs.about.github.upstream">GitHub 上的 OpenUtau</system:String>
-  <system:String x:Key="dialogs.about.license">OpenUtau 与 OpenUtau Lunai 均为采用 MIT 许可证的免费开源软件。</system:String>
-  <system:String x:Key="dialogs.about.lunai.message">您正在运行 OpenUtau Lunai，这是一个旨在让 DiffSinger 更易用、更愉快的分支。经典 UTAU 音源以及 OpenUtau 已支持的其他类型音源均可照常使用。此外还包含许多尚未发布或合并到原始 OpenUtau 的上游拉取请求中的功能。</system:String>
   <system:String x:Key="dialogs.about.message">OpenUtau 致力于成为面向 UTAU 社区的开源编辑环境，提供现代化的使用体验与智能音韵支持。欢迎访问我们的 GitHub。</system:String>
   <system:String x:Key="dialogs.about.upstream.message">OpenUtau 致力于成为面向 UTAU 社区的开源编辑环境，提供现代化的使用体验与智能音韵支持。</system:String>
   <system:String x:Key="dialogs.dropproject.caption">打开或导入工程</system:String>
@@ -77,15 +74,6 @@
   <system:String x:Key="dialogs.importproject.timesig">拍号</system:String>
   <system:String x:Key="dialogs.messagebox.openlink">打开下载页面</system:String>
   <system:String x:Key="dialogs.messagebox.openpackages">扩展包管理器</system:String>
-  <system:String x:Key="dialogs.reportissue.discord.description">加入我们的服务器，在 #help 中描述问题。如有需要，请从“帮助 → 打开日志位置”附加日志。</system:String>
-  <system:String x:Key="dialogs.reportissue.discord.open">打开 Discord</system:String>
-  <system:String x:Key="dialogs.reportissue.discord.title">Discord</system:String>
-  <system:String x:Key="dialogs.reportissue.email.address">lunaiproject@gmail.com</system:String>
-  <system:String x:Key="dialogs.reportissue.email.copy">复制地址</system:String>
-  <system:String x:Key="dialogs.reportissue.email.description">如问题难以复现，请写信给我们并附上日志。</system:String>
-  <system:String x:Key="dialogs.reportissue.email.title">电子邮件</system:String>
-  <system:String x:Key="dialogs.reportissue.email.write">撰写邮件</system:String>
-  <system:String x:Key="dialogs.reportissue.message">请告诉我们出了什么问题。建议优先使用 Discord #help，以便我们尽快回复；有帮助时请附上日志文件。也可以通过电子邮件联系我们。</system:String>
 
   <system:String x:Key="harmony.interval.fifthabove">5+</system:String>
   <system:String x:Key="harmony.interval.fifthbelow">5-</system:String>
@@ -96,52 +84,8 @@
   <system:String x:Key="key.picker.analyzing">正在分析...</system:String>
   <system:String x:Key="key.picker.suggested">建议调性</system:String>
 
-  <system:String x:Key="lunai.caption">Singer Hub</system:String>
-  <system:String x:Key="lunai.col.action">操作</system:String>
-  <system:String x:Key="lunai.col.installed">已安装</system:String>
-  <system:String x:Key="lunai.col.name">名称</system:String>
-  <system:String x:Key="lunai.col.version">版本</system:String>
-  <system:String x:Key="lunai.company">LUNAI Project</system:String>
-  <system:String x:Key="lunai.confirm.install.caption">安装歌手</system:String>
-  <system:String x:Key="lunai.confirm.install.message">安装 {0}？</system:String>
-  <system:String x:Key="lunai.confirm.install.tos">该歌手有使用条款。点击“是”即表示您同意这些条款。</system:String>
-  <system:String x:Key="lunai.confirm.uninstall.caption">卸载歌手</system:String>
-  <system:String x:Key="lunai.confirm.uninstall.message">卸载 {0}？</system:String>
-  <system:String x:Key="lunai.confirm.update.caption">更新歌手</system:String>
-  <system:String x:Key="lunai.confirm.update.message">将 {0} 更新到版本 {1}？</system:String>
-  <system:String x:Key="lunai.install">安装</system:String>
-  <system:String x:Key="lunai.installed">已安装</system:String>
-  <system:String x:Key="lunai.latest">最新</system:String>
-  <system:String x:Key="lunai.newversionavailable">有新版本可用</system:String>
-  <system:String x:Key="lunai.notinstalled">未安装</system:String>
-  <system:String x:Key="lunai.outdated">已过时</system:String>
-  <system:String x:Key="lunai.refresh">刷新</system:String>
   <system:String x:Key="lunai.search">搜索...</system:String>
-  <system:String x:Key="lunai.section.installed">已安装</system:String>
-  <system:String x:Key="lunai.section.notinstalled">未安装</system:String>
-  <system:String x:Key="lunai.section.updatesavailable">有可用更新</system:String>
-  <system:String x:Key="lunai.status.error">错误</system:String>
-  <system:String x:Key="lunai.status.fetching">正在获取列表...</system:String>
-  <system:String x:Key="lunai.status.installfailed">安装失败</system:String>
-  <system:String x:Key="lunai.status.installfinished">安装完成</system:String>
-  <system:String x:Key="lunai.status.installing">正在安装 {0}...</system:String>
-  <system:String x:Key="lunai.status.listing">正在扫描已安装项...</system:String>
-  <system:String x:Key="lunai.status.offline">就绪（缓存列表，网络不可用）</system:String>
-  <system:String x:Key="lunai.status.ready">就绪</system:String>
-  <system:String x:Key="lunai.status.uninstallfailed">卸载失败</system:String>
-  <system:String x:Key="lunai.status.uninstallfinished">卸载完成</system:String>
-  <system:String x:Key="lunai.status.uninstalling">正在卸载 {0}...</system:String>
-  <system:String x:Key="lunai.status.updatefinished">更新完成</system:String>
-  <system:String x:Key="lunai.status.updating">正在更新 {0}...</system:String>
   <system:String x:Key="lunai.tab.all">全部</system:String>
-  <system:String x:Key="lunai.tab.brapa">BRAPA</system:String>
-  <system:String x:Key="lunai.tab.lunai">LUNAI</system:String>
-  <system:String x:Key="lunai.tab.ufr">UFR</system:String>
-  <system:String x:Key="lunai.uninstall">卸载</system:String>
-  <system:String x:Key="lunai.unknownversion">未知</system:String>
-  <system:String x:Key="lunai.update">更新</system:String>
-  <system:String x:Key="lunai.uptodate">已是最新</system:String>
-  <system:String x:Key="lunai.website">网站</system:String>
 
   <system:String x:Key="menu.file.exportds.v2">导出 DiffSinger 脚本至 (v2)</system:String>
   <system:String x:Key="menu.file.exportds.v2withoutpitch">导出 DiffSinger 脚本至 (v2，不含音高曲线)</system:String>

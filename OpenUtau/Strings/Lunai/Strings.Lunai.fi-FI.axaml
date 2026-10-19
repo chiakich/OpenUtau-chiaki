@@ -28,7 +28,6 @@
 
   <system:String x:Key="dialogs.about.close">Sulje</system:String>
   <system:String x:Key="dialogs.about.contributors.embedded">Näytetään sisäänrakennettu tekijäluettelo.</system:String>
-  <system:String x:Key="dialogs.about.contributors.intro">Nämä henkilöt ovat osallistuneet alkuperäiseen OpenUtau-repositorioon GitHubissa. OpenUtau Lunai rakentuu heidän työnsä varaan. Kiitos kaikille listatuille!</system:String>
   <system:String x:Key="dialogs.about.contributors.loading">Ladataan tekijöitä GitHubista...</system:String>
   <system:String x:Key="dialogs.about.contributors.title">Tekijät</system:String>
   <system:String x:Key="dialogs.about.contributors.unavailable">Tekijöitä ei voitu ladata. Tarkista internetyhteys ja yritä uudelleen.</system:String>
@@ -36,8 +35,6 @@
   <system:String x:Key="dialogs.about.contributors.upstream">OpenUtau ({0})</system:String>
   <system:String x:Key="dialogs.about.github.lunai">OpenUtau Lunai GitHubissa</system:String>
   <system:String x:Key="dialogs.about.github.upstream">OpenUtau GitHubissa</system:String>
-  <system:String x:Key="dialogs.about.license">OpenUtau ja OpenUtau Lunai ovat ilmaisia avoimen lähdekoodin ohjelmistoja MIT-lisenssillä.</system:String>
-  <system:String x:Key="dialogs.about.lunai.message">Käytät OpenUtau Lunaita, haarautumaa, jonka tavoitteena on tehdä DiffSingeristä helpompi ja miellyttävämpi käyttää. Klassiset UTAU-pankit ja kaikki muut OpenUtaun jo tukemat äänipankkityypit toimivat edelleen normaalisti. Mukana on myös monia ominaisuuksia upstream-pull requesteista, joita ei ole vielä julkaistu tai yhdistetty alkuperäiseen OpenUtauhun.</system:String>
   <system:String x:Key="dialogs.about.message">OpenUtau pyrkii olemaan avoimen lähdekoodin editointiympäristö UTAU-yhteisölle, modernilla käyttökokemuksella ja älykkäällä fonologisella tuella. Vieraile meillä Githubissa.</system:String>
   <system:String x:Key="dialogs.about.upstream.message">OpenUtau pyrkii olemaan avoimen lähdekoodin editointiympäristö UTAU-yhteisölle, modernilla käyttökokemuksella ja älykkäällä fonologisella tuella.</system:String>
   <system:String x:Key="dialogs.dropproject.caption">Avaa tai tuo projekti</system:String>
@@ -77,15 +74,6 @@
   <system:String x:Key="dialogs.importproject.timesig">Tahtiosoitukset</system:String>
   <system:String x:Key="dialogs.messagebox.openlink">Avaa lataussivu</system:String>
   <system:String x:Key="dialogs.messagebox.openpackages">Pakettienhallinta</system:String>
-  <system:String x:Key="dialogs.reportissue.discord.description">Liity palvelimellemme ja kuvaile virhe kanavalla #help. Liitä loki kohdasta Ohje → Avaa lokien sijainti tarvittaessa.</system:String>
-  <system:String x:Key="dialogs.reportissue.discord.open">Avaa Discord</system:String>
-  <system:String x:Key="dialogs.reportissue.discord.title">Discord</system:String>
-  <system:String x:Key="dialogs.reportissue.email.address">lunaiproject@gmail.com</system:String>
-  <system:String x:Key="dialogs.reportissue.email.copy">Kopioi osoite</system:String>
-  <system:String x:Key="dialogs.reportissue.email.description">Kirjoita meille ja liitä loki, jos ongelmaa on vaikea toistaa.</system:String>
-  <system:String x:Key="dialogs.reportissue.email.title">Sähköposti</system:String>
-  <system:String x:Key="dialogs.reportissue.email.write">Kirjoita sähköposti</system:String>
-  <system:String x:Key="dialogs.reportissue.message">Kerro, mikä meni pieleen. Suosi Discordia #help, jotta voimme vastata nopeasti; liitä lokitiedosto tarvittaessa. Voit myös lähettää sähköpostia.</system:String>
 
   <system:String x:Key="harmony.interval.fifthabove">5+</system:String>
   <system:String x:Key="harmony.interval.fifthbelow">5-</system:String>
@@ -96,52 +84,8 @@
   <system:String x:Key="key.picker.analyzing">Analysoidaan...</system:String>
   <system:String x:Key="key.picker.suggested">Ehdotetut sävellajit</system:String>
 
-  <system:String x:Key="lunai.caption">Singer Hub</system:String>
-  <system:String x:Key="lunai.col.action">Toiminto</system:String>
-  <system:String x:Key="lunai.col.installed">Asennettu</system:String>
-  <system:String x:Key="lunai.col.name">Nimi</system:String>
-  <system:String x:Key="lunai.col.version">Versio</system:String>
-  <system:String x:Key="lunai.company">LUNAI Project</system:String>
-  <system:String x:Key="lunai.confirm.install.caption">Asenna laulaja</system:String>
-  <system:String x:Key="lunai.confirm.install.message">Asennetaanko {0}?</system:String>
-  <system:String x:Key="lunai.confirm.install.tos">Tällä laulajalla on käyttöehdot. Napsauttamalla Kyllä hyväksyt nämä ehdot.</system:String>
-  <system:String x:Key="lunai.confirm.uninstall.caption">Poista laulaja</system:String>
-  <system:String x:Key="lunai.confirm.uninstall.message">Poistetaanko {0}?</system:String>
-  <system:String x:Key="lunai.confirm.update.caption">Päivitä laulaja</system:String>
-  <system:String x:Key="lunai.confirm.update.message">Päivitetäänkö {0} versioon {1}?</system:String>
-  <system:String x:Key="lunai.install">Asenna</system:String>
-  <system:String x:Key="lunai.installed">Asennettu</system:String>
-  <system:String x:Key="lunai.latest">Uusin</system:String>
-  <system:String x:Key="lunai.newversionavailable">Uusi versio saatavilla</system:String>
-  <system:String x:Key="lunai.notinstalled">Ei asennettu</system:String>
-  <system:String x:Key="lunai.outdated">Vanhentunut</system:String>
-  <system:String x:Key="lunai.refresh">Päivitä</system:String>
   <system:String x:Key="lunai.search">Haku...</system:String>
-  <system:String x:Key="lunai.section.installed">Asennettu</system:String>
-  <system:String x:Key="lunai.section.notinstalled">Ei asennettu</system:String>
-  <system:String x:Key="lunai.section.updatesavailable">Päivityksiä saatavilla</system:String>
-  <system:String x:Key="lunai.status.error">Virhe</system:String>
-  <system:String x:Key="lunai.status.fetching">Haetaan luetteloa...</system:String>
-  <system:String x:Key="lunai.status.installfailed">Asennus epäonnistui</system:String>
-  <system:String x:Key="lunai.status.installfinished">Asennus valmis</system:String>
-  <system:String x:Key="lunai.status.installing">Asennetaan {0}...</system:String>
-  <system:String x:Key="lunai.status.listing">Skannataan asennettuja...</system:String>
-  <system:String x:Key="lunai.status.offline">Valmis (välimuistilista, verkko ei käytettävissä)</system:String>
-  <system:String x:Key="lunai.status.ready">Valmis</system:String>
-  <system:String x:Key="lunai.status.uninstallfailed">Poisto epäonnistui</system:String>
-  <system:String x:Key="lunai.status.uninstallfinished">Poisto valmis</system:String>
-  <system:String x:Key="lunai.status.uninstalling">Poistetaan {0}...</system:String>
-  <system:String x:Key="lunai.status.updatefinished">Päivitys valmis</system:String>
-  <system:String x:Key="lunai.status.updating">Päivitetään {0}...</system:String>
   <system:String x:Key="lunai.tab.all">Kaikki</system:String>
-  <system:String x:Key="lunai.tab.brapa">BRAPA</system:String>
-  <system:String x:Key="lunai.tab.lunai">LUNAI</system:String>
-  <system:String x:Key="lunai.tab.ufr">UFR</system:String>
-  <system:String x:Key="lunai.uninstall">Poista</system:String>
-  <system:String x:Key="lunai.unknownversion">tuntematon</system:String>
-  <system:String x:Key="lunai.update">Päivitä</system:String>
-  <system:String x:Key="lunai.uptodate">Ajantasalla</system:String>
-  <system:String x:Key="lunai.website">Verkkosivusto</system:String>
 
   <system:String x:Key="menu.file.exportds.v2">Vie DiffSinger-skriptit kohteeseen (v2)</system:String>
   <system:String x:Key="menu.file.exportds.v2withoutpitch">Vie DiffSinger-skriptit kohteeseen (v2, ilman pitch-käyrää)</system:String>

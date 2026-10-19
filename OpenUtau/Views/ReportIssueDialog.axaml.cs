@@ -1,11 +1,9 @@
-using Avalonia.Input.Platform;
 using System;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using OpenUtau.App.ViewModels;
 using OpenUtau.Core;
 using OpenUtau.Core.Util;
-using Serilog;
 
 namespace OpenUtau.App.Views {
     public partial class ReportIssueDialog : Window {
@@ -13,30 +11,10 @@ namespace OpenUtau.App.Views {
             InitializeComponent();
         }
 
-        void OnOpenDiscord(object? sender, RoutedEventArgs e) {
+        void OnOpenIssues(object? sender, RoutedEventArgs e) {
             try {
-                OS.OpenWeb(UpdaterViewModel.LunaiDiscordInviteUrl);
+                OS.OpenWeb(UpdaterViewModel.IssuesUrl);
             } catch (Exception ex) {
-                DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(ex));
-            }
-        }
-
-        void OnWriteEmail(object? sender, RoutedEventArgs e) {
-            try {
-                OS.OpenWeb($"mailto:{UpdaterViewModel.LunaiSupportEmail}");
-            } catch (Exception ex) {
-                DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(ex));
-            }
-        }
-
-        async void OnCopyEmail(object? sender, RoutedEventArgs e) {
-            try {
-                var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
-                if (clipboard != null) {
-                    await clipboard.SetTextAsync(UpdaterViewModel.LunaiSupportEmail);
-                }
-            } catch (Exception ex) {
-                Log.Error(ex, "Failed to copy support email");
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(ex));
             }
         }
