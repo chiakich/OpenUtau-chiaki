@@ -36,7 +36,8 @@ namespace OpenUtau.Core {
             Singers = singers
                 .ToLookup(s => s.Id)
                 .ToDictionary(g => g.Key, g => g.First());
-            SingerGroups = singers
+            // Group the deduplicated set so a bundled singer does not also list its installed copy.
+            SingerGroups = Singers.Values
                 .GroupBy(s => s.SingerType)
                 .ToDictionary(s => s.Key, s => s.LocalizedOrderBy(singer => singer.LocalizedName).ToList());
             foreach (var old in oldSingers) {

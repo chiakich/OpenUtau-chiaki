@@ -168,9 +168,16 @@ namespace OpenUtau.Core {
         public string NotePresetsFilePath => Path.Combine(DataPath, "notepresets.json");
         public string BackupsPath => Path.Combine(DataPath, "Backups");
 
+        // Voicebanks shipped next to the executable; searched first so they win over installed copies.
+        public string BundledSingersPath => Path.Combine(RootPath, "Singers");
+
         public List<string> SingersPaths {
             get {
-                var list = new List<string> { SingersPath };
+                var list = new List<string>();
+                if (Directory.Exists(BundledSingersPath)) {
+                    list.Add(BundledSingersPath);
+                }
+                list.Add(SingersPath);
                 if (Directory.Exists(SingersPathOld)) {
                     list.Add(SingersPathOld);
                 }
