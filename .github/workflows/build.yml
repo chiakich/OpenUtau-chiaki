@@ -53,6 +53,8 @@ jobs:
     steps:
       # Setup
       - uses: actions/checkout@v4
+        with:
+          lfs: true
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: |
