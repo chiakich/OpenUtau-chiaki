@@ -133,7 +133,7 @@ namespace OpenUtau.Core.Util {
                 string textPath = Path.Combine(dir, baseName + ".txt");
 
                 var sb = new StringBuilder(8 * 1024);
-                sb.AppendLine("OpenUtau Lunai crash report");
+                sb.AppendLine("OpenUtau Chiaki crash report");
                 sb.AppendLine($"utc={DateTime.UtcNow:o}");
                 sb.AppendLine($"local={DateTime.Now:o}");
                 sb.AppendLine($"reason={reason}");

@@ -190,7 +190,7 @@ namespace OpenUtau.Core {
             string name = Path.GetFileName(file);
             return name.Equals("OpenUtau.Core.dll", StringComparison.OrdinalIgnoreCase)
                 || name.Equals("OpenUtau.dll", StringComparison.OrdinalIgnoreCase)
-                || name.Equals("OpenUtau-Lunai.dll", StringComparison.OrdinalIgnoreCase);
+                || name.Equals("OpenUtau-Chiaki.dll", StringComparison.OrdinalIgnoreCase);
         }
 
         private void SearchPluginInternal(string path, List<string> result) {

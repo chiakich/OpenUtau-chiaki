@@ -140,7 +140,7 @@ namespace OpenUtau.App {
 
         static void ShowNativeFatalDialog(Exception ex, string? preface = null) {
             try {
-                string title = "OpenUtau Lunai";
+                string title = "OpenUtau Chiaki";
                 try {
                     string caption = ThemeManager.GetString("errors.caption");
                     if (!string.IsNullOrWhiteSpace(caption) && !caption.StartsWith("errors.", StringComparison.Ordinal)) {
@@ -167,7 +167,7 @@ namespace OpenUtau.App {
                 }
             } catch {
             }
-            return "A fatal error occurred and OpenUtau Lunai must close. Details were written to the log.";
+            return "A fatal error occurred and OpenUtau Chiaki must close. Details were written to the log.";
         }
 
         static string Truncate(string text, int max) {

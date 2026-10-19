@@ -4,8 +4,8 @@ set -euo pipefail
 ARCH_NAME="${1:?usage: create-macos-dmg.sh <arch-name> e.g. osx-x64}"
 
 PUBLISH_DIR="bin/${ARCH_NAME}/publish"
-APP="${PUBLISH_DIR}/OpenUtau-Lunai.app"
-OUT="OpenUtau-Lunai-${ARCH_NAME}.dmg"
+APP="${PUBLISH_DIR}/OpenUtau-Chiaki.app"
+OUT="OpenUtau-Chiaki-${ARCH_NAME}.dmg"
 
 resolve_app_bundle() {
   if [[ -d "${APP}" ]]; then
@@ -16,8 +16,8 @@ resolve_app_bundle() {
   local candidate
   for candidate in \
       "${PUBLISH_DIR}/OpenUtau.app" \
-      "${PUBLISH_DIR}/OpenUtau Lunai.app" \
-      "${PUBLISH_DIR}/OpenUtau-Lunai.app"; do
+      "${PUBLISH_DIR}/OpenUtau Chiaki.app" \
+      "${PUBLISH_DIR}/OpenUtau-Chiaki.app"; do
     if [[ -d "${candidate}" ]]; then
       if [[ "${candidate}" != "${APP}" ]]; then
         mv "${candidate}" "${APP}"
@@ -48,7 +48,7 @@ if [[ ! -d "${PUBLISH_DIR}" ]]; then
 fi
 
 if ! resolve_app_bundle; then
-  echo "App bundle not found under ${PUBLISH_DIR} (expected OpenUtau-Lunai.app)" >&2
+  echo "App bundle not found under ${PUBLISH_DIR} (expected OpenUtau-Chiaki.app)" >&2
   echo "Contents of ${PUBLISH_DIR}:" >&2
   ls -la "${PUBLISH_DIR}" 2>/dev/null || true
   exit 1
@@ -69,7 +69,7 @@ if data.startswith(b'\\xef\\xbb\\xbf'):
 "
 
 rm -f "${OUT}" *.dmg
-hdiutil detach "/Volumes/OpenUtau Lunai" -force 2>/dev/null || true
+hdiutil detach "/Volumes/OpenUtau Chiaki" -force 2>/dev/null || true
 hdiutil detach "/Volumes/OpenUtau" -force 2>/dev/null || true
 
 npm install -g create-dmg

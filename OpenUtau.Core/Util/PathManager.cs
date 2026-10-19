@@ -12,7 +12,7 @@ using Serilog;
 namespace OpenUtau.Core {
 
     public class PathManager : SingletonBase<PathManager> {
-        public const string AppDataFolderName = "OpenUtau-Lunai";
+        public const string AppDataFolderName = "OpenUtau-Chiaki";
         public const string LegacyDataFolderName = "OpenUtau";
 
         public PathManager() {
@@ -108,7 +108,7 @@ namespace OpenUtau.Core {
         /// <c>netX.Y-windows</c>, so TFM bumps do not create a fresh empty prefs.json.
         /// Shipped portable ZIP (publish to <c>bin/win-x64</c>, Velopack Portable) is NOT a TFM
         /// folder — prefs stay next to the exe, same as before.
-        /// Installed / Velopack builds never call this; they use <c>Documents\OpenUtau-Lunai</c>.
+        /// Installed / Velopack builds never call this; they use <c>Documents\OpenUtau-Chiaki</c>.
         /// </summary>
         public static string ResolveWindowsPortableDataPath(string? exePath) {
             if (string.IsNullOrEmpty(exePath)) {
@@ -222,7 +222,7 @@ namespace OpenUtau.Core {
         /// Debug/Release SDK output only: adopt prefs from sibling <c>net*-windows</c> folders
         /// into <see cref="PortableDataFolderName"/>. No-op for:
         /// <list type="bullet">
-        /// <item>Installed / Velopack builds (<c>Documents\OpenUtau-Lunai</c>)</item>
+        /// <item>Installed / Velopack builds (<c>Documents\OpenUtau-Chiaki</c>)</item>
         /// <item>Shipped portable ZIP (exe not under a TFM folder — prefs stay next to exe)</item>
         /// </list>
         /// </summary>
@@ -231,7 +231,7 @@ namespace OpenUtau.Core {
                 if (IsInstalled || OS.IsMacOS() || OS.IsLinux()) {
                     return;
                 }
-                // Extra guard: never touch Documents\OpenUtau-Lunai or a flat portable ZIP folder.
+                // Extra guard: never touch Documents\OpenUtau-Chiaki or a flat portable ZIP folder.
                 if (!IsPortableTfmSiblingDataPath(DataPath)) {
                     return;
                 }
@@ -285,7 +285,7 @@ namespace OpenUtau.Core {
         }
 
         /// <summary>
-        /// True only for <c>.../Debug|Release/OpenUtau-Lunai-Data</c> used by local SDK builds.
+        /// True only for <c>.../Debug|Release/OpenUtau-Chiaki-Data</c> used by local SDK builds.
         /// </summary>
         public static bool IsPortableTfmSiblingDataPath(string? dataPath) {
             if (string.IsNullOrEmpty(dataPath)) {

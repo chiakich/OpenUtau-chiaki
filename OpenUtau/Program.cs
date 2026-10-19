@@ -44,7 +44,7 @@ namespace OpenUtau.App {
             Log.Information($"{RuntimeInformation.OSDescription} " +
                 $"{RuntimeInformation.OSArchitecture} " +
                 $"{RuntimeInformation.ProcessArchitecture}");
-            Log.Information($"OpenUtau Lunai v{Assembly.GetEntryAssembly()?.GetName().Version} " +
+            Log.Information($"OpenUtau Chiaki v{Assembly.GetEntryAssembly()?.GetName().Version} " +
                 $"{RuntimeInformation.RuntimeIdentifier}");
             Log.Information($"Installed = {PathManager.Inst.IsInstalled}");
             Log.Information($"Data path = {PathManager.Inst.DataPath}");

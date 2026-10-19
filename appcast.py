@@ -17,10 +17,10 @@ def main():
     xml = '''<?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
 <channel>
-    <title>OpenUtau Lunai</title>
+    <title>OpenUtau Chiaki</title>
     <language>en</language>
     <item>
-    <title>OpenUtau Lunai %s</title>
+    <title>OpenUtau Chiaki %s</title>
     <pubDate>%s</pubDate>
     <enclosure url="https://github.com/keirokeer/OpenUtau-lunai/releases/download/%s/%s"
                 sparkle:version="%s"

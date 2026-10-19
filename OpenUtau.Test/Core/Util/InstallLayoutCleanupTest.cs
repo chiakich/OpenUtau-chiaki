@@ -11,7 +11,7 @@ namespace OpenUtau.Test.Core.Util {
             string nested = Path.Combine(root, "OpenUtau");
             Directory.CreateDirectory(nested);
             try {
-                File.WriteAllText(Path.Combine(root, "OpenUtau-Lunai.exe"), "host");
+                File.WriteAllText(Path.Combine(root, "OpenUtau-Chiaki.exe"), "host");
                 File.WriteAllText(Path.Combine(root, "installed.txt"), "yes");
                 File.WriteAllText(Path.Combine(nested, "OpenUtau.Core.dll"), "core");
                 File.WriteAllText(Path.Combine(nested, "OpenUtau.exe"), "old");
@@ -33,7 +33,7 @@ namespace OpenUtau.Test.Core.Util {
             string nested = Path.Combine(root, "OpenUtau");
             Directory.CreateDirectory(nested);
             try {
-                File.WriteAllText(Path.Combine(root, "OpenUtau-Lunai.exe"), "host");
+                File.WriteAllText(Path.Combine(root, "OpenUtau-Chiaki.exe"), "host");
                 // No OpenUtau.Core.dll → not a binary shadow
                 File.WriteAllText(Path.Combine(nested, "notes.txt"), "user stuff");
 

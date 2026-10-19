@@ -79,7 +79,7 @@ public static class ThemeHubClient {
 
     static HttpClient CreateClient() {
         var client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("OpenUtau-Lunai-ThemeHub");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("OpenUtau-Chiaki-ThemeHub");
         return client;
     }
 

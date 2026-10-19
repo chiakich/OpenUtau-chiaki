@@ -12,7 +12,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
     <Version>0.0.0</Version>
-    <AssemblyName>OpenUtau-Lunai</AssemblyName>
+    <AssemblyName>OpenUtau-Chiaki</AssemblyName>
     <ApplicationIcon>Assets\open-utau.ico</ApplicationIcon>
     <PublishReadyToRun>true</PublishReadyToRun>
     <DebugType>embedded</DebugType>
@@ -20,14 +20,14 @@
   </PropertyGroup>
   <PropertyGroup>
     <!-- CFBundleName also becomes the .app folder name (no spaces). -->
-    <CFBundleName>OpenUtau-Lunai</CFBundleName>
-    <CFBundleDisplayName>OpenUtau Lunai</CFBundleDisplayName>
-    <CFBundleIdentifier>com.keirokeer.openutau-lunai</CFBundleIdentifier>
+    <CFBundleName>OpenUtau-Chiaki</CFBundleName>
+    <CFBundleDisplayName>OpenUtau Chiaki</CFBundleDisplayName>
+    <CFBundleIdentifier>com.chiakich.openutau-chiaki</CFBundleIdentifier>
     <CFBundleVersion>0.0.0</CFBundleVersion>
     <CFBundleShortVersionString>0.0.0</CFBundleShortVersionString>
     <CFBundlePackageType>APPL</CFBundlePackageType>
     <CFBundleSignature>????</CFBundleSignature>
-    <CFBundleExecutable>OpenUtau-Lunai</CFBundleExecutable>
+    <CFBundleExecutable>OpenUtau-Chiaki</CFBundleExecutable>
     <CFBundleIconFile>OpenUtau.icns</CFBundleIconFile>
     <NSPrincipalClass>NSApplication</NSPrincipalClass>
     <NSHighResolutionCapable>true</NSHighResolutionCapable>
@@ -46,7 +46,7 @@
                 <string>Editor</string>
                 <key>LSItemContentTypes</key>
                 <array>
-                    <string>com.keirokeer.openutau-lunai.ustx</string>
+                    <string>com.chiakich.openutau-chiaki.ustx</string>
                 </array>
             </dict>
         </array>          

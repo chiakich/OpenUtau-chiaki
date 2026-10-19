@@ -47,7 +47,7 @@ namespace OpenUtau.Test.Core.Util {
         [InlineData("net10.0-windows", true)]
         [InlineData("net10.0", true)]
         [InlineData("Debug", false)]
-        [InlineData("OpenUtau-Lunai-Data", false)]
+        [InlineData("OpenUtau-Chiaki-Data", false)]
         public void DetectsDotnetTfmOutputFolderNames(string name, bool expected) {
             Assert.Equal(expected, PathManager.IsDotnetTfmOutputFolderName(name));
         }
@@ -92,7 +92,7 @@ namespace OpenUtau.Test.Core.Util {
 
         [Fact]
         public void DocumentsLunaiPathIsNotTfmMigrationTarget() {
-            string docs = Path.Combine(Path.GetTempPath(), "Docs-" + Path.GetRandomFileName(), "OpenUtau-Lunai");
+            string docs = Path.Combine(Path.GetTempPath(), "Docs-" + Path.GetRandomFileName(), "OpenUtau-Chiaki");
             Assert.False(PathManager.IsPortableTfmSiblingDataPath(docs));
             Assert.False(PathManager.IsPortableTfmSiblingDataPath(
                 Path.Combine(Path.GetTempPath(), "OpenUtau")));

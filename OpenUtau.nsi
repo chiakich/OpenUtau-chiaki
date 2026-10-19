@@ -3,10 +3,10 @@
 ManifestDPIAware true
 
 ; HM NIS Edit Wizard helper defines
-!define PRODUCT_NAME "OpenUtau Lunai"
+!define PRODUCT_NAME "OpenUtau Chiaki"
 !define PRODUCT_PUBLISHER "keirokeer"
 !define PRODUCT_WEB_SITE "https://lunaiproject.github.io/editor"
-!define PRODUCT_EXE "OpenUtau-Lunai.exe"
+!define PRODUCT_EXE "OpenUtau-Chiaki.exe"
 !define PRODUCT_PROGID "OpenUtauLunaiFile"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 !define PRODUCT_UNINST_ROOT_KEY "HKLM"
@@ -63,8 +63,8 @@ FunctionEnd
 ; MUI end ------
 
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
-OutFile "OpenUtau-Lunai-win-${ARCH}.exe"
-InstallDir "$PROGRAMFILES64\OpenUtau-Lunai"
+OutFile "OpenUtau-Chiaki-win-${ARCH}.exe"
+InstallDir "$PROGRAMFILES64\OpenUtau-Chiaki"
 ; Remember last install dir for upgrades (Directory page + /D= from app updater).
 InstallDirRegKey ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "InstallLocation"
 ShowInstDetails show
@@ -97,8 +97,8 @@ Section "MainSection" SEC01
 SectionEnd
 
 Section -AdditionalIcons
-  CreateShortCut "$SMPROGRAMS\OpenUtau Lunai.lnk" "$INSTDIR\${PRODUCT_EXE}"
-  CreateShortCut "$DESKTOP\OpenUtau Lunai.lnk" "$INSTDIR\${PRODUCT_EXE}"
+  CreateShortCut "$SMPROGRAMS\OpenUtau Chiaki.lnk" "$INSTDIR\${PRODUCT_EXE}"
+  CreateShortCut "$DESKTOP\OpenUtau Chiaki.lnk" "$INSTDIR\${PRODUCT_EXE}"
 SectionEnd
 
 Section -Post
@@ -151,8 +151,8 @@ Section Uninstall
   Delete "$INSTDIR\*"
   RMDir "$INSTDIR"
 
-  Delete "$SMPROGRAMS\OpenUtau Lunai.lnk"
-  Delete "$DESKTOP\OpenUtau Lunai.lnk"
+  Delete "$SMPROGRAMS\OpenUtau Chiaki.lnk"
+  Delete "$DESKTOP\OpenUtau Chiaki.lnk"
 
   ; Only clear .ustx association if it still points at Lunai.
   ReadRegStr $0 HKCR ".ustx" ""

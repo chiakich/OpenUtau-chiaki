@@ -82,7 +82,7 @@ namespace OpenUtau.App.ViewModels {
 
         [Reactive] public partial string ClearCacheHeader { get; set; }
         public bool ProjectSaved => !string.IsNullOrEmpty(DocManager.Inst.Project.FilePath) && DocManager.Inst.Project.Saved;
-        public string AppVersion => $"OpenUtau Lunai v{System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version}";
+        public string AppVersion => $"OpenUtau Chiaki v{System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version}";
         [Reactive] public partial double Progress { get; set; }
         [Reactive] public partial string ProgressText { get; set; }
         [Reactive] public partial bool ShowPianoRoll { get; set; }
