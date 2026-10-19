@@ -1,53 +1,38 @@
-# OpenUtau Lunai
+# OpenUtau Chiaki
 
-**OpenUtau Lunai** is a fork of [OpenUtau](https://github.com/openutau/OpenUtau) aimed at making DiffSinger easier and more enjoyable to use. Classic UTAU and all other voicebank types OpenUtau already supports still work as usual.
+Personal build of [OpenUtau Lunai](https://github.com/keirokeer/OpenUtau-lunai) with the Chiaki DiffSinger voicebank built in.
 
-[Release](https://github.com/keirokeer/OpenUtau-lunai/releases/latest) · [Download](https://lunaiproject.github.io/editor)
+## Differences from Lunai
 
-![OpenUtau Lunai](Misc/openutau-lunai.jpg)
-
-## Features
-
-Extras in this fork:
-
-- **Refreshed UI**: redesigned welcome screen, piano roll, and dockable panels for convenient work
-- **Singer Hub**: browse and install DiffSinger voicebanks from the app
-- **DiffSinger quality presets**: quick HQ / MQ / LQ render profiles
-- **Key & scale**: project key with in-scale highlighting on the piano roll
-- **Harmony generation**: create harmony tracks from a part
-- **Pitch Follow**: the piano roll follows the notes while playing
-- **Live Pitch**: pitch updates as you edit notes and lyrics
-- **Synthesizer V (`.svp`) import**
-- Custom themes, track colors, and more
-
-
-
-## Download
-
-- [lunaiproject.github.io/editor](https://lunaiproject.github.io/editor)
-- [GitHub Releases](https://github.com/keirokeer/OpenUtau-lunai/releases/latest)
-
-Windows, macOS, and Linux. In-app updates when a new release is out.
-
-## Upstream
-
-Based on [openutau/OpenUtau](https://github.com/openutau/OpenUtau). Alongside Lunai-specific work, this fork also includes many features from upstream pull requests that are not yet released or merged into the original repository.
-
-Credit belongs to the original OpenUtau project and to everyone listed in **Help → About OpenUtau**. See also the [Getting Started wiki](https://github.com/stakira/OpenUtau/wiki/Getting-Started).
-
-## Support
-
-Join our [Discord](https://discord.gg/GKSxrSd7mB) and ask in **#help**, or open an issue here.
+- **Chiaki voicebank bundled** in `Singers/Chiaki` (Git LFS) and loaded ahead of any installed copy.
+- **DiffSinger Finnish phonemizer built in**, so Finnish tracks need no extra plugin DLL.
+- **Singer Hub removed.**
+- **Own identity**: the app is `OpenUtau-Chiaki` with its own data folder, so it can sit next to Lunai.
+- **Updates come from this repo's releases.** On Windows the Velopack updater reads a GitHub token from `OPENUTAU_CHIAKI_GITHUB_TOKEN` because the repo is private; on macOS and Linux the updater opens the releases page.
+- Fixes on top of Lunai: portrait cropping on HiDPI displays, and expanding a detached piano roll.
 
 ## Building
 
+Git LFS is required; without it the voicebank models are only pointer files.
+
 ```sh
+git lfs install
+git clone https://github.com/chiakich/OpenUtau-chiaki.git
 dotnet build OpenUtau/OpenUtau.csproj
-dotnet test OpenUtau.Test/OpenUtau.Test.csproj
+dotnet run --project OpenUtau.Test/OpenUtau.Test.csproj
 ```
 
+The build copies `Singers/` next to the executable.
 
+## Syncing with Lunai
 
-## License
+```sh
+git fetch upstream
+git merge upstream/master
+```
 
-Same as upstream OpenUtau (`LICENSE.txt`).
+## Credits and license
+
+Based on [OpenUtau Lunai](https://github.com/keirokeer/OpenUtau-lunai) and [OpenUtau](https://github.com/openutau/OpenUtau); credit belongs to their authors and everyone listed in **Help → About OpenUtau**. Code is under the upstream license (`LICENSE.txt`).
+
+The Chiaki voicebank is for personal use only. Its `tgm_hifigan` vocoder is CC BY-NC 4.0 (no commercial use); see `Singers/Chiaki/tgm_hifigan/documents`.
