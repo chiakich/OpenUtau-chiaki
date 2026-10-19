@@ -4,7 +4,7 @@ Personal build of [OpenUtau Lunai](https://github.com/keirokeer/OpenUtau-lunai) 
 
 ## Differences from Lunai
 
-- **Chiaki voicebank bundled** in `Singers/Chiaki` (Git LFS) and loaded ahead of any installed copy.
+- **Chiaki voicebank bundled**: stored as a release asset, placed in `Singers/Chiaki` before building, and loaded ahead of any installed copy.
 - **DiffSinger Finnish phonemizer built in**, so Finnish tracks need no extra plugin DLL.
 - **Singer Hub removed.**
 - **Own identity**: the app is `OpenUtau-Chiaki` with its own data folder, so it can sit next to Lunai.
@@ -13,16 +13,21 @@ Personal build of [OpenUtau Lunai](https://github.com/keirokeer/OpenUtau-lunai) 
 
 ## Building
 
-Git LFS is required; without it the voicebank models are only pointer files.
+The voicebank is not in git. `scripts/voicebank.json` names the release asset and its SHA256; fetch it before building:
 
 ```sh
-git lfs install
-git clone https://github.com/chiakich/OpenUtau-chiaki.git
+scripts/fetch-voicebank.sh
 dotnet build OpenUtau/OpenUtau.csproj
 dotnet run --project OpenUtau.Test/OpenUtau.Test.csproj
 ```
 
-The build copies `Singers/` next to the executable.
+The script downloads with `gh`, checks the SHA256, and skips work when `Singers/Chiaki` is already current. To use a local copy instead of downloading:
+
+```sh
+scripts/fetch-voicebank.sh --from ~/Library/OpenUtau/Singers/Chiaki
+```
+
+The build copies `Singers/` next to the executable. To publish a new voicebank, upload a zip whose top folder is `Chiaki` to a new release tag and update `scripts/voicebank.json`.
 
 ## Syncing with Lunai
 

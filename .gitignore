@@ -1,6 +1,9 @@
 Doxyfile
 docs/
 
+# Bundled voicebank, fetched by scripts/fetch-voicebank.sh
+/Singers/Chiaki/
+
 # Local packaging / sample activation artifacts
 dist/
 
@@ -348,3 +351,6 @@ appcast.*.xml
 *.tar.gz
 .vscode/
 Microsoft.AI.DirectML
+
+# Voicebank download cache; must come after the !*.[Cc]ache/ rule above.
+/.cache/

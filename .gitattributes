@@ -7,9 +7,3 @@
 *.csproj   text eol=crlf
 *.xaml     text eol=crlf
 *.axaml    text eol=crlf
-# Voicebank files are kept byte-for-byte.
-Singers/** -text
-Singers/**/*.onnx filter=lfs diff=lfs merge=lfs -text
-Singers/**/*.emb filter=lfs diff=lfs merge=lfs -text
-Singers/**/*.png filter=lfs diff=lfs merge=lfs -text
-Singers/**/*.xlsx filter=lfs diff=lfs merge=lfs -text
