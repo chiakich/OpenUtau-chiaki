@@ -179,7 +179,7 @@ jobs:
           }
 
           & vpk pack `
-            --packId OpenUtau.Lunai `
+            --packId OpenUtau.Chiaki `
             --packVersion $packVersion `
             --packDir "bin/${{ matrix.arch.name }}" `
             --mainExe OpenUtau-Chiaki.exe `

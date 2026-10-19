@@ -14,11 +14,13 @@ using Velopack.Sources;
 namespace OpenUtau.App.ViewModels {
     public partial class UpdaterViewModel : ViewModelBase {
         public const string LunaiRepository = "keirokeer/OpenUtau-lunai";
-        public const string LunaiReleasesUrl = "https://github.com/keirokeer/OpenUtau-lunai/releases";
-        public const string LunaiRepoUrl = "https://github.com/keirokeer/OpenUtau-lunai";
         public const string LunaiDiscordInviteUrl = "https://discord.gg/GKSxrSd7mB";
         public const string LunaiSupportEmail = "lunaiproject@gmail.com";
-        public const string VelopackPackId = "OpenUtau.Lunai";
+        public const string UpdateRepoUrl = "https://github.com/chiakich/OpenUtau-chiaki";
+        public const string UpdateReleasesUrl = UpdateRepoUrl + "/releases";
+        // The update repo is private, so Velopack needs a GitHub token to list its releases.
+        public const string UpdateTokenEnvVar = "OPENUTAU_CHIAKI_GITHUB_TOKEN";
+        public const string VelopackPackId = "OpenUtau.Chiaki";
 
         public string AppVersion => $"v{Assembly.GetEntryAssembly()?.GetName().Version}";
         public bool IsDarkMode => ThemeManager.IsDarkMode;
@@ -50,7 +52,10 @@ namespace OpenUtau.App.ViewModels {
             if (!OS.IsWindows()) {
                 return null;
             }
-            var source = new GithubSource(LunaiRepoUrl, accessToken: null, prerelease: Preferences.Default.Beta);
+            var token = Environment.GetEnvironmentVariable(UpdateTokenEnvVar);
+            var source = new GithubSource(UpdateRepoUrl,
+                accessToken: string.IsNullOrWhiteSpace(token) ? null : token,
+                prerelease: Preferences.Default.Beta);
             var options = new UpdateOptions {
                 ExplicitChannel = GetVelopackChannel(),
                 AllowVersionDowngrade = true,
@@ -130,7 +135,7 @@ namespace OpenUtau.App.ViewModels {
 
         public void OnGithub() {
             try {
-                OS.OpenWeb(LunaiReleasesUrl);
+                OS.OpenWeb(UpdateReleasesUrl);
             } catch (Exception e) {
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(e));
             }

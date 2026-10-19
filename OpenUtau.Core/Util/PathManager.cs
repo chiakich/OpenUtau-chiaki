@@ -50,7 +50,7 @@ namespace OpenUtau.Core {
                 // AppContext.BaseDirectory resolves to the app output dir in normal runs and
                 // during dotnet test; Process.MainModule points at testhost.exe under xunit.
                 string exePath = Path.TrimEndingDirectorySeparator(AppContext.BaseDirectory);
-                // NSIS marker and/or Velopack layout (%LocalAppData%\OpenUtau.Lunai\current + Update.exe).
+                // NSIS marker and/or Velopack layout (%LocalAppData%\OpenUtau.Chiaki\current + Update.exe).
                 IsInstalled = IsWindowsInstalledLayout(exePath);
                 string dataHome = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
                 LegacyDataPath = Path.Combine(dataHome, LegacyDataFolderName);
