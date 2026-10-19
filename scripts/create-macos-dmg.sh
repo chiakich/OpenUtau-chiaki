@@ -68,6 +68,9 @@ if data.startswith(b'\\xef\\xbb\\xbf'):
     p.write_bytes(data[3:])
 "
 
+# Sign after every bundle edit above; any later change would break the seal.
+bash "$(dirname "$0")/macos/sign-app.sh" "${APP}"
+
 rm -f "${OUT}" *.dmg
 hdiutil detach "/Volumes/OpenUtau Chiaki" -force 2>/dev/null || true
 hdiutil detach "/Volumes/OpenUtau" -force 2>/dev/null || true
@@ -75,5 +78,8 @@ hdiutil detach "/Volumes/OpenUtau" -force 2>/dev/null || true
 npm install -g create-dmg
 create-dmg --no-code-sign "${APP}"
 mv *.dmg "${OUT}"
-# Ad-hoc sign when no Developer ID is available (e.g. GitHub Actions).
-codesign -fvs - "${OUT}" || true
+if [[ -n "${MACOS_SIGN_IDENTITY:-}" && "${MACOS_SIGN_IDENTITY}" != "-" ]]; then
+  codesign --force --timestamp --sign "${MACOS_SIGN_IDENTITY}" "${OUT}"
+else
+  codesign -fvs - "${OUT}" || true
+fi

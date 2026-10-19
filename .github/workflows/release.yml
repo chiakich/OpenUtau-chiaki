@@ -1,0 +1,391 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version (SemVer 3-part for Velopack, e.g. 0.1.0; 4-part 0.1.529.0 is normalized)"
+        required: true
+        default: "0.1.0"
+        type: string
+      release:
+        description: "Publish a GitHub release (off: build artifacts only)"
+        type: boolean
+        default: false
+      beta:
+        description: "Beta"
+        type: boolean
+        default: false
+      draft:
+        description: "Draft"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+env:
+  REPO_URL: https://github.com/${{ github.repository }}
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      tag: ${{ steps.v.outputs.tag }}
+      release: ${{ steps.v.outputs.release }}
+      beta: ${{ steps.v.outputs.beta }}
+      draft: ${{ steps.v.outputs.draft }}
+    steps:
+      - id: v
+        shell: bash
+        env:
+          IN_VERSION: ${{ inputs.version }}
+          IN_RELEASE: ${{ inputs.release }}
+          IN_BETA: ${{ inputs.beta }}
+          IN_DRAFT: ${{ inputs.draft }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            version="${GITHUB_REF_NAME#v}"
+            if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "::error::Tag must look like v1.2.3, got $GITHUB_REF_NAME"
+              exit 1
+            fi
+            tag="$GITHUB_REF_NAME"; release=true; beta=false; draft=false
+          else
+            version="$(echo "$IN_VERSION" | xargs)"; version="${version#[vV]}"
+            tag="$version"; release="$IN_RELEASE"; beta="$IN_BETA"; draft="$IN_DRAFT"
+          fi
+          {
+            echo "version=$version"
+            echo "tag=$tag"
+            echo "release=$release"
+            echo "beta=$beta"
+            echo "draft=$draft"
+          } | tee -a "$GITHUB_OUTPUT"
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Run Tests
+        run: dotnet run --project OpenUtau.Test/OpenUtau.Test.csproj
+
+  build:
+    needs: [prepare, test]
+    runs-on: ${{ matrix.arch.runs-on }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          - { name: win-x64, rid: win-x64, arch: x64, os: win, runs-on: windows-latest }
+          - { name: win-arm64, rid: win-arm64, arch: arm64, os: win, runs-on: windows-latest }
+          - { name: osx-arm64, rid: osx-arm64, arch: arm64, os: osx, runs-on: macos-15 }
+          - { name: osx-x64, rid: osx-x64, arch: x64, os: osx, runs-on: macos-15 }
+          - { name: linux-x64, rid: linux-x64, arch: x64, os: linux, runs-on: ubuntu-latest, linuxarch: x86_64 }
+          - { name: linux-arm64, rid: linux-arm64, arch: arm64, os: linux, runs-on: ubuntu-latest, linuxarch: aarch64 }
+
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+      BETA: ${{ needs.prepare.outputs.beta }}
+      RELEASE: ${{ needs.prepare.outputs.release }}
+      # Signing and notarization are skipped when these secrets are not configured.
+      MAC_SIGNING: ${{ secrets.MACOS_CERTIFICATE_P12 != '' }}
+      MAC_NOTARIZE: ${{ secrets.MACOS_CERTIFICATE_P12 != '' && secrets.APPLE_ID != '' }}
+
+    steps:
+      # Setup
+      - uses: actions/checkout@v4
+
+      - name: Fetch voicebank
+        shell: bash
+        run: scripts/fetch-voicebank.sh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update contributors list
+        run: python3 scripts/update-contributors.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Setup Node.js (for DMG)
+        if: matrix.arch.os == 'osx'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Patch Version
+        uses: justalemon/VersionPatcher@v0.8
+        with:
+          version: ${{ env.VERSION }}
+          csproj-files: "OpenUtau/*.csproj"
+
+      # Build
+      - name: Restore dependencies
+        run: dotnet restore OpenUtau -r ${{ matrix.arch.rid }}
+
+      - name: Publish
+        if: matrix.arch.os != 'osx'
+        run: dotnet publish OpenUtau -c Release -r ${{ matrix.arch.rid }} --self-contained true -o bin/${{ matrix.arch.name }}
+
+      - name: Build (macOS)
+        if: matrix.arch.os == 'osx'
+        run: >-
+          dotnet msbuild OpenUtau -t:BundleApp -p:Configuration=Release -p:RuntimeIdentifier=${{ matrix.arch.rid }}
+          -p:UseAppHost=true -p:SelfContained=true -p:OutputPath=../bin/${{ matrix.arch.name }}/
+          -p:CFBundleVersion=${{ env.VERSION }} -p:CFBundleShortVersionString=${{ env.VERSION }}
+
+      - name: Write release channel info
+        shell: bash
+        run: |
+          dir="bin/${{ matrix.arch.name }}"
+          # The macOS app reads it from inside the bundle, so it must be written before signing.
+          if [ "${{ matrix.arch.os }}" = "osx" ]; then
+            app="$(find "$dir/publish" -maxdepth 1 -name '*.app' -type d | head -n 1)"
+            dir="$app/Contents/MacOS"
+          fi
+          echo "{ \"Beta\": $BETA }" > "$dir/prefs-default.json"
+
+      # Windows
+      - name: Download DirectML (Windows)
+        if: matrix.arch.os == 'win'
+        shell: cmd
+        run: |
+          curl -L https://www.nuget.org/api/v2/package/Microsoft.AI.DirectML/1.15.4 -o Microsoft.AI.DirectML.nupkg
+          mkdir Microsoft.AI.DirectML
+          tar -xf Microsoft.AI.DirectML.nupkg -C Microsoft.AI.DirectML
+          copy /y Microsoft.AI.DirectML\bin\${{ matrix.arch.arch }}-win\DirectML.dll bin\${{ matrix.arch.name }}
+
+      - name: Create Windows Velopack packages
+        if: matrix.arch.os == 'win'
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $rid = '${{ matrix.arch.rid }}'
+          $arch = '${{ matrix.arch.arch }}'
+          $channel = if ($env:BETA -eq 'true') { "$rid-beta" } else { $rid }
+          $vcredist = "vcredist143-$arch"
+          $rawVersion = $env:VERSION
+          # Velopack requires SemVer2 with exactly 3 numeric parts (not 0.0.0.0 / 1.2.3.4).
+          if ($rawVersion -notmatch '^(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?((?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?)$') {
+            throw "Invalid version '$rawVersion'. Use SemVer 3-part (e.g. 0.1.0 or 0.1.529). Four-part versions like 0.1.529.0 are normalized automatically."
+          }
+          $major = $Matches[1]
+          $minor = $Matches[2]
+          $patch = $Matches[3]
+          $revision = $Matches[4]
+          $suffix = $Matches[5]
+          $packVersion = "$major.$minor.$patch$suffix"
+          if ($revision -and $revision -ne '0') {
+            # Preserve non-zero 4th component as build metadata: 1.2.3.4 -> 1.2.3+4
+            if ($suffix -match '\+') {
+              $packVersion = "$major.$minor.$patch$($suffix -replace '^\+', "+$revision.")"
+            } else {
+              $packVersion = "$major.$minor.$patch$suffix+$revision"
+            }
+          }
+          Write-Host "Velopack packVersion: $packVersion"
+          $outDir = "Releases/$rid"
+          New-Item -ItemType Directory -Force -Path $outDir | Out-Null
+
+          dotnet tool install -g vpk --version 1.2.0
+          $env:PATH = "$env:USERPROFILE\.dotnet\tools;$env:PATH"
+
+          # Pull previous releases for deltas (must not fail the job on first channel release).
+          $downloadArgs = @(
+            'download', 'github',
+            '--repoUrl', $env:REPO_URL,
+            '--channel', $channel,
+            '--token', $env:GITHUB_TOKEN,
+            '--outputDir', $outDir
+          )
+          if ($env:BETA -eq 'true') { $downloadArgs += '--pre' }
+          # Native tools can throw under $ErrorActionPreference=Stop on some pwsh versions.
+          $prevNative = $PSNativeCommandUseErrorActionPreference
+          $PSNativeCommandUseErrorActionPreference = $false
+          try {
+            & vpk @downloadArgs
+            if ($LASTEXITCODE -ne 0) {
+              Write-Host "vpk download skipped/failed (first release for channel?). Continuing with pack."
+            }
+          } finally {
+            $PSNativeCommandUseErrorActionPreference = $prevNative
+          }
+
+          & vpk pack `
+            --packId OpenUtau.Chiaki `
+            --packVersion $packVersion `
+            --packDir "bin/${{ matrix.arch.name }}" `
+            --mainExe OpenUtau-Chiaki.exe `
+            --packTitle "OpenUtau Chiaki" `
+            --icon "OpenUtau/Assets/open-utau.ico" `
+            --channel $channel `
+            --framework $vcredist `
+            --outputDir $outDir
+          if ($LASTEXITCODE -ne 0) { throw "vpk pack failed" }
+
+          $setup = Get-ChildItem $outDir -Filter '*Setup*.exe' | Select-Object -First 1
+          if (-not $setup) { throw "Velopack Setup.exe not found in $outDir" }
+          $portable = Get-ChildItem $outDir -Filter '*Portable*.zip' | Select-Object -First 1
+          if (-not $portable) { throw "Velopack Portable.zip not found in $outDir" }
+          # Stable download names; keep Releases/ for nupkg + feed metadata only (no duplicates).
+          Copy-Item $setup.FullName "OpenUtau-Chiaki-$rid-Setup.exe" -Force
+          Copy-Item $portable.FullName "OpenUtau-Chiaki-$rid-Portable.zip" -Force
+          Remove-Item $setup.FullName -Force
+          Remove-Item $portable.FullName -Force
+          # assets.*.json still lists Setup/Portable by Velopack names; rewrite to match what we ship in Releases/.
+          Get-ChildItem $outDir -Filter 'assets.*.json' | ForEach-Object {
+            $assets = @(Get-ChildItem $outDir -File | ForEach-Object {
+              $type = if ($_.Name -like '*-full.nupkg') { 'Full' }
+                      elseif ($_.Name -like '*-delta.nupkg') { 'Delta' }
+                      else { $null }
+              if ($type) {
+                [ordered]@{ RelativeFileName = $_.Name; Type = $type }
+              }
+            })
+            ($assets | ConvertTo-Json -Compress -AsArray) | Set-Content -Path $_.FullName -Encoding utf8NoBOM
+          }
+
+      # macOS
+      - name: Import signing certificate (macOS)
+        if: matrix.arch.os == 'osx' && env.MAC_SIGNING == 'true'
+        env:
+          MACOS_CERTIFICATE_P12: ${{ secrets.MACOS_CERTIFICATE_P12 }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        run: |
+          keychain="$RUNNER_TEMP/signing.keychain-db"
+          password="$(openssl rand -base64 24)"
+          echo "$MACOS_CERTIFICATE_P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p "$password" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$password" "$keychain"
+          security import "$RUNNER_TEMP/cert.p12" -k "$keychain" -P "$MACOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          rm -f "$RUNNER_TEMP/cert.p12"
+          # An exported .p12 usually lacks the Developer ID intermediates.
+          for ca in DeveloperIDG2CA DeveloperIDCA; do
+            curl -fsSL "https://www.apple.com/certificateauthority/$ca.cer" -o "$RUNNER_TEMP/$ca.cer"
+            security import "$RUNNER_TEMP/$ca.cer" -k "$keychain" || true
+          done
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$password" "$keychain" > /dev/null
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          identity="$(security find-identity -v -p codesigning "$keychain" | awk '/Developer ID Application/ { print $2; exit }')"
+          if [ -z "$identity" ]; then
+            echo "::error::No 'Developer ID Application' identity found in MACOS_CERTIFICATE_P12"
+            exit 1
+          fi
+          echo "MACOS_SIGN_IDENTITY=$identity" >> "$GITHUB_ENV"
+
+      - name: Create macOS DMG
+        if: matrix.arch.os == 'osx'
+        run: bash scripts/create-macos-dmg.sh ${{ matrix.arch.name }}
+
+      - name: Notarize DMG (macOS)
+        if: matrix.arch.os == 'osx' && env.MAC_NOTARIZE == 'true'
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: bash scripts/macos/notarize.sh OpenUtau-Chiaki-${{ matrix.arch.name }}.dmg
+
+      - name: Remove signing keychain (macOS)
+        if: always() && matrix.arch.os == 'osx' && env.MAC_SIGNING == 'true'
+        run: security delete-keychain "$RUNNER_TEMP/signing.keychain-db" || true
+
+      # Linux
+      - name: Set Linux executable permissions
+        if: matrix.arch.os == 'linux'
+        run: chmod +x bin/${{ matrix.arch.name }}/OpenUtau-Chiaki
+
+      - name: Create zip and tar.gz (Linux)
+        if: matrix.arch.os == 'linux'
+        run: |
+          (cd bin/${{ matrix.arch.name }} && 7z a ../../OpenUtau-Chiaki-${{ matrix.arch.name }}.zip *)
+          tar -czf OpenUtau-Chiaki-${{ matrix.arch.name }}.tar.gz -C bin/${{ matrix.arch.name }} .
+
+      - name: Install LinuxDeploy
+        if: matrix.arch.os == 'linux'
+        uses: AnimMouse/setup-appimage@v1
+        with:
+          name: linuxdeploy
+          url: https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+
+      - name: Create AppImage
+        if: matrix.arch.os == 'linux'
+        run: |
+          cp OpenUtau/Assets/OpenUtau.desktop bin/${{ matrix.arch.name }}
+          cp OpenUtau/Assets/OpenUtau.png bin/${{ matrix.arch.name }}
+          cp OpenUtau/Assets/OpenUtau.png bin/${{ matrix.arch.name }}/.DirIcon
+          cp OpenUtau/Assets/AppRun bin/${{ matrix.arch.name }}
+          chmod 755 bin/${{ matrix.arch.name }}/AppRun
+          ARCH=${{ matrix.arch.linuxarch }} linuxdeploy --appdir bin/${{ matrix.arch.name }} --output appimage
+          for f in OpenUtau*.AppImage; do
+            case "$f" in
+              OpenUtau-Chiaki-*) ;;
+              *) mv "$f" "OpenUtau-Chiaki-${{ matrix.arch.linuxarch }}.AppImage" ;;
+            esac
+          done
+
+      # Outputs
+      - name: Upload Artifacts
+        # Each build carries the ~470 MB voicebank; keep artifacts briefly to stay inside the private-repo storage quota.
+        if: env.RELEASE != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenUtau-Chiaki-${{ matrix.arch.name }}
+          retention-days: 3
+          compression-level: 0
+          path: |
+            OpenUtau-Chiaki-${{ matrix.arch.name }}-Setup.exe
+            OpenUtau-Chiaki-${{ matrix.arch.name }}.dmg
+            OpenUtau-Chiaki-${{ matrix.arch.name }}.tar.gz
+            OpenUtau-Chiaki-${{ matrix.arch.linuxarch }}.AppImage
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        if: env.RELEASE == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          name: ${{ env.VERSION }}${{ env.BETA == 'true' && ' Beta' || '' }}
+          prerelease: ${{ env.BETA == 'true' }}
+          draft: ${{ needs.prepare.outputs.draft == 'true' }}
+          files: |
+            OpenUtau-Chiaki-${{ matrix.arch.name }}-Setup.exe
+            OpenUtau-Chiaki-${{ matrix.arch.name }}-Portable.zip
+            OpenUtau-Chiaki-${{ matrix.arch.name }}.zip
+            OpenUtau-Chiaki-${{ matrix.arch.name }}.dmg
+            OpenUtau-Chiaki-${{ matrix.arch.name }}.tar.gz
+            OpenUtau-Chiaki-${{ matrix.arch.linuxarch }}.AppImage
+            Releases/${{ matrix.arch.rid }}/*
+          body: |
+            ### Downloads
+
+            **Windows** (Velopack, updates from Help → Check for Update)
+            - [Setup x64](${{ env.REPO_URL }}/releases/download/${{ needs.prepare.outputs.tag }}/OpenUtau-Chiaki-win-x64-Setup.exe) · [Setup ARM64](${{ env.REPO_URL }}/releases/download/${{ needs.prepare.outputs.tag }}/OpenUtau-Chiaki-win-arm64-Setup.exe)
+            - [Portable x64](${{ env.REPO_URL }}/releases/download/${{ needs.prepare.outputs.tag }}/OpenUtau-Chiaki-win-x64-Portable.zip) · [Portable ARM64](${{ env.REPO_URL }}/releases/download/${{ needs.prepare.outputs.tag }}/OpenUtau-Chiaki-win-arm64-Portable.zip)
+
+            **macOS**
+            - [Apple Silicon (.dmg)](${{ env.REPO_URL }}/releases/download/${{ needs.prepare.outputs.tag }}/OpenUtau-Chiaki-osx-arm64.dmg)
+            - [Intel (.dmg)](${{ env.REPO_URL }}/releases/download/${{ needs.prepare.outputs.tag }}/OpenUtau-Chiaki-osx-x64.dmg)
+
+            **Linux**
+            - [AppImage x86_64](${{ env.REPO_URL }}/releases/download/${{ needs.prepare.outputs.tag }}/OpenUtau-Chiaki-x86_64.AppImage) · [AppImage aarch64](${{ env.REPO_URL }}/releases/download/${{ needs.prepare.outputs.tag }}/OpenUtau-Chiaki-aarch64.AppImage)
+            - [x64 .tar.gz](${{ env.REPO_URL }}/releases/download/${{ needs.prepare.outputs.tag }}/OpenUtau-Chiaki-linux-x64.tar.gz) · [ARM64 .tar.gz](${{ env.REPO_URL }}/releases/download/${{ needs.prepare.outputs.tag }}/OpenUtau-Chiaki-linux-arm64.tar.gz)
+
+            ### Notes
+            - Windows settings stay in Documents\OpenUtau-Chiaki.
+            - macOS/Linux: download new builds from Releases.
+            - macOS builds are signed and notarized when the signing secrets are configured. If an unsigned build says "This app is damaged", run `xattr -rc "/Applications/OpenUtau-Chiaki.app"`.
