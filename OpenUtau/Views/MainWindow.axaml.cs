@@ -1647,10 +1647,14 @@ namespace OpenUtau.App.Views {
         }
 
         public void SetPianoRollFullscreen(bool fullscreen) {
-            if (Preferences.Default.DetachPianoRoll) {
+            if (fullscreen && pianoRoll == null) {
                 return;
             }
-            if (fullscreen && pianoRoll == null) {
+            if (Preferences.Default.DetachPianoRoll) {
+                // From a detached window, bring the piano roll back under the tracks instead of hiding them.
+                if (fullscreen) {
+                    ApplyPianoRollAttachment(false);
+                }
                 return;
             }
             viewModel.PianoRollFullscreen = fullscreen;
