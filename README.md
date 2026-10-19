@@ -29,6 +29,10 @@ scripts/fetch-voicebank.sh --from ~/Library/OpenUtau/Singers/Chiaki
 
 The build copies `Singers/` next to the executable. To publish a new voicebank, upload a zip whose top folder is `Chiaki` to a new release tag and update `scripts/voicebank.json`.
 
+## Releases
+
+`.github/workflows/release.yml` tests once, then builds Windows (x64, ARM64), macOS (Apple Silicon, Intel) and Linux (x64, ARM64). Push a `v1.2.3` tag to publish a release, or run the workflow by hand to get build artifacts only. macOS builds are signed and notarized once the signing secrets are set; see [RELEASING.md](RELEASING.md).
+
 ## Syncing with Lunai
 
 ```sh
