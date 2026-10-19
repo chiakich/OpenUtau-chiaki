@@ -82,7 +82,6 @@
             <MenuItem Header="{DynamicResource menu.tools.singer.install}" Click="OnMenuInstallSinger"/>
             <MenuItem Header="{DynamicResource menu.tools.wavtoolresampler.install}" Click="OnMenuInstallWavtoolResampler"/>
             <MenuItem Header="{DynamicResource menu.tools.packages}" Click="OnMenuPackageManager"/>
-            <MenuItem Header="{DynamicResource menu.tools.singerhub}" Click="OnMenuSingerHub"/>
             <MenuItem Header="{DynamicResource menu.tools.prefs}" Click="OnMenuPreferences"/>
           </MenuItem>
           <MenuItem Header="{DynamicResource menu.help}">
@@ -193,7 +192,7 @@
       </Border>
       <Carousel Grid.Row="1" SelectedIndex="{Binding Page}" >
         <!--Welcome page-->
-        <Grid Classes="workspaceLayout" Margin="8,0,8,8" ColumnDefinitions="*,8,380" RowDefinitions="*" KeyDown="OnCarouselPageKeyDown">
+        <Grid Classes="workspaceLayout" Margin="8,0,8,8" ColumnDefinitions="*" RowDefinitions="*" KeyDown="OnCarouselPageKeyDown">
           <Grid Grid.Column="0" RowDefinitions="Auto,8,*" ColumnDefinitions="*,8,*">
             <Border Grid.Row="0" Grid.ColumnSpan="3" Classes="welcomeCard">
               <StackPanel Spacing="8">
@@ -266,16 +265,6 @@
             </Border>
           </Grid>
 
-          <!-- Singer Hub shell only; SingerHubPane content is unchanged -->
-          <Border Grid.Column="2" Classes="welcomeHubShell" VerticalAlignment="Stretch">
-            <Grid RowDefinitions="Auto,8,*">
-              <StackPanel Grid.Row="0" Spacing="4">
-                <TextBlock Text="{DynamicResource lunai.caption}" Classes="notePropsPanelTitle" VerticalAlignment="Center"/>
-                <TextBlock Text="{DynamicResource welcome.singerhub.description}" Classes="welcomeActionDescription"/>
-              </StackPanel>
-              <views:SingerHubPane Grid.Row="2"/>
-            </Grid>
-          </Border>
         </Grid>
       
         <!--Main page-->
