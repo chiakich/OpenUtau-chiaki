@@ -874,9 +874,17 @@ namespace OpenUtau.App.Controls {
                     
                     if (notesVm?.Part == null) return;
                     if (tick < notesVm.Part.position || tick >= notesVm.Part.End) {
+                        int trackNo = notesVm.Part.trackNo;
+                        var tracks = notesVm.Project.tracks;
+                        // Prefer the current track; otherwise follow playback to the nearest unmuted track.
                         var targetPart = notesVm.Project.parts
                             .OfType<UVoicePart>()
-                            .FirstOrDefault(p => p.trackNo == notesVm.Part.trackNo && p.position <= tick && p.End > tick);
+                            .Where(p => p.position <= tick && p.End > tick)
+                            .Where(p => p.trackNo == trackNo
+                                || (p.trackNo < tracks.Count && !tracks[p.trackNo].Mute))
+                            .OrderBy(p => Math.Abs(p.trackNo - trackNo))
+                            .ThenBy(p => p.trackNo)
+                            .FirstOrDefault();
 
                         if (targetPart != null) {
                             DocManager.Inst.ExecuteCmd(new LoadPartNotification(targetPart, notesVm.Project, tick));
