@@ -93,7 +93,7 @@ namespace OpenUtau.App.Controls {
                 if (Enum.TryParse(sc.KeyName, out Key parsedKey) && 
                     Enum.TryParse(sc.ModifiersName, out KeyModifiers parsedMods)) {
                     
-                    if (KeyTranslator.IsKeyMatch(parsedKey, pressedKey) && parsedMods == pressedMods) {
+                    if (KeyTranslator.IsKeyMatch(parsedKey, pressedKey) && KeyTranslator.ToPlatform(parsedMods) == pressedMods) {
                         return sc.ActionId;
                     }
                 }
@@ -118,8 +118,8 @@ namespace OpenUtau.App.Controls {
             }
 
             string? action = GetActionIdForShortcut(args.Key, args.KeyModifiers);
-            // Legacy hardcode: Control+R always loads rendered pitch (pre-remap behavior).
-            if (args.Key == Key.R && args.KeyModifiers == KeyModifiers.Control) {
+            // Legacy hardcode: Ctrl/Cmd+R always loads rendered pitch (pre-remap behavior).
+            if (args.Key == Key.R && args.KeyModifiers == cmdKey) {
                 action = "pianoroll.menu.notes.loadrenderedpitch";
             }
             if (action == null || !NoteCommandShortcutActionIds.Contains(action)) {
@@ -718,14 +718,7 @@ namespace OpenUtau.App.Controls {
                 new RandomizeTiming(),
                 new RandomizePhonemeOffset()
             }.Select(edit => {
-                Avalonia.Input.KeyGesture? menuGesture = null;
-                var savedSc = Preferences.Default.Shortcuts?.FirstOrDefault(s => s.ActionId == edit.Name);
-                if (savedSc != null && 
-                    Enum.TryParse<Avalonia.Input.Key>(savedSc.KeyName, out var parsedKey) && 
-                    Enum.TryParse<Avalonia.Input.KeyModifiers>(savedSc.ModifiersName, out var parsedMods) && 
-                    parsedKey != Avalonia.Input.Key.None) {
-                    menuGesture = new Avalonia.Input.KeyGesture(parsedKey, parsedMods);
-                }
+                var menuGesture = KeyTranslator.GetGesture(edit.Name);
 
                 return new MenuItemViewModel() {
                     Header = ThemeManager.GetString(edit.Name),
@@ -749,14 +742,7 @@ namespace OpenUtau.App.Controls {
                 new DashToPlusTilda(),
                 new InsertSlur(),
             }.Select(edit => {
-                Avalonia.Input.KeyGesture? menuGesture = null;
-                var savedSc = Preferences.Default.Shortcuts?.FirstOrDefault(s => s.ActionId == edit.Name);
-                if (savedSc != null && 
-                    Enum.TryParse<Avalonia.Input.Key>(savedSc.KeyName, out var parsedKey) && 
-                    Enum.TryParse<Avalonia.Input.KeyModifiers>(savedSc.ModifiersName, out var parsedMods) && 
-                    parsedKey != Avalonia.Input.Key.None) {
-                    menuGesture = new Avalonia.Input.KeyGesture(parsedKey, parsedMods);
-                }
+                var menuGesture = KeyTranslator.GetGesture(edit.Name);
 
                 return new MenuItemViewModel() {
                     Header = ThemeManager.GetString(edit.Name),
@@ -775,14 +761,7 @@ namespace OpenUtau.App.Controls {
                 new ClearTimings(),
                 new ResetAliases(),
             }.Select(edit => {
-                Avalonia.Input.KeyGesture? menuGesture = null;
-                var savedSc = Preferences.Default.Shortcuts?.FirstOrDefault(s => s.ActionId == edit.Name);
-                if (savedSc != null && 
-                    Enum.TryParse<Avalonia.Input.Key>(savedSc.KeyName, out var parsedKey) && 
-                    Enum.TryParse<Avalonia.Input.KeyModifiers>(savedSc.ModifiersName, out var parsedMods) && 
-                    parsedKey != Avalonia.Input.Key.None) {
-                    menuGesture = new Avalonia.Input.KeyGesture(parsedKey, parsedMods);
-                }
+                var menuGesture = KeyTranslator.GetGesture(edit.Name);
 
                 return new MenuItemViewModel() {
                     Header = ThemeManager.GetString(edit.Name),
@@ -797,15 +776,7 @@ namespace OpenUtau.App.Controls {
                         .Select(type => Activator.CreateInstance(type) as BatchEdit)
                         .Where(edit => edit != null)
                         .Select(edit => {
-                            Avalonia.Input.KeyGesture? menuGesture = null;
-                            var savedSc = Preferences.Default.Shortcuts?.FirstOrDefault(s => s.ActionId == edit!.Name);
-                            
-                            if (savedSc != null && 
-                                Enum.TryParse<Avalonia.Input.Key>(savedSc.KeyName, out var parsedKey) && 
-                                Enum.TryParse<Avalonia.Input.KeyModifiers>(savedSc.ModifiersName, out var parsedMods) && 
-                                parsedKey != Avalonia.Input.Key.None) {
-                                menuGesture = new Avalonia.Input.KeyGesture(parsedKey, parsedMods);
-                            }
+                            var menuGesture = KeyTranslator.GetGesture(edit!.Name);
 
                             return new MenuItemViewModel() {
                                 Header = ThemeManager.GetString(edit!.Name),
@@ -2329,6 +2300,10 @@ namespace OpenUtau.App.Controls {
             }
 
             string? action = GetActionIdForShortcut(args.Key, args.KeyModifiers);
+            // Ctrl/Cmd+Shift+Z is the standard redo on macOS and most Linux apps.
+            if (action == null && isBoth && args.Key == Key.Z) {
+                action = "Redo";
+            }
 
             switch (action) {
                 // Playback & Selection

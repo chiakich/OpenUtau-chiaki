@@ -206,7 +206,7 @@ namespace OpenUtau.App.ViewModels {
             foreach (var sc in Preferences.Default.Shortcuts) {
                 Enum.TryParse<KeyModifiers>(sc.ModifiersName, out var parsedMods);
                 
-                string mods = KeyTranslator.GetFriendlyModifiersName(parsedMods);
+                string mods = KeyTranslator.GetFriendlyModifiersName(KeyTranslator.ToPlatform(parsedMods));
                 string key = KeyTranslator.GetFriendlyName(sc.KeyName); 
                 
                 if (string.IsNullOrEmpty(mods) || sc.ModifiersName == "None") {

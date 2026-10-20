@@ -47,7 +47,7 @@ namespace OpenUtau.App.ViewModels {
         public string DisplayString {
             get {
                 if (IsListening) return ThemeManager.GetString("prefs.shortcuts.listening") ?? "Press keys...";
-                string mods = KeyTranslator.GetFriendlyModifiersName(Modifiers);
+                string mods = KeyTranslator.GetFriendlyModifiersName(KeyTranslator.ToPlatform(Modifiers));
                 string friendlyKey = KeyTranslator.GetFriendlyName(Key.ToString());
                 if (!string.IsNullOrEmpty(mods)) {
                     return KeyTranslator.IsMac ? $"{mods}{friendlyKey}" : $"{mods} + {friendlyKey}";
@@ -248,6 +248,7 @@ namespace OpenUtau.App.ViewModels {
             if (key == Key.LeftCtrl || key == Key.RightCtrl || key == Key.LeftShift || key == Key.RightShift || key == Key.LeftAlt || key == Key.RightAlt || key == Key.LWin || key == Key.RWin) {
                 return;
             }
+            modifiers = KeyTranslator.FromPlatform(modifiers);
 
             var duplicate = allShortcuts.FirstOrDefault(s => s != ActiveShortcut && s.Key == key && s.Modifiers == modifiers);
             

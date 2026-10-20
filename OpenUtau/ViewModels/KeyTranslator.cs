@@ -114,6 +114,18 @@ namespace OpenUtau.App.ViewModels {
         /// Generates a native Avalonia KeyGesture for UI Menus (Top Menu, Right-Click).
         /// Automatically formats for Windows (Ctrl+S) or Mac (⌘S).
         /// </summary>
+        // Stored "Control" means the primary command key (Ctrl on Windows/Linux, Cmd on macOS);
+        // swapping keeps physical Ctrl on macOS bindable as stored "Meta".
+        public static KeyModifiers ToPlatform(KeyModifiers stored) {
+            if (!IsMac) return stored;
+            var swapped = stored & ~(KeyModifiers.Control | KeyModifiers.Meta);
+            if (stored.HasFlag(KeyModifiers.Control)) swapped |= KeyModifiers.Meta;
+            if (stored.HasFlag(KeyModifiers.Meta)) swapped |= KeyModifiers.Control;
+            return swapped;
+        }
+
+        public static KeyModifiers FromPlatform(KeyModifiers pressed) => ToPlatform(pressed);
+
         public static Avalonia.Input.KeyGesture? GetGesture(string actionId) {
             var sc = Preferences.Default.Shortcuts?.FirstOrDefault(s => s.ActionId == actionId);
             
@@ -122,7 +134,7 @@ namespace OpenUtau.App.ViewModels {
                 Enum.TryParse<Avalonia.Input.KeyModifiers>(sc.ModifiersName, out var m) && 
                 k != Avalonia.Input.Key.None) {
                 
-                return new Avalonia.Input.KeyGesture(k, m);
+                return new Avalonia.Input.KeyGesture(k, ToPlatform(m));
             }
             return null;
         }
