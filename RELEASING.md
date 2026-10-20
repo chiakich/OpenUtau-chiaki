@@ -11,7 +11,7 @@
 ## 觸發方式
 
 - **只 build 不發佈**：GitHub → Actions → Release → Run workflow，填版本，`release` 不勾。產物在該次 run 的 Artifacts，保留 3 天。
-- **正式發佈**：推一個 `v` 開頭的 tag，版本取自 tag：
+- **正式發佈**：推一個 `v` 加數字開頭的 tag（例如 `v0.1.0`；`voicebank-*` 這類 tag 不會觸發），版本取自 tag：
 
   ```sh
   git tag v0.1.0
