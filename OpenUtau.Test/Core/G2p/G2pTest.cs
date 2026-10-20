@@ -1,3 +1,4 @@
+using DiffSingerLatin;
 using Xunit;
 
 namespace OpenUtau.Core.G2p {
@@ -53,6 +54,19 @@ namespace OpenUtau.Core.G2p {
             Assert.Equal("f l aa p tr aa p ih k ax", string.Join(' ', g2p.Query("%fl,optro pica")));
             Assert.Equal("s l ey d", string.Join(' ', g2p.Query("slayed")));
             Assert.Equal("d er eh k sh ax n", string.Join(' ', g2p.Query("direction")));
+        }
+
+        [Fact]
+        public void LatinG2pTest() {
+            var g2p = new LatinG2p();
+            Assert.Null(g2p.Query(""));
+            Assert.Equal("e k sh e l s i s", string.Join(' ', g2p.Query("excelsis")));
+            Assert.Equal("g r a ts i a", string.Join(' ', g2p.Query("gratia")));
+            Assert.Equal("a ny u s", string.Join(' ', g2p.Query("Agnus")));
+            Assert.Equal("j e s u s", string.Join(' ', g2p.Query("Iesus")));
+            Assert.Equal("e g z a u_ d i", string.Join(' ', g2p.Query("exaudi")));
+            Assert.Equal("a l e l u j a", string.Join(' ', g2p.Query("alleluia")));
+            Assert.Equal("a e r i a", string.Join(' ', g2p.Query("aëria")));
         }
     }
 }

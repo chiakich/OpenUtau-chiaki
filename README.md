@@ -5,7 +5,7 @@ Personal build of [OpenUtau Lunai](https://github.com/keirokeer/OpenUtau-lunai) 
 ## Differences from Lunai
 
 - **Chiaki voicebank bundled**: stored as a release asset, placed in `Singers/Chiaki` before building, and loaded ahead of any installed copy.
-- **DiffSinger Finnish phonemizer built in**, so Finnish tracks need no extra plugin DLL.
+- **DiffSinger Finnish and Latin phonemizers built in**, so Finnish and Latin (Ecclesiastical) tracks need no extra plugin DLL.
 - **Singer Hub removed.**
 - **Own identity**: the app is `OpenUtau-Chiaki` with its own data folder, so it can sit next to Lunai.
 - **Updates come from this repo's releases.** On Windows the Velopack updater reads a GitHub token from `OPENUTAU_CHIAKI_GITHUB_TOKEN` because the repo is private; on macOS and Linux the updater opens the releases page.
