@@ -6,7 +6,7 @@
 |---|---|
 | win-x64、win-arm64 | `OpenUtau-Chiaki-<rid>-Setup.exe`、`-Portable.zip`、Velopack 更新檔 |
 | osx-arm64、osx-x64 | `OpenUtau-Chiaki-<rid>.dmg`（有設定 secrets 時會簽章並公證） |
-| linux-x64、linux-arm64 | `.AppImage`、`.zip`、`.tar.gz` |
+| linux-x64、linux-arm64 | `.AppImage`、`.tar.gz` |
 
 ## 觸發方式
 

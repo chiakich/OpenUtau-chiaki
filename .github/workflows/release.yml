@@ -309,10 +309,9 @@ jobs:
         if: matrix.arch.os == 'linux'
         run: chmod +x bin/${{ matrix.arch.name }}/OpenUtau-Chiaki
 
-      - name: Create zip and tar.gz (Linux)
+      - name: Create tar.gz (Linux)
         if: matrix.arch.os == 'linux'
         run: |
-          (cd bin/${{ matrix.arch.name }} && 7z a ../../OpenUtau-Chiaki-${{ matrix.arch.name }}.zip *)
           tar -czf OpenUtau-Chiaki-${{ matrix.arch.name }}.tar.gz -C bin/${{ matrix.arch.name }} .
 
       - name: Install LinuxDeploy
@@ -365,7 +364,6 @@ jobs:
           files: |
             OpenUtau-Chiaki-${{ matrix.arch.name }}-Setup.exe
             OpenUtau-Chiaki-${{ matrix.arch.name }}-Portable.zip
-            OpenUtau-Chiaki-${{ matrix.arch.name }}.zip
             OpenUtau-Chiaki-${{ matrix.arch.name }}.dmg
             OpenUtau-Chiaki-${{ matrix.arch.name }}.tar.gz
             OpenUtau-Chiaki-${{ matrix.arch.linuxarch }}.AppImage
