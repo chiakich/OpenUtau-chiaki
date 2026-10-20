@@ -119,15 +119,15 @@ namespace OpenUtau.Core.Util {
         }
 
         static void WarnAboutLegacyRootBinaries(string exeDir) {
-            bool hasLunai = File.Exists(Path.Combine(exeDir, "OpenUtau-Chiaki.exe"))
+            bool hasChiaki = File.Exists(Path.Combine(exeDir, "OpenUtau-Chiaki.exe"))
                 || File.Exists(Path.Combine(exeDir, "OpenUtau-Chiaki.dll"));
-            if (!hasLunai) {
+            if (!hasChiaki) {
                 return;
             }
             if (File.Exists(Path.Combine(exeDir, "OpenUtau.exe"))
                 || File.Exists(Path.Combine(exeDir, "OpenUtau.dll"))) {
                 Log.Warning(
-                    "Legacy OpenUtau.exe/OpenUtau.dll found next to Lunai in {Dir}. Prefer launching OpenUtau-Chiaki.exe only.",
+                    "Legacy OpenUtau.exe/OpenUtau.dll found next to OpenUtau-Chiaki in {Dir}. Prefer launching OpenUtau-Chiaki.exe only.",
                     exeDir);
             }
         }

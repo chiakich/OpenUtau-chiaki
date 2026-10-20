@@ -83,7 +83,7 @@ namespace OpenUtau.Core {
         public string CachePath { get; private set; }
         public bool HomePathIsAscii { get; private set; }
         public bool IsInstalled { get; private set; }
-        /// <summary>When true, singers load from LegacyDataPath instead of Lunai DataPath.</summary>
+        /// <summary>When true, singers load from LegacyDataPath instead of this app's DataPath.</summary>
         public bool ShareLegacySingers { get; private set; }
 
         /// <summary>
@@ -189,7 +189,7 @@ namespace OpenUtau.Core {
         }
 
         /// <summary>
-        /// One-time copy of prefs/themes from stock OpenUtau into the Lunai data folder.
+        /// One-time copy of prefs/themes from stock OpenUtau into the OpenUtau-Chiaki data folder.
         /// Does not move singers. Skips files that already exist in the destination.
         /// </summary>
         public void TryMigrateFromLegacyOpenUtau() {

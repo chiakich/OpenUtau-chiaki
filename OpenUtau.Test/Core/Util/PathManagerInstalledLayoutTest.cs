@@ -78,7 +78,7 @@ namespace OpenUtau.Test.Core.Util {
 
         [Fact]
         public void ReleasePublishFolderWinX64IsNotTfmDataRedirect() {
-            // release-lunai.yml: dotnet publish -o bin/win-x64 — must keep prefs next to exe on update.
+            // release.yml: dotnet publish -o bin/win-x64 — must keep prefs next to exe on update.
             string root = Path.Combine(Path.GetTempPath(), "ou-pub-" + Path.GetRandomFileName(), "win-x64");
             Directory.CreateDirectory(root);
             try {
@@ -91,7 +91,7 @@ namespace OpenUtau.Test.Core.Util {
         }
 
         [Fact]
-        public void DocumentsLunaiPathIsNotTfmMigrationTarget() {
+        public void DocumentsDataPathIsNotTfmMigrationTarget() {
             string docs = Path.Combine(Path.GetTempPath(), "Docs-" + Path.GetRandomFileName(), "OpenUtau-Chiaki");
             Assert.False(PathManager.IsPortableTfmSiblingDataPath(docs));
             Assert.False(PathManager.IsPortableTfmSiblingDataPath(

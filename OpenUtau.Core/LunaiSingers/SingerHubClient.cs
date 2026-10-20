@@ -114,7 +114,7 @@ namespace OpenUtau.Core.SingerHub {
             }
             try {
                 using var client = new HttpClient();
-                client.DefaultRequestHeaders.Add("User-Agent", "OpenUtau-LUNAI");
+                client.DefaultRequestHeaders.Add("User-Agent", "OpenUtau-Chiaki");
                 client.Timeout = TimeSpan.FromSeconds(90);
                 using var response = await client.GetAsync(url).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
