@@ -215,6 +215,7 @@ namespace OpenUtau.Core {
         readonly Deque<UCommandGroup> undoQueue = new Deque<UCommandGroup>();
         readonly Deque<UCommandGroup> redoQueue = new Deque<UCommandGroup>();
         UCommandGroup? undoGroup = null;
+        public bool HasUndoGroup => undoGroup != null;
         UCommandGroup? savedPoint = null;
         UCommandGroup? autosavedPoint = null;
         public bool Recovered { get; set; } = false; // Flag to not overwrite backup file

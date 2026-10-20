@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using OpenUtau.Core.DiffSinger;
 using OpenUtau.Core.Render;
 using OpenUtau.Core.Ustx;
@@ -476,6 +477,14 @@ namespace OpenUtau.Core.Editing {
                 fastRealtime: fastRealtime);
         }
 
+        internal void RunAfterLoad(
+            UProject project, UVoicePart part, DocManager docManager, CancellationToken cancellationToken) {
+            RunInternal(
+                project, part, new List<UNote>(), docManager,
+                (_, _) => { }, cancellationToken,
+                showUnsupportedError: false);
+        }
+
         void RunInternal(
             UProject project, UVoicePart part, List<UNote> selectedNotes, DocManager docManager,
             Action<int, int> setProgressCallback, CancellationToken cancellationToken,
@@ -579,7 +588,16 @@ namespace OpenUtau.Core.Editing {
                 SkipPhonemizer = true,
                 SkipPhoneme = true,
             };
-            DocManager.Inst.PostOnUIThread(() => {
+            void Apply(int attempt) {
+                // The project may have been closed or the part removed while pitch was rendering.
+                if (DocManager.Inst.Project != project || !project.parts.Contains(part)) {
+                    return;
+                }
+                // Wait out a group another edit still has open, rather than cutting it short.
+                if (recordUndo && docManager.HasUndoGroup && attempt < 200) {
+                    Task.Delay(50).ContinueWith(_ => DocManager.Inst.PostOnUIThread(() => Apply(attempt + 1)));
+                    return;
+                }
                 var all = new List<UCommand>(commands);
                 if (cleared.Count > 0 && project.expressions.ContainsKey(Format.Ustx.RPIT)) {
                     var curve = part.maskedCurves.FirstOrDefault(c => c.abbr == Format.Ustx.RPIT)?.Clone()
@@ -598,7 +616,8 @@ namespace OpenUtau.Core.Editing {
                 } else {
                     docManager.ApplyTransient(all, validateOptions, preRender: !fastRealtime);
                 }
-            });
+            }
+            DocManager.Inst.PostOnUIThread(() => Apply(0));
         }
 
         /// <summary>

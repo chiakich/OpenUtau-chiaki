@@ -426,7 +426,7 @@ namespace OpenUtau.Core.Util {
             public bool PlayTone = false;
             /// <summary>Legacy; migrated to <see cref="RealTimePitchMode"/> on load.</summary>
             public bool RealTimePitchGeneration = false;
-            public int RealTimePitchMode = (int)LivePitchMode.Off;
+            public int RealTimePitchMode = (int)LivePitchMode.Normal;
             public bool ShowVibrato = true;
             public bool ShowPitch = true;
             public bool ShowFinalPitch = true;

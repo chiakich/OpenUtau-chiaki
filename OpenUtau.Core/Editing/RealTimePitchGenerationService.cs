@@ -10,7 +10,8 @@ using Serilog;
 
 namespace OpenUtau.Core.Editing {
     /// <summary>
-    /// When enabled, regenerates DiffSinger pitch curves (Ctrl+R) after relevant piano roll edits.
+    /// When enabled, regenerates DiffSinger pitch curves (Ctrl+R) after relevant piano roll edits,
+    /// and for every part an opened or imported file brings in once it has been phonemized.
     /// </summary>
     public sealed class RealTimePitchGenerationService : ICmdSubscriber {
         public static RealTimePitchGenerationService Inst { get; } = new();
@@ -33,6 +34,13 @@ namespace OpenUtau.Core.Editing {
         readonly Dictionary<UVoicePart, CancellationTokenSource> debounceTokens = new();
         readonly Dictionary<UVoicePart, HashSet<UNote>> pendingNotesByPart = new();
         readonly HashSet<UVoicePart> lyricPendingParts = new();
+        // Parts already in the project, so an import only loads pitch for the parts it adds.
+        HashSet<UPart> knownParts = new();
+        readonly HashSet<UVoicePart> loadPendingParts = new();
+        CancellationTokenSource loadCts = new();
+        UProject? loadedProject;
+        // Lets the phonemizer finish every batch for a part before pitch is generated from it.
+        const int AfterLoadPhonemizeMs = 300;
         readonly LoadRenderedPitch pitchLoader = new();
 
         readonly struct RealtimePitchSettings {
@@ -73,6 +81,15 @@ namespace OpenUtau.Core.Editing {
         }
 
         public void OnNext(UCommand cmd, bool isUndo) {
+            if (cmd is LoadProjectNotification load) {
+                OnProjectLoaded(load.project);
+                return;
+            }
+            if (cmd is PartCommand || cmd is TrackCommand) {
+                lock (scheduleLock) {
+                    knownParts = DocManager.Inst.Project.parts.ToHashSet();
+                }
+            }
             if (isUndo || SuppressCallbacks || !IsEnabled) {
                 return;
             }
@@ -87,10 +104,15 @@ namespace OpenUtau.Core.Editing {
             }
             if (cmd is PhonemizedNotification phonemized) {
                 bool schedule;
+                bool afterLoad;
                 lock (scheduleLock) {
                     schedule = lyricPendingParts.Remove(phonemized.part);
+                    // A part whose track is not DiffSinger yet (e.g. an imported UST) stays pending until its singer is switched.
+                    afterLoad = loadPendingParts.Contains(phonemized.part) && IsDiffSingerPart(phonemized.part);
                 }
-                if (schedule) {
+                if (afterLoad) {
+                    SchedulePart(phonemized.part, AfterLoadPhonemizeMs);
+                } else if (schedule) {
                     SchedulePart(phonemized.part, settings.AfterPhonemizeMs);
                 }
                 return;
@@ -100,6 +122,26 @@ namespace OpenUtau.Core.Editing {
                     TrackAffectedNotes(noteCmd.Part, noteCmd.Notes);
                 }
                 SchedulePart(noteCmd.Part, settings.DebounceMs);
+            }
+        }
+
+        void OnProjectLoaded(UProject project) {
+            lock (scheduleLock) {
+                if (project != loadedProject) {
+                    loadCts.Cancel();
+                    loadCts.Dispose();
+                    loadCts = new CancellationTokenSource();
+                    loadedProject = project;
+                }
+                loadPendingParts.RemoveWhere(p => !project.parts.Contains(p));
+                if (IsEnabled) {
+                    foreach (var part in project.parts.OfType<UVoicePart>()) {
+                        if (!knownParts.Contains(part) && part.notes.Count > 0) {
+                            loadPendingParts.Add(part);
+                        }
+                    }
+                }
+                knownParts = project.parts.ToHashSet();
             }
         }
 
@@ -155,6 +197,24 @@ namespace OpenUtau.Core.Editing {
             var settings = GetSettings();
             var project = DocManager.Inst.Project;
             if (!project.parts.Contains(part) || !IsDiffSingerPart(part)) {
+                return;
+            }
+            bool afterLoad;
+            CancellationToken loadToken;
+            lock (scheduleLock) {
+                afterLoad = loadPendingParts.Remove(part);
+                loadToken = loadCts.Token;
+                if (afterLoad) {
+                    pendingNotesByPart.Remove(part);
+                }
+            }
+            if (afterLoad) {
+                try {
+                    // Full quality and undoable, unlike edit-time live pitch.
+                    pitchLoader.RunAfterLoad(project, part, DocManager.Inst, loadToken);
+                } catch (Exception e) {
+                    Log.Warning(e, "Loading rendered pitch after opening a project failed.");
+                }
                 return;
             }
             List<UNote> affectedNotes;
