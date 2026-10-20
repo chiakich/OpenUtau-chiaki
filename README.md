@@ -44,4 +44,4 @@ git merge upstream/master
 
 Based on [OpenUtau Lunai](https://github.com/keirokeer/OpenUtau-lunai) and [OpenUtau](https://github.com/openutau/OpenUtau); credit belongs to their authors and everyone listed in **Help → About OpenUtau**. Code is under the upstream license (`LICENSE.txt`).
 
-The Chiaki voicebank is for personal use only. Its `tgm_hifigan` vocoder is CC BY-NC 4.0 (no commercial use); see `Singers/Chiaki/tgm_hifigan/documents`.
+The Chiaki voicebank is licensed under CC BY-NC 4.0 (no commercial use), as is its `tgm_hifigan` vocoder; see `Singers/Chiaki/readme.txt` and `Singers/Chiaki/tgm_hifigan/documents`. The illustration is not covered by that license.
