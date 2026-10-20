@@ -37,6 +37,8 @@ namespace OpenUtau.Core.Editing {
         // Parts already in the project, so an import only loads pitch for the parts it adds.
         HashSet<UPart> knownParts = new();
         readonly HashSet<UVoicePart> loadPendingParts = new();
+        // Parts an opened or imported file brought in; a singer or phonemizer change fills them in again.
+        readonly HashSet<UVoicePart> loadedParts = new();
         CancellationTokenSource loadCts = new();
         UProject? loadedProject;
         // Lets the phonemizer finish every batch for a part before pitch is generated from it.
@@ -90,6 +92,16 @@ namespace OpenUtau.Core.Editing {
                     knownParts = DocManager.Inst.Project.parts.ToHashSet();
                 }
             }
+            // Phrases a phonemizer could not handle get no pitch; once the voice is fixed, fill them in.
+            if (cmd is TrackChangeSingerCommand || cmd is TrackChangePhonemizerCommand
+                    || cmd is TrackChangeRenderSettingCommand) {
+                var track = ((TrackCommand)cmd).track;
+                lock (scheduleLock) {
+                    if (IsEnabled) {
+                        loadPendingParts.UnionWith(loadedParts.Where(p => p.trackNo == track.TrackNo));
+                    }
+                }
+            }
             if (isUndo || SuppressCallbacks || !IsEnabled) {
                 return;
             }
@@ -134,9 +146,11 @@ namespace OpenUtau.Core.Editing {
                     loadedProject = project;
                 }
                 loadPendingParts.RemoveWhere(p => !project.parts.Contains(p));
-                if (IsEnabled) {
-                    foreach (var part in project.parts.OfType<UVoicePart>()) {
-                        if (!knownParts.Contains(part) && part.notes.Count > 0) {
+                loadedParts.RemoveWhere(p => !project.parts.Contains(p));
+                foreach (var part in project.parts.OfType<UVoicePart>()) {
+                    if (!knownParts.Contains(part) && part.notes.Count > 0) {
+                        loadedParts.Add(part);
+                        if (IsEnabled) {
                             loadPendingParts.Add(part);
                         }
                     }
