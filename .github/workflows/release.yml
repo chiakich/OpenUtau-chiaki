@@ -246,6 +246,11 @@ jobs:
           Copy-Item $portable.FullName "OpenUtau-Chiaki-$rid-Portable.zip" -Force
           Remove-Item $setup.FullName -Force
           Remove-Item $portable.FullName -Force
+          # vpk download left the previous full package here only as the delta base; it is already in its own release.
+          Get-ChildItem $outDir -Filter '*.nupkg' |
+            Where-Object { -not $_.Name.StartsWith("OpenUtau.Chiaki-$packVersion-") } |
+            Remove-Item -Force
+          if (-not (Get-ChildItem $outDir -Filter '*-full.nupkg')) { throw "Full package for $packVersion not found in $outDir" }
           # assets.*.json still lists Setup/Portable by Velopack names; rewrite to match what we ship in Releases/.
           Get-ChildItem $outDir -Filter 'assets.*.json' | ForEach-Object {
             $assets = @(Get-ChildItem $outDir -File | ForEach-Object {
