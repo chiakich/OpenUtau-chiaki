@@ -34,6 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.v.outputs.version }}
+      pack_version: ${{ steps.v.outputs.pack_version }}
       tag: ${{ steps.v.outputs.tag }}
       release: ${{ steps.v.outputs.release }}
       beta: ${{ steps.v.outputs.beta }}
@@ -58,8 +59,26 @@ jobs:
             version="$(echo "$IN_VERSION" | xargs)"; version="${version#[vV]}"
             tag="$version"; release="$IN_RELEASE"; beta="$IN_BETA"; draft="$IN_DRAFT"
           fi
+          # Velopack requires SemVer2 with exactly 3 numeric parts; a non-zero 4th part becomes build metadata.
+          re='^([0-9]+)\.([0-9]+)\.([0-9]+)(\.([0-9]+))?((-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?)$'
+          if ! [[ "$version" =~ $re ]]; then
+            echo "::error::Invalid version '$version'. Use SemVer 3-part (e.g. 0.1.0 or 0.1.529)."
+            exit 1
+          fi
+          base="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[3]}"
+          revision="${BASH_REMATCH[5]}"
+          suffix="${BASH_REMATCH[6]}"
+          pack_version="$base$suffix"
+          if [ -n "$revision" ] && [ "$revision" != "0" ]; then
+            if [[ "$suffix" == *+* ]]; then
+              pack_version="$base${suffix/+/+$revision.}"
+            else
+              pack_version="$base$suffix+$revision"
+            fi
+          fi
           {
             echo "version=$version"
+            echo "pack_version=$pack_version"
             echo "tag=$tag"
             echo "release=$release"
             echo "beta=$beta"
@@ -93,6 +112,7 @@ jobs:
 
     env:
       VERSION: ${{ needs.prepare.outputs.version }}
+      PACK_VERSION: ${{ needs.prepare.outputs.pack_version }}
       BETA: ${{ needs.prepare.outputs.beta }}
       RELEASE: ${{ needs.prepare.outputs.release }}
       # Signing and notarization are skipped when these secrets are not configured.
@@ -178,25 +198,7 @@ jobs:
           $arch = '${{ matrix.arch.arch }}'
           $channel = if ($env:BETA -eq 'true') { "$rid-beta" } else { $rid }
           $vcredist = "vcredist143-$arch"
-          $rawVersion = $env:VERSION
-          # Velopack requires SemVer2 with exactly 3 numeric parts (not 0.0.0.0 / 1.2.3.4).
-          if ($rawVersion -notmatch '^(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?((?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?)$') {
-            throw "Invalid version '$rawVersion'. Use SemVer 3-part (e.g. 0.1.0 or 0.1.529). Four-part versions like 0.1.529.0 are normalized automatically."
-          }
-          $major = $Matches[1]
-          $minor = $Matches[2]
-          $patch = $Matches[3]
-          $revision = $Matches[4]
-          $suffix = $Matches[5]
-          $packVersion = "$major.$minor.$patch$suffix"
-          if ($revision -and $revision -ne '0') {
-            # Preserve non-zero 4th component as build metadata: 1.2.3.4 -> 1.2.3+4
-            if ($suffix -match '\+') {
-              $packVersion = "$major.$minor.$patch$($suffix -replace '^\+', "+$revision.")"
-            } else {
-              $packVersion = "$major.$minor.$patch$suffix+$revision"
-            }
-          }
+          $packVersion = $env:PACK_VERSION
           Write-Host "Velopack packVersion: $packVersion"
           $outDir = "Releases/$rid"
           New-Item -ItemType Directory -Force -Path $outDir | Out-Null
@@ -292,6 +294,17 @@ jobs:
             exit 1
           fi
           echo "MACOS_SIGN_IDENTITY=$identity" >> "$GITHUB_ENV"
+          echo "MACOS_KEYCHAIN=$keychain" >> "$GITHUB_ENV"
+
+      - name: Prepare app bundle (macOS)
+        if: matrix.arch.os == 'osx'
+        run: bash scripts/macos/prepare-app.sh ${{ matrix.arch.name }}
+
+      - name: Create macOS Velopack packages
+        if: matrix.arch.os == 'osx'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/macos/pack-velopack.sh ${{ matrix.arch.name }}
 
       - name: Create macOS DMG
         if: matrix.arch.os == 'osx'
@@ -380,7 +393,7 @@ jobs:
             - [Setup x64](${{ env.REPO_URL }}/releases/download/${{ needs.prepare.outputs.tag }}/OpenUtau-Chiaki-win-x64-Setup.exe) · [Setup ARM64](${{ env.REPO_URL }}/releases/download/${{ needs.prepare.outputs.tag }}/OpenUtau-Chiaki-win-arm64-Setup.exe)
             - [Portable x64](${{ env.REPO_URL }}/releases/download/${{ needs.prepare.outputs.tag }}/OpenUtau-Chiaki-win-x64-Portable.zip) · [Portable ARM64](${{ env.REPO_URL }}/releases/download/${{ needs.prepare.outputs.tag }}/OpenUtau-Chiaki-win-arm64-Portable.zip)
 
-            **macOS**
+            **macOS** (Velopack, updates from Help → Check for Update)
             - [Apple Silicon (.dmg)](${{ env.REPO_URL }}/releases/download/${{ needs.prepare.outputs.tag }}/OpenUtau-Chiaki-osx-arm64.dmg)
             - [Intel (.dmg)](${{ env.REPO_URL }}/releases/download/${{ needs.prepare.outputs.tag }}/OpenUtau-Chiaki-osx-x64.dmg)
 
@@ -390,5 +403,6 @@ jobs:
 
             ### Notes
             - Windows settings stay in Documents\OpenUtau-Chiaki.
-            - macOS/Linux: download new builds from Releases.
+            - macOS: install from the DMG once; later versions update in-app.
+            - Linux: download new builds from Releases.
             - macOS builds are signed and notarized when the signing secrets are configured. If an unsigned build says "This app is damaged", run `xattr -rc "/Applications/OpenUtau-Chiaki.app"`.

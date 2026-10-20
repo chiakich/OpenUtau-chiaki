@@ -46,8 +46,10 @@ namespace OpenUtau.App.ViewModels {
             return Preferences.Default.Beta ? $"{rid}-beta" : rid;
         }
 
+        public static bool SupportsAutoUpdate => OS.IsWindows() || OS.IsMacOS();
+
         public static UpdateManager? TryCreateUpdateManager() {
-            if (!OS.IsWindows()) {
+            if (!SupportsAutoUpdate) {
                 return null;
             }
             var token = Environment.GetEnvironmentVariable(UpdateTokenEnvVar);
@@ -61,7 +63,7 @@ namespace OpenUtau.App.ViewModels {
             return new UpdateManager(source, options);
         }
 
-        /// <summary>Quiet check for startup prompt. Windows+Velopack only.</summary>
+        /// <summary>Quiet check for startup prompt. Velopack installs on Windows and macOS only.</summary>
         public static async Task<bool> IsUpdateAvailableQuietlyAsync() {
             try {
                 var mgr = TryCreateUpdateManager();
@@ -87,7 +89,7 @@ namespace OpenUtau.App.ViewModels {
 
         async Task InitAsync() {
             UpdaterStatus = ThemeManager.GetString("updater.status.checking");
-            if (!OS.IsWindows()) {
+            if (!SupportsAutoUpdate) {
                 UpdaterStatus = ThemeManager.GetString("updater.status.manual");
                 OpenGitHubOnUpdate = true;
                 UpdateAvailable = true;
@@ -140,7 +142,7 @@ namespace OpenUtau.App.ViewModels {
         }
 
         public async void OnUpdate() {
-            if (OpenGitHubOnUpdate || !OS.IsWindows()) {
+            if (OpenGitHubOnUpdate || !SupportsAutoUpdate) {
                 OnGithub();
                 return;
             }
