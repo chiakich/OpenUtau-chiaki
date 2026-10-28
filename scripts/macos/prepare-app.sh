@@ -67,3 +67,28 @@ data = p.read_bytes()
 if data.startswith(b'\\xef\\xbb\\xbf'):
     p.write_bytes(data[3:])
 "
+
+# Dotnet.Bundle ignores CFBundleDocumentTypes, so register .ustx here.
+python3 - "${PLIST}" <<'PY'
+import plistlib, sys
+path = sys.argv[1]
+with open(path, 'rb') as f:
+    plist = plistlib.load(f)
+uti = 'com.chiakich.openutau-chiaki.ustx'
+plist['UTExportedTypeDeclarations'] = [{
+    'UTTypeIdentifier': uti,
+    'UTTypeDescription': 'OpenUtau Sequence File',
+    'UTTypeConformsTo': ['public.data', 'public.content'],
+    'UTTypeIconFile': 'OpenUtau.icns',
+    'UTTypeTagSpecification': {'public.filename-extension': ['ustx']},
+}]
+plist['CFBundleDocumentTypes'] = [{
+    'CFBundleTypeName': 'OpenUtau Sequence File',
+    'CFBundleTypeRole': 'Editor',
+    'CFBundleTypeIconFile': 'OpenUtau.icns',
+    'LSHandlerRank': 'Owner',
+    'LSItemContentTypes': [uti],
+}]
+with open(path, 'wb') as f:
+    plistlib.dump(plist, f, fmt=plistlib.FMT_XML)
+PY

@@ -2,7 +2,7 @@ Doxyfile
 docs/
 
 # Bundled voicebank, fetched by scripts/fetch-voicebank.sh
-/Singers/Chiaki/
+/Singers/
 
 # Local packaging / sample activation artifacts
 dist/

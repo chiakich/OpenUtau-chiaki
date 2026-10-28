@@ -178,6 +178,20 @@ namespace OpenUtau.App.Views {
             viewModel.InitProject(this);
         }
 
+        public async void OpenFromSystem(string file) {
+            Activate();
+            if (!DocManager.Inst.ChangesSaved && !await AskIfSaveAndContinue()) {
+                return;
+            }
+            try {
+                viewModel.OpenProject(new[] { file });
+                viewModel.Page = 1;
+            } catch (Exception e) {
+                Log.Error(e, $"Failed to open file {file}");
+                _ = await MessageBox.ShowError(this, new MessageCustomizableException($"Failed to open file {file}", $"<translate:errors.failed.openfile>: {file}", e));
+            }
+        }
+
         static async Task SyncThemeHubAsync() {
             try {
                 var result = await ThemeHubClient.SyncAsync().ConfigureAwait(false);

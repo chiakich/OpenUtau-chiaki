@@ -243,13 +243,15 @@ namespace OpenUtau.App.ViewModels {
             }
           
             var args = Environment.GetCommandLineArgs();
-            if (args.Length == 2 && File.Exists(args[1])) {
+            var file = App.PendingOpenFile ?? (args.Length == 2 ? args[1] : null);
+            App.PendingOpenFile = null;
+            if (file != null && File.Exists(file)) {
                 try {
-                    Core.Format.Formats.LoadProject(new string[] { args[1] });
+                    Core.Format.Formats.LoadProject(new string[] { file });
                     Page = 1;
                     DocManager.Inst.ExecuteCmd(new VoiceColorRemappingNotification(-1, true));
                 } catch (Exception e) {
-                    var customEx = new MessageCustomizableException($"Failed to open file {args[1]}", $"<translate:errors.failed.openfile>: {args[1]}", e);
+                    var customEx = new MessageCustomizableException($"Failed to open file {file}", $"<translate:errors.failed.openfile>: {file}", e);
                     DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(customEx));
                 }
                 return;
