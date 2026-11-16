@@ -659,6 +659,20 @@
               </Grid>
             </Grid>
           </ToggleButton>
+          <Button Classes="sideToolbarToggle" Margin="0" Padding="0"
+                  VerticalAlignment="Center"
+                  Click="OnHidePianoRoll"
+                  IsVisible="{Binding HideMenuItemVisible}">
+            <ToolTip.Tip>
+              <TextBlock Text="{DynamicResource pianoroll.toggle.hidepianoroll}" Foreground="{DynamicResource ToolTipForegroundBrush}"/>
+            </ToolTip.Tip>
+            <Grid Classes="toolbarIconHostSide">
+              <Grid Classes="toolbarIconHostSideLayout">
+                <Path Stroke="{DynamicResource PianoRollSideIconOffBrush}" StrokeThickness="1.6"
+                      StrokeLineCap="Round" Data="M 4.5 4.5 L 13.5 13.5 M 13.5 4.5 L 4.5 13.5"/>
+              </Grid>
+            </Grid>
+          </Button>
           </StackPanel>
         </Border>
       </Grid>
@@ -672,12 +686,15 @@
       </StackPanel>
       <Border Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" ZIndex="150"
               HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-              ClipToBounds="True" IsHitTestVisible="False">
+              ClipToBounds="True">
         <Grid>
-          <Border Classes="tips" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="8"
-                IsVisible="{Binding NotesViewModel.ShowTips}">
-            <TextBlock Classes="tips" Text="{DynamicResource tip.notes.basics}"/>
-          </Border>
+          <Panel HorizontalAlignment="Center" VerticalAlignment="Center"
+                 IsVisible="{Binding NotesViewModel.ShowTips}">
+            <Border Classes="tips" Padding="8,8,24,8">
+              <TextBlock Classes="tips" Text="{DynamicResource tip.notes.basics}"/>
+            </Border>
+            <Button Classes="tipsClose" Click="OnTipsCloseClick"/>
+          </Panel>
           <Border Classes="tips" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0" Padding="8"
                    IsVisible="{Binding NotesViewModel.ShowTips}">
             <TextBlock Classes="tips" Text="{DynamicResource tip.notes.zoomx}"/>

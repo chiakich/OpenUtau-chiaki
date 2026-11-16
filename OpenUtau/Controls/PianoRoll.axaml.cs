@@ -1239,6 +1239,12 @@ namespace OpenUtau.App.Controls {
             }
         }
 
+        private void OnTipsCloseClick(object? sender, RoutedEventArgs e) {
+            if (ViewModel?.NotesViewModel != null) {
+                ViewModel.NotesViewModel.ShowTips = false;
+            }
+        }
+
         private void LyricBoxLostFocus(object sender, RoutedEventArgs e) {
             // Alt / Shift+Alt (layout switch) can briefly clear keyboard focus while the
             // lyric editor stays open. Restore the text field instead of parking focus

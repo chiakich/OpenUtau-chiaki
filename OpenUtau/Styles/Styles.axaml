@@ -1392,6 +1392,23 @@
     <Setter Property="Padding" Value="2"/>
     <Setter Property="IsHitTestVisible" Value="False"/>
   </Style>
+  <Style Selector="Button.tipsClose">
+    <Setter Property="HorizontalAlignment" Value="Right"/>
+    <Setter Property="VerticalAlignment" Value="Top"/>
+    <Setter Property="Width" Value="18"/>
+    <Setter Property="Height" Value="18"/>
+    <Setter Property="Margin" Value="0,3,3,0"/>
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="CornerRadius" Value="4"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Content">
+      <Template>
+        <Path Data="M0,0 L8,8 M8,0 L0,8" Stroke="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+              StrokeThickness="1.4" StrokeLineCap="Round" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+      </Template>
+    </Setter>
+  </Style>
   <Style Selector="TextBlock.tips">
     <Setter Property="LineHeight" Value="18"/>
   </Style>
