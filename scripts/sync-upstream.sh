@@ -20,8 +20,8 @@ if git merge --no-ff --no-commit "$remote/master"; then
   exit 0
 fi
 
-# "UD": deleted by us, modified by them. Keep it deleted.
-git status --porcelain | awk '$1 == "UD" { print substr($0, 4) }' | while read -r path; do
+# "DU": deleted by us, modified by them. Keep it deleted.
+git status --porcelain | awk '$1 == "DU" { print substr($0, 4) }' | while read -r path; do
   echo "Keeping fork deletion: $path"
   git rm -q -- "$path"
 done
