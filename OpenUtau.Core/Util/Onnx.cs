@@ -105,8 +105,6 @@ namespace OpenUtau.Core {
 
         private static SessionOptions getOnnxSessionOptions(bool coremlEnableOnSubgraphs = false) {
             SessionOptions options = new SessionOptions();
-            // Default pools take every core and spin between jobs, which pegs the CPU during pre-render.
-            options.IntraOpNumThreads = Math.Clamp(Environment.ProcessorCount / 2, 1, 4);
             options.AddSessionConfigEntry("session.intra_op.allow_spinning", "0");
             List<string> runnerOptions = getRunnerOptions();
             string runner = Preferences.Default.OnnxRunner;
