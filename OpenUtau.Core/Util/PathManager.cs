@@ -50,7 +50,7 @@ namespace OpenUtau.Core {
                 // AppContext.BaseDirectory resolves to the app output dir in normal runs and
                 // during dotnet test; Process.MainModule points at testhost.exe under xunit.
                 string exePath = Path.TrimEndingDirectorySeparator(AppContext.BaseDirectory);
-                // NSIS marker and/or Velopack layout (%LocalAppData%\OpenUtau.Chiaki\current + Update.exe).
+                // NSIS marker and/or Velopack layout (%LocalAppData%\OpenUtau.Lunai\current + Update.exe).
                 IsInstalled = IsWindowsInstalledLayout(exePath);
                 string dataHome = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
                 LegacyDataPath = Path.Combine(dataHome, LegacyDataFolderName);
@@ -83,7 +83,7 @@ namespace OpenUtau.Core {
         public string CachePath { get; private set; }
         public bool HomePathIsAscii { get; private set; }
         public bool IsInstalled { get; private set; }
-        /// <summary>When true, singers load from LegacyDataPath instead of this app's DataPath.</summary>
+        /// <summary>When true, singers load from LegacyDataPath instead of Lunai DataPath.</summary>
         public bool ShareLegacySingers { get; private set; }
 
         /// <summary>
@@ -108,7 +108,7 @@ namespace OpenUtau.Core {
         /// <c>netX.Y-windows</c>, so TFM bumps do not create a fresh empty prefs.json.
         /// Shipped portable ZIP (publish to <c>bin/win-x64</c>, Velopack Portable) is NOT a TFM
         /// folder — prefs stay next to the exe, same as before.
-        /// Installed / Velopack builds never call this; they use <c>Documents\OpenUtau-Chiaki</c>.
+        /// Installed / Velopack builds never call this; they use <c>Documents\OpenUtau-Lunai</c>.
         /// </summary>
         public static string ResolveWindowsPortableDataPath(string? exePath) {
             if (string.IsNullOrEmpty(exePath)) {
@@ -189,7 +189,7 @@ namespace OpenUtau.Core {
         }
 
         /// <summary>
-        /// One-time copy of prefs/themes from stock OpenUtau into the OpenUtau-Chiaki data folder.
+        /// One-time copy of prefs/themes from stock OpenUtau into the Lunai data folder.
         /// Does not move singers. Skips files that already exist in the destination.
         /// </summary>
         public void TryMigrateFromLegacyOpenUtau() {
@@ -229,7 +229,7 @@ namespace OpenUtau.Core {
         /// Debug/Release SDK output only: adopt prefs from sibling <c>net*-windows</c> folders
         /// into <see cref="PortableDataFolderName"/>. No-op for:
         /// <list type="bullet">
-        /// <item>Installed / Velopack builds (<c>Documents\OpenUtau-Chiaki</c>)</item>
+        /// <item>Installed / Velopack builds (<c>Documents\OpenUtau-Lunai</c>)</item>
         /// <item>Shipped portable ZIP (exe not under a TFM folder — prefs stay next to exe)</item>
         /// </list>
         /// </summary>
@@ -238,7 +238,7 @@ namespace OpenUtau.Core {
                 if (IsInstalled || OS.IsMacOS() || OS.IsLinux()) {
                     return;
                 }
-                // Extra guard: never touch Documents\OpenUtau-Chiaki or a flat portable ZIP folder.
+                // Extra guard: never touch Documents\OpenUtau-Lunai or a flat portable ZIP folder.
                 if (!IsPortableTfmSiblingDataPath(DataPath)) {
                     return;
                 }
@@ -292,7 +292,7 @@ namespace OpenUtau.Core {
         }
 
         /// <summary>
-        /// True only for <c>.../Debug|Release/OpenUtau-Chiaki-Data</c> used by local SDK builds.
+        /// True only for <c>.../Debug|Release/OpenUtau-Lunai-Data</c> used by local SDK builds.
         /// </summary>
         public static bool IsPortableTfmSiblingDataPath(string? dataPath) {
             if (string.IsNullOrEmpty(dataPath)) {

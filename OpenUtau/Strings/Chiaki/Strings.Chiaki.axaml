@@ -1,0 +1,15 @@
+<!--OpenUtau Chiaki overlay. Merged after the Lunai overlays in App.SetLanguage.-->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:system="clr-namespace:System;assembly=mscorlib"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <system:String x:Key="dialogs.about.contributors.intro">These people contributed to the original OpenUtau repository on GitHub. OpenUtau Lunai and this build are based on their work. Thank you to everyone listed!</system:String>
+  <system:String x:Key="dialogs.about.license">OpenUtau and OpenUtau Lunai, which this build is based on, are free open-source software under the MIT license.</system:String>
+  <system:String x:Key="dialogs.about.lunai.message">You are running OpenUtau Chiaki, a personal build of OpenUtau Lunai with the Chiaki DiffSinger voicebank and the DiffSinger Finnish phonemizer built in. OpenUtau Lunai is a fork aimed at making DiffSinger easier and more enjoyable to use.</system:String>
+  <system:String x:Key="dialogs.reportissue.message">Report problems as GitHub issues. Attach a log file when it helps.</system:String>
+  <system:String x:Key="dialogs.reportissue.github.description">Describe what went wrong and how to reproduce it. Attach a log from Help → Open Logs Location if needed.</system:String>
+  <system:String x:Key="dialogs.reportissue.github.open">Open issues</system:String>
+  <system:String x:Key="dialogs.reportissue.github.title">GitHub Issues</system:String>
+  <system:String x:Key="errors.unhandled.fatal">A fatal error occurred and OpenUtau Chiaki must close. Details were written to the log.</system:String>
+  <system:String x:Key="updater.status.notinstalled">Install the latest release from GitHub Releases once to enable in-app updates.</system:String>
+</ResourceDictionary>

@@ -514,7 +514,6 @@ OpenUtau 致力於為 UTAU 社群建立開源編輯環境，提供現代化使�
   <system:String x:Key="pianoroll.menu.view.pianoroll.detach">分離</system:String>
   <system:String x:Key="pianoroll.menu.view.pianoroll.hide">隱藏</system:String>
   <system:String x:Key="pianoroll.snapdiv">網格寬度</system:String>
-  <system:String x:Key="pianoroll.toggle.hidepianoroll">隱藏鋼琴卷軸</system:String>
   <system:String x:Key="pianoroll.toggle.expressions">檢視表現 (L)</system:String>
   <system:String x:Key="pianoroll.toggle.finalpitch">顯示算繪音高曲線 (R)</system:String>
   <system:String x:Key="pianoroll.toggle.noteparams">檢視音符參數 (\)</system:String>

@@ -8,7 +8,7 @@ using OpenUtau.Core;
 namespace OpenUtau.Colors;
 
 /// <summary>
-/// Converts classic stakira/OpenUtau YAML themes into OpenUtau Chiaki format.
+/// Converts classic stakira/OpenUtau YAML themes into OpenUtau Lunai format.
 /// Classic themes omit Lunai-only keys; deserialization otherwise leaves Light ctor defaults
 /// (wrong for dark themes) and purple note accents.
 /// </summary>

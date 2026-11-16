@@ -515,7 +515,6 @@ OpenUtau 是一个开源项目, 旨在为 UTAU 用户社区提供现代的用户
   <system:String x:Key="pianoroll.menu.view.pianoroll.detach">分离</system:String>
   <system:String x:Key="pianoroll.menu.view.pianoroll.hide">隐藏</system:String>
   <system:String x:Key="pianoroll.snapdiv">网格精度</system:String>
-  <system:String x:Key="pianoroll.toggle.hidepianoroll">隐藏钢琴卷轴</system:String>
   <system:String x:Key="pianoroll.toggle.expressions">查看表情 (L)</system:String>
   <system:String x:Key="pianoroll.toggle.finalpitch">显示最终音高线 (R)</system:String>
   <system:String x:Key="pianoroll.toggle.noteparams">显示参数面板 (\)</system:String>

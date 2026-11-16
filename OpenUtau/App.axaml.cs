@@ -7,14 +7,13 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using OpenUtau.App.Views;
 using OpenUtau.Colors;
 using Serilog;
 
 namespace OpenUtau.App {
-    public class App : Application {
+    public partial class App : Application {
         public override void Initialize() {
             Log.Information("Initializing application.");
             AvaloniaXamlLoader.Load(this);
@@ -32,33 +31,9 @@ namespace OpenUtau.App {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop) {
                 desktop.MainWindow = new SplashWindow();
             }
-            if (this.TryGetFeature<IActivatableLifetime>() is { } activatable) {
-                activatable.Activated += OnActivated;
-            }
+            SubscribeFileActivation();
 
             base.OnFrameworkInitializationCompleted();
-        }
-
-        // macOS delivers Finder double-clicks as Apple Events, not argv; may arrive before MainWindow exists.
-        public static string? PendingOpenFile { get; set; }
-
-        void OnActivated(object? sender, ActivatedEventArgs e) {
-            if (e is not FileActivatedEventArgs fileArgs) {
-                return;
-            }
-            var file = fileArgs.Files
-                .Select(item => item.TryGetLocalPath())
-                .FirstOrDefault(path => !string.IsNullOrEmpty(path));
-            if (file == null) {
-                return;
-            }
-            Log.Information($"Activated with file {file}");
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop &&
-                desktop.MainWindow is MainWindow mainWindow) {
-                mainWindow.OpenFromSystem(file);
-            } else {
-                PendingOpenFile = file;
-            }
         }
 
         public void InitializeCulture() {
@@ -136,6 +111,7 @@ namespace OpenUtau.App {
             if (language != "en-US" && lunaiLanguages.TryGetValue(language, out var lunaiLocale)) {
                 Current.Resources.MergedDictionaries.Add(lunaiLocale);
             }
+            ApplyChiakiOverlay(language);
         }
 
         static async void InitializeTheme() {
