@@ -135,7 +135,7 @@ namespace OpenUtau.App.ViewModels {
                             .OrderBy(factory => factory.tag)
                             .ThenBy(factory => factory.name)
                             .Select(factory =>
-                            new MenuItemViewModel(singer.DefaultPhonemizer == factory.type.FullName) {
+                            new MenuItemViewModel(singer.DefaultPhonemizer == factory.Id) {
                                 Header = factory.ToString(),
                                 Command = setDefaultPhonemizerCommand,
                                 CommandParameter = factory,
@@ -214,7 +214,7 @@ namespace OpenUtau.App.ViewModels {
                 return;
             }
             try {
-                ModifyConfig(Singer, config => config.DefaultPhonemizer = factory.type.FullName ?? string.Empty);
+                ModifyConfig(Singer, config => config.DefaultPhonemizer = factory.Id ?? string.Empty);
             } catch (Exception e) {
                 var customEx = new MessageCustomizableException("Failed to save singer config", "<translate:errors.failed.savesingerconfig>", e);
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(customEx));
@@ -416,13 +416,19 @@ namespace OpenUtau.App.ViewModels {
             Avatar = LoadAvatar(Singer);
             Otos.Clear();
             Otos.AddRange(Singer.Otos);
+            // Reload replaces the oto objects. Do not leave the editor bound to the old ones.
+            Search();
             LoadSubbanks();
 
             DocManager.Inst.ExecuteCmd(new SingersRefreshedNotification(Singer));
             DocManager.Inst.ExecuteCmd(new OtoChangedNotification());
-            if (Otos.Count > 0) {
-                index = Math.Clamp(index, 0, Otos.Count - 1);
+            if (DisplayedOtos.Count > 0) {
+                index = Math.Clamp(index, 0, DisplayedOtos.Count - 1);
                 SelectedIndex = index;
+                SelectedOto = DisplayedOtos[index];
+            } else {
+                SelectedIndex = -1;
+                SelectedOto = null;
             }
         }
 

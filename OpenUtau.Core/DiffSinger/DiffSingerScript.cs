@@ -142,10 +142,11 @@ namespace OpenUtau.Core.DiffSinger {
 
                 //variance curves
                 if (options.exportVariance && singer.HasVariancePredictor) {
-                    var variancePredictor = singer.getVariancePredictor();
                     VarianceResult varianceResult;
+                    using var dmlScope = Onnx.EnterDmlScope();
+                    // Take the reference inside SessionLock so a concurrent FreeMemory cannot dispose it first.
                     lock (singer.SessionLock) {
-                        varianceResult = variancePredictor.Process(phrase);
+                        varianceResult = singer.getVariancePredictor().Process(phrase);
                     }
                     if (varianceResult.energy != null) {
                         energy = ComputeVarianceCurve(
@@ -203,9 +204,14 @@ namespace OpenUtau.Core.DiffSinger {
                 x => x).Select(x => (float)x).ToArray();
             userSampled = PhonemeVarianceRemap.ApplyIfEnabled(
                 phrase, userSampled, abbr, (float)frameMs, headFrames, tailFrames);
-            var deltaFunc = DiffSingerUtils.VarianceDeltaFunctions[abbr];
-            return resampled.Zip(userSampled, deltaFunc)
-                .Select(x => (double)x).ToArray();
+            var combined = resampled.Zip(userSampled,
+                    (p, u) => DiffSingerUtils.ApplyVarianceDelta(abbr, p, u))
+                .ToArray();
+            if (abbr == Format.Ustx.OPEC) {
+                PhonemeVarianceRemap.AttenuateCombinedMouthOpening(
+                    phrase, combined, (float)frameMs, headFrames, tailFrames);
+            }
+            return combined.Select(x => (double)x).ToArray();
         }
 
         public RawDiffSingerScript toRaw() {

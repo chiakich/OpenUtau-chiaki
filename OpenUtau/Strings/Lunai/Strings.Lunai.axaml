@@ -354,6 +354,7 @@
   <system:String x:Key="shortcut.ResizeNotesLeft">Resize Notes Left</system:String>
   <system:String x:Key="shortcut.ResizeNotesRight">Resize Notes Right</system:String>
   <system:String x:Key="shortcut.SaveProject">Save Project</system:String>
+  <system:String x:Key="shortcut.SplitNoteUnderPointer">Split Note Under Pointer</system:String>
   <system:String x:Key="shortcut.ScrollDown">Scroll Down</system:String>
   <system:String x:Key="shortcut.ScrollLeft">Scroll Left</system:String>
   <system:String x:Key="shortcut.ScrollRight">Scroll Right</system:String>
@@ -409,6 +410,8 @@
   <system:String x:Key="tracks.rotateselectedtracksingers">Rotate singers across selected tracks</system:String>
   <system:String x:Key="tracks.singer.applytoalltracks.tooltip">Apply to all selected tracks</system:String>
   <system:String x:Key="tracks.singer.favorite.tooltip">Add singer to favorites</system:String>
+  <system:String x:Key="tracks.singerflyout.expand">Expand singer list across the window</system:String>
+  <system:String x:Key="tracks.singerflyout.collapse">Collapse to a single column</system:String>
   <system:String x:Key="tracks.standardizesettings">Standardize Track Settings</system:String>
 
   <system:String x:Key="updater.status.unknown">Unable to check update. Open GitHub Releases to download manually, or see the log for details.</system:String>

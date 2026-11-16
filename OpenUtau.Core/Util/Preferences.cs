@@ -213,6 +213,7 @@ namespace OpenUtau.Core.Util {
                     ClampVoiceColorCurveMax();
                     Default.ThemeEditorPanelWidth = Math.Clamp(Default.ThemeEditorPanelWidth, 300, 450);
                     Default.NotePropertiesPanelWidth = Math.Clamp(Default.NotePropertiesPanelWidth, 350, 450);
+                    if (Default.DefaultRenderer == "Classic") Default.DefaultRenderer = Renderers.CLASSIC;
                     if (!Renderers.getRendererOptions().Contains(Default.DefaultRenderer)) Default.DefaultRenderer = string.Empty;
                     if (!Onnx.getRunnerOptions().Contains(Default.OnnxRunner)) Default.OnnxRunner = string.Empty;
                     // Stale GPU index (e.g. copied prefs / removed second GPU) must not crash DirectML render.
@@ -310,6 +311,9 @@ namespace OpenUtau.Core.Util {
             public int MetronomeHighFrequency = 2200;
             public int MetronomeLowFrequency = 1320;
             public string ThemeName = "Dark";
+            public string UiFontPath = string.Empty;
+            public string UiFontFamily = string.Empty;
+            public bool UseUiFontForNotes = false;
             /// <summary>Color temperature cast: -100 cold … 0 neutral … +100 warm.</summary>
             public int ThemeTemperature = 0;
             /// <summary>Blend toward <see cref="ThemeTintColor"/>: 0 off … 100 strong.</summary>
@@ -369,6 +373,11 @@ namespace OpenUtau.Core.Util {
             /// nearby notes keep separate phrase boundaries unless the user opts in.
             /// </summary>
             public bool DiffSingerMergeOverlappingPhrases = false;
+            /// <summary>
+            /// Cap on merged phrase length in seconds when phrase merging is active.
+            /// 0 means Auto (no cap). Used with DiffSingerMergeOverlappingPhrases / ShouldMergePhrases.
+            /// </summary>
+            public float MergePhrasesSec = 0;
             public bool DiffSingerShowPhonemeVarianceRemapPreview = false;
             public bool SkipRenderingMutedTracks = false;
             public string Language = string.Empty;
@@ -406,6 +415,7 @@ namespace OpenUtau.Core.Util {
             public bool ShowIcon = true;
             public bool ShowGhostNotes = true;
             public bool NoteHoverGlow = true;
+            public bool ReduceAnimations = false;
             public bool ShowPlaybackNoteHighlight = true;
             public bool ShowPlaybackNoteBounce = false;
             /// <summary>When true, piano-roll notes (including rests/triggers) are drawn with a border stroke.</summary>
@@ -424,6 +434,7 @@ namespace OpenUtau.Core.Util {
             public double NoteOpacity = 0.35;
             public EditTool EditTool = new EditTool();
             public bool PlayTone = false;
+            public bool PlaySineWhenNoSinger = true;
             /// <summary>Legacy; migrated to <see cref="RealTimePitchMode"/> on load.</summary>
             public bool RealTimePitchGeneration = false;
             public int RealTimePitchMode = (int)LivePitchMode.Normal;
@@ -446,6 +457,7 @@ namespace OpenUtau.Core.Util {
             public Dictionary<string, string> DefaultWavtools = new Dictionary<string, string>();
             public string LyricHelper = string.Empty;
             public bool LyricsHelperBrackets = false;
+            public bool RenderStatusInTrackBar = true;
             public int OtoEditor = 0;
             public string VLabelerPath = string.Empty;
             public string SetParamPath = string.Empty;
@@ -572,6 +584,7 @@ namespace OpenUtau.Core.Util {
 
                 // Track & Project Operations
                 new ShortcutBinding { ActionId = "SaveProject", KeyName = "S", ModifiersName = "Control" },
+                new ShortcutBinding { ActionId = "SplitNoteUnderPointer", KeyName = "S", ModifiersName = "None" },
                 new ShortcutBinding { ActionId = "SoloTrack", KeyName = "S", ModifiersName = "Shift" },
                 new ShortcutBinding { ActionId = "MuteTrack", KeyName = "M", ModifiersName = "Shift" },
                 new ShortcutBinding { ActionId = "FocusSelection", KeyName = "F", ModifiersName = "None" },
