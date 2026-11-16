@@ -28,6 +28,7 @@
 
   <system:String x:Key="dialogs.about.close">إغلاق</system:String>
   <system:String x:Key="dialogs.about.contributors.embedded">يتم عرض قائمة المساهمين المضمّنة.</system:String>
+  <system:String x:Key="dialogs.about.contributors.intro">ساهم هؤلاء الأشخاص في مستودع OpenUtau الأصلي على GitHub. يعتمد OpenUtau Lunai على عملهم. شكرًا لكل من ورد اسمه في القائمة!</system:String>
   <system:String x:Key="dialogs.about.contributors.loading">جارٍ تحميل المساهمين من GitHub...</system:String>
   <system:String x:Key="dialogs.about.contributors.title">المساهمون</system:String>
   <system:String x:Key="dialogs.about.contributors.unavailable">تعذّر تحميل المساهمين. تحقق من اتصال الإنترنت ثم حاول مجددًا.</system:String>
@@ -35,6 +36,8 @@
   <system:String x:Key="dialogs.about.contributors.upstream">OpenUtau ({0})</system:String>
   <system:String x:Key="dialogs.about.github.lunai">OpenUtau Lunai على GitHub</system:String>
   <system:String x:Key="dialogs.about.github.upstream">OpenUtau على GitHub</system:String>
+  <system:String x:Key="dialogs.about.license">OpenUtau وOpenUtau Lunai برمجيات حرة مفتوحة المصدر بموجب رخصة MIT.</system:String>
+  <system:String x:Key="dialogs.about.lunai.message">أنت تستخدم OpenUtau Lunai، وهو فرع يهدف إلى جعل DiffSinger أسهل وأكثر متعة في الاستخدام. بنوك UTAU الكلاسيكية وجميع أنواع مكتبات الصوت الأخرى التي يدعمها OpenUtau بالفعل ما زالت تعمل كالمعتاد. ويتضمن أيضًا العديد من الميزات من طلبات السحب في المشروع الأصلي التي لم تُصدَر أو تُدمَج بعد في OpenUtau الأصلي.</system:String>
   <system:String x:Key="dialogs.about.message">يهدف OpenUtau إلى أن يكون بيئة تحرير مفتوحة المصدر لمجتمع UTAU، بتجربة مستخدم حديثة ودعم صوتي ذكي. زرنا على Github.</system:String>
   <system:String x:Key="dialogs.about.upstream.message">يهدف OpenUtau إلى أن يكون بيئة تحرير مفتوحة المصدر لمجتمع UTAU، بتجربة مستخدم حديثة ودعم صوتي ذكي.</system:String>
   <system:String x:Key="dialogs.dropproject.caption">فتح المشروع أو استيراده</system:String>
@@ -74,6 +77,15 @@
   <system:String x:Key="dialogs.importproject.timesig">الموازين الزمنية</system:String>
   <system:String x:Key="dialogs.messagebox.openlink">فتح صفحة التنزيل</system:String>
   <system:String x:Key="dialogs.messagebox.openpackages">مدير الحزم</system:String>
+  <system:String x:Key="dialogs.reportissue.discord.description">انضم إلى خادمنا ووصف الخطأ في #help. أرفق سجلًا من تعليمات → فتح موقع السجلات عند الحاجة.</system:String>
+  <system:String x:Key="dialogs.reportissue.discord.open">فتح Discord</system:String>
+  <system:String x:Key="dialogs.reportissue.discord.title">Discord</system:String>
+  <system:String x:Key="dialogs.reportissue.email.address">lunaiproject@gmail.com</system:String>
+  <system:String x:Key="dialogs.reportissue.email.copy">نسخ العنوان</system:String>
+  <system:String x:Key="dialogs.reportissue.email.description">راسلنا وأرفق سجلًا إذا كان تكرار المشكلة صعبًا.</system:String>
+  <system:String x:Key="dialogs.reportissue.email.title">البريد الإلكتروني</system:String>
+  <system:String x:Key="dialogs.reportissue.email.write">كتابة بريد</system:String>
+  <system:String x:Key="dialogs.reportissue.message">أخبرنا بما حدث خطأ. يُفضَّل Discord في #help لسرعة الرد؛ أرفق ملف سجل عند الحاجة. يمكنك أيضًا مراسلتنا بالبريد.</system:String>
 
   <system:String x:Key="harmony.interval.fifthabove">5+</system:String>
   <system:String x:Key="harmony.interval.fifthbelow">5-</system:String>
@@ -84,8 +96,52 @@
   <system:String x:Key="key.picker.analyzing">جارٍ التحليل...</system:String>
   <system:String x:Key="key.picker.suggested">المفاتيح المقترحة</system:String>
 
+  <system:String x:Key="lunai.caption">مركز المغنين</system:String>
+  <system:String x:Key="lunai.col.action">إجراء</system:String>
+  <system:String x:Key="lunai.col.installed">مثبَّت</system:String>
+  <system:String x:Key="lunai.col.name">الاسم</system:String>
+  <system:String x:Key="lunai.col.version">الإصدار</system:String>
+  <system:String x:Key="lunai.company">LUNAI Project</system:String>
+  <system:String x:Key="lunai.confirm.install.caption">تثبيت مغنٍ</system:String>
+  <system:String x:Key="lunai.confirm.install.message">تثبيت {0}؟</system:String>
+  <system:String x:Key="lunai.confirm.install.tos">لهذا المغني شروط استخدام. بالنقر على نعم فإنك توافق على هذه الشروط.</system:String>
+  <system:String x:Key="lunai.confirm.uninstall.caption">إلغاء تثبيت المغني</system:String>
+  <system:String x:Key="lunai.confirm.uninstall.message">إلغاء تثبيت {0}؟</system:String>
+  <system:String x:Key="lunai.confirm.update.caption">تحديث المغني</system:String>
+  <system:String x:Key="lunai.confirm.update.message">تحديث {0} إلى الإصدار {1}؟</system:String>
+  <system:String x:Key="lunai.install">تثبيت</system:String>
+  <system:String x:Key="lunai.installed">مثبَّت</system:String>
+  <system:String x:Key="lunai.latest">الأحدث</system:String>
+  <system:String x:Key="lunai.newversionavailable">يتوفر إصدار جديد</system:String>
+  <system:String x:Key="lunai.notinstalled">غير مثبَّت</system:String>
+  <system:String x:Key="lunai.outdated">قديم</system:String>
+  <system:String x:Key="lunai.refresh">تحديث</system:String>
   <system:String x:Key="lunai.search">بحث...</system:String>
+  <system:String x:Key="lunai.section.installed">مثبَّتة</system:String>
+  <system:String x:Key="lunai.section.notinstalled">غير مثبَّتة</system:String>
+  <system:String x:Key="lunai.section.updatesavailable">تحديثات متاحة</system:String>
+  <system:String x:Key="lunai.status.error">خطأ</system:String>
+  <system:String x:Key="lunai.status.fetching">جارٍ جلب القائمة...</system:String>
+  <system:String x:Key="lunai.status.installfailed">فشل التثبيت</system:String>
+  <system:String x:Key="lunai.status.installfinished">اكتمل التثبيت</system:String>
+  <system:String x:Key="lunai.status.installing">جارٍ تثبيت {0}...</system:String>
+  <system:String x:Key="lunai.status.listing">جارٍ فحص المثبَّت...</system:String>
+  <system:String x:Key="lunai.status.offline">جاهز (قائمة مخزَّنة، الشبكة غير متاحة)</system:String>
+  <system:String x:Key="lunai.status.ready">جاهز</system:String>
+  <system:String x:Key="lunai.status.uninstallfailed">فشل إلغاء التثبيت</system:String>
+  <system:String x:Key="lunai.status.uninstallfinished">اكتمل إلغاء التثبيت</system:String>
+  <system:String x:Key="lunai.status.uninstalling">جارٍ إلغاء تثبيت {0}...</system:String>
+  <system:String x:Key="lunai.status.updatefinished">اكتمل التحديث</system:String>
+  <system:String x:Key="lunai.status.updating">جارٍ تحديث {0}...</system:String>
   <system:String x:Key="lunai.tab.all">الكل</system:String>
+  <system:String x:Key="lunai.tab.brapa">BRAPA</system:String>
+  <system:String x:Key="lunai.tab.lunai">LUNAI</system:String>
+  <system:String x:Key="lunai.tab.ufr">UFR</system:String>
+  <system:String x:Key="lunai.uninstall">إلغاء التثبيت</system:String>
+  <system:String x:Key="lunai.unknownversion">غير معروف</system:String>
+  <system:String x:Key="lunai.update">تحديث</system:String>
+  <system:String x:Key="lunai.uptodate">محدَّث</system:String>
+  <system:String x:Key="lunai.website">الموقع</system:String>
 
   <system:String x:Key="menu.file.exportds.v2">تصدير سكربتات DiffSinger إلى (v2)</system:String>
   <system:String x:Key="menu.file.exportds.v2withoutpitch">تصدير سكربتات DiffSinger إلى (v2، بدون منحنى الطبقة)</system:String>

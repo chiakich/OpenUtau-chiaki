@@ -28,6 +28,7 @@
 
   <system:String x:Key="dialogs.about.close">Închide</system:String>
   <system:String x:Key="dialogs.about.contributors.embedded">Se afișează lista încorporată a contribuitorilor.</system:String>
+  <system:String x:Key="dialogs.about.contributors.intro">Aceste persoane au contribuit la depozitul original OpenUtau de pe GitHub. OpenUtau Lunai se bazează pe munca lor. Mulțumim tuturor celor enumerați!</system:String>
   <system:String x:Key="dialogs.about.contributors.loading">Se încarcă contribuitorii de pe GitHub...</system:String>
   <system:String x:Key="dialogs.about.contributors.title">Contribuitori</system:String>
   <system:String x:Key="dialogs.about.contributors.unavailable">Contribuitorii nu au putut fi încărcați. Verifică conexiunea la internet și încearcă din nou.</system:String>
@@ -35,6 +36,8 @@
   <system:String x:Key="dialogs.about.contributors.upstream">OpenUtau ({0})</system:String>
   <system:String x:Key="dialogs.about.github.lunai">OpenUtau Lunai pe GitHub</system:String>
   <system:String x:Key="dialogs.about.github.upstream">OpenUtau pe GitHub</system:String>
+  <system:String x:Key="dialogs.about.license">OpenUtau și OpenUtau Lunai sunt programe gratuite cu sursă deschisă, sub licența MIT.</system:String>
+  <system:String x:Key="dialogs.about.lunai.message">Rulați OpenUtau Lunai, un fork creat pentru a face DiffSinger mai simplu și mai plăcut de utilizat. Băncile UTAU clasice și toate celelalte tipuri de bănci vocale deja acceptate de OpenUtau funcționează în continuare ca de obicei. Include și multe funcții din pull request-uri upstream care încă nu sunt lansate sau integrate în OpenUtau original.</system:String>
   <system:String x:Key="dialogs.about.message">OpenUtau își propune să fie un mediu de editare cu sursă deschisă pentru comunitatea UTAU, cu o experiență modernă și suport fonologic inteligent. Vizitează-ne pe GitHub.</system:String>
   <system:String x:Key="dialogs.about.upstream.message">OpenUtau își propune să fie un mediu de editare cu sursă deschisă pentru comunitatea UTAU, cu o experiență modernă și suport fonologic inteligent.</system:String>
   <system:String x:Key="dialogs.dropproject.caption">Deschide or import proiect</system:String>
@@ -74,6 +77,15 @@
   <system:String x:Key="dialogs.importproject.timesig">Măsuri</system:String>
   <system:String x:Key="dialogs.messagebox.openlink">Deschide pagina de descărcare</system:String>
   <system:String x:Key="dialogs.messagebox.openpackages">Manager de pachete</system:String>
+  <system:String x:Key="dialogs.reportissue.discord.description">Alăturați-vă serverului nostru și descrieți eroarea în #help. Atașați un jurnal din Ajutor → Deschide locația jurnalelor dacă este necesar.</system:String>
+  <system:String x:Key="dialogs.reportissue.discord.open">Deschide Discord</system:String>
+  <system:String x:Key="dialogs.reportissue.discord.title">Discord</system:String>
+  <system:String x:Key="dialogs.reportissue.email.address">lunaiproject@gmail.com</system:String>
+  <system:String x:Key="dialogs.reportissue.email.copy">Copiază adresa</system:String>
+  <system:String x:Key="dialogs.reportissue.email.description">Scrieți-ne și atașați un jurnal dacă problema este greu de reprodus.</system:String>
+  <system:String x:Key="dialogs.reportissue.email.title">E-mail</system:String>
+  <system:String x:Key="dialogs.reportissue.email.write">Scrie e-mail</system:String>
+  <system:String x:Key="dialogs.reportissue.message">Spuneți-ne ce nu a funcționat. Preferați Discord #help pentru a vă putea răspunde rapid; includeți un fișier jurnal când ajută. Ne puteți scrie și prin e-mail.</system:String>
 
   <system:String x:Key="harmony.interval.fifthabove">5+</system:String>
   <system:String x:Key="harmony.interval.fifthbelow">5-</system:String>
@@ -84,8 +96,52 @@
   <system:String x:Key="key.picker.analyzing">Se analizează...</system:String>
   <system:String x:Key="key.picker.suggested">Tonalități sugerate</system:String>
 
+  <system:String x:Key="lunai.caption">Singer Hub</system:String>
+  <system:String x:Key="lunai.col.action">Acțiune</system:String>
+  <system:String x:Key="lunai.col.installed">Instalat</system:String>
+  <system:String x:Key="lunai.col.name">Nume</system:String>
+  <system:String x:Key="lunai.col.version">Versiune</system:String>
+  <system:String x:Key="lunai.company">LUNAI Project</system:String>
+  <system:String x:Key="lunai.confirm.install.caption">Instalează Singer</system:String>
+  <system:String x:Key="lunai.confirm.install.message">Instalează {0}?</system:String>
+  <system:String x:Key="lunai.confirm.install.tos">Acest interpret are termeni de utilizare. Făcând clic pe Da, acceptați acești termeni.</system:String>
+  <system:String x:Key="lunai.confirm.uninstall.caption">Dezinstalează singer</system:String>
+  <system:String x:Key="lunai.confirm.uninstall.message">Dezinstalează {0}?</system:String>
+  <system:String x:Key="lunai.confirm.update.caption">Actualizează singer</system:String>
+  <system:String x:Key="lunai.confirm.update.message">Actualizează {0} to version {1}?</system:String>
+  <system:String x:Key="lunai.install">Instalează</system:String>
+  <system:String x:Key="lunai.installed">Instalat</system:String>
+  <system:String x:Key="lunai.latest">Cea mai recentă</system:String>
+  <system:String x:Key="lunai.newversionavailable">Este disponibilă o versiune nouă</system:String>
+  <system:String x:Key="lunai.notinstalled">Neinstalat</system:String>
+  <system:String x:Key="lunai.outdated">Învechit</system:String>
+  <system:String x:Key="lunai.refresh">Reîmprospătează</system:String>
   <system:String x:Key="lunai.search">Caută...</system:String>
+  <system:String x:Key="lunai.section.installed">Instalat</system:String>
+  <system:String x:Key="lunai.section.notinstalled">Neinstalat</system:String>
+  <system:String x:Key="lunai.section.updatesavailable">Actualizări disponibile</system:String>
+  <system:String x:Key="lunai.status.error">Eroare</system:String>
+  <system:String x:Key="lunai.status.fetching">Se preia lista...</system:String>
+  <system:String x:Key="lunai.status.installfailed">Instalarea a eșuat</system:String>
+  <system:String x:Key="lunai.status.installfinished">Instalare finalizată</system:String>
+  <system:String x:Key="lunai.status.installing">Se instalează {0}...</system:String>
+  <system:String x:Key="lunai.status.listing">Se scanează instalările...</system:String>
+  <system:String x:Key="lunai.status.offline">Gata (listă din cache, rețea indisponibilă)</system:String>
+  <system:String x:Key="lunai.status.ready">Gata</system:String>
+  <system:String x:Key="lunai.status.uninstallfailed">Dezinstalează failed</system:String>
+  <system:String x:Key="lunai.status.uninstallfinished">Dezinstalează finished</system:String>
+  <system:String x:Key="lunai.status.uninstalling">Se dezinstalează {0}...</system:String>
+  <system:String x:Key="lunai.status.updatefinished">Actualizează finished</system:String>
+  <system:String x:Key="lunai.status.updating">Se actualizează {0}...</system:String>
   <system:String x:Key="lunai.tab.all">Toate</system:String>
+  <system:String x:Key="lunai.tab.brapa">BRAPA</system:String>
+  <system:String x:Key="lunai.tab.lunai">LUNAI</system:String>
+  <system:String x:Key="lunai.tab.ufr">UFR</system:String>
+  <system:String x:Key="lunai.uninstall">Dezinstalează</system:String>
+  <system:String x:Key="lunai.unknownversion">necunoscută</system:String>
+  <system:String x:Key="lunai.update">Actualizează</system:String>
+  <system:String x:Key="lunai.uptodate">La zi</system:String>
+  <system:String x:Key="lunai.website">Site web</system:String>
 
   <system:String x:Key="menu.file.exportds.v2">Exportă DiffSinger Scripts în (v2)</system:String>
   <system:String x:Key="menu.file.exportds.v2withoutpitch">Exportă DiffSinger Scripts în (v2, fără curbă de înălțime)</system:String>

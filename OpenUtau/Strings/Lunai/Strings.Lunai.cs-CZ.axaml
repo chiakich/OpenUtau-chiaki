@@ -28,6 +28,7 @@
 
   <system:String x:Key="dialogs.about.close">Zavřít</system:String>
   <system:String x:Key="dialogs.about.contributors.embedded">Zobrazuje se vložený seznam přispěvatelů.</system:String>
+  <system:String x:Key="dialogs.about.contributors.intro">Tito lidé přispěli do původního repozitáře OpenUtau na GitHubu. OpenUtau Lunai staví na jejich práci. Děkujeme všem uvedeným!</system:String>
   <system:String x:Key="dialogs.about.contributors.loading">Načítání přispěvatelů z GitHubu...</system:String>
   <system:String x:Key="dialogs.about.contributors.title">Přispěvatelé</system:String>
   <system:String x:Key="dialogs.about.contributors.unavailable">Přispěvatele se nepodařilo načíst. Zkontrolujte připojení k internetu a zkuste to znovu.</system:String>
@@ -35,6 +36,8 @@
   <system:String x:Key="dialogs.about.contributors.upstream">OpenUtau ({0})</system:String>
   <system:String x:Key="dialogs.about.github.lunai">OpenUtau Lunai na GitHubu</system:String>
   <system:String x:Key="dialogs.about.github.upstream">OpenUtau na GitHubu</system:String>
+  <system:String x:Key="dialogs.about.license">OpenUtau a OpenUtau Lunai jsou svobodný software s otevřeným zdrojovým kódem pod licencí MIT.</system:String>
+  <system:String x:Key="dialogs.about.lunai.message">Používáte OpenUtau Lunai, fork zaměřený na jednodušší a příjemnější práci s DiffSinger. Klasické banky UTAU a všechny ostatní typy hlasových bank, které OpenUtau již podporuje, nadále fungují jako obvykle. Obsahuje také mnoho funkcí z upstream pull requestů, které zatím nebyly vydány ani sloučeny do původního OpenUtau.</system:String>
   <system:String x:Key="dialogs.about.message">OpenUtau si klade za cíl být editačním prostředím s otevřeným zdrojovým kódem pro komunitu UTAU s moderním uživatelským prostředím a inteligentní fonologickou podporou. Navštivte nás na GitHubu.</system:String>
   <system:String x:Key="dialogs.about.upstream.message">OpenUtau si klade za cíl být editačním prostředím s otevřeným zdrojovým kódem pro komunitu UTAU s moderním uživatelským prostředím a inteligentní fonologickou podporou.</system:String>
   <system:String x:Key="dialogs.dropproject.caption">Otevřít or import projekt</system:String>
@@ -74,6 +77,15 @@
   <system:String x:Key="dialogs.importproject.timesig">Taktová označení</system:String>
   <system:String x:Key="dialogs.messagebox.openlink">Otevřít stránku pro stažení</system:String>
   <system:String x:Key="dialogs.messagebox.openpackages">Správce balíčků</system:String>
+  <system:String x:Key="dialogs.reportissue.discord.description">Připojte se k našemu serveru a popište chybu v #help. V případě potřeby přiložte protokol přes Nápověda → Otevřít umístění protokolů.</system:String>
+  <system:String x:Key="dialogs.reportissue.discord.open">Otevřít Discord</system:String>
+  <system:String x:Key="dialogs.reportissue.discord.title">Discord</system:String>
+  <system:String x:Key="dialogs.reportissue.email.address">lunaiproject@gmail.com</system:String>
+  <system:String x:Key="dialogs.reportissue.email.copy">Kopírovat adresu</system:String>
+  <system:String x:Key="dialogs.reportissue.email.description">Napište nám a přiložte protokol, pokud se problém obtížně reprodukuje.</system:String>
+  <system:String x:Key="dialogs.reportissue.email.title">E-mail</system:String>
+  <system:String x:Key="dialogs.reportissue.email.write">Napsat e-mail</system:String>
+  <system:String x:Key="dialogs.reportissue.message">Popište, co se pokazilo. Upřednostněte Discord #help, abychom mohli rychle odpovědět; pokud pomůže, přiložte soubor protokolu. Můžete nám také napsat e-mail.</system:String>
 
   <system:String x:Key="harmony.interval.fifthabove">5+</system:String>
   <system:String x:Key="harmony.interval.fifthbelow">5-</system:String>
@@ -84,8 +96,52 @@
   <system:String x:Key="key.picker.analyzing">Analyzování...</system:String>
   <system:String x:Key="key.picker.suggested">Navržené tóniny</system:String>
 
+  <system:String x:Key="lunai.caption">Singer Hub</system:String>
+  <system:String x:Key="lunai.col.action">Akce</system:String>
+  <system:String x:Key="lunai.col.installed">Nainstalováno</system:String>
+  <system:String x:Key="lunai.col.name">Název</system:String>
+  <system:String x:Key="lunai.col.version">Verze</system:String>
+  <system:String x:Key="lunai.company">LUNAI Project</system:String>
+  <system:String x:Key="lunai.confirm.install.caption">Nainstalovat Singer</system:String>
+  <system:String x:Key="lunai.confirm.install.message">Nainstalovat {0}?</system:String>
+  <system:String x:Key="lunai.confirm.install.tos">Tento zpěvák má podmínky použití. Kliknutím na Ano s těmito podmínkami souhlasíte.</system:String>
+  <system:String x:Key="lunai.confirm.uninstall.caption">Odinstalovat singer</system:String>
+  <system:String x:Key="lunai.confirm.uninstall.message">Odinstalovat {0}?</system:String>
+  <system:String x:Key="lunai.confirm.update.caption">Aktualizovat singer</system:String>
+  <system:String x:Key="lunai.confirm.update.message">Aktualizovat {0} to version {1}?</system:String>
+  <system:String x:Key="lunai.install">Nainstalovat</system:String>
+  <system:String x:Key="lunai.installed">Nainstalováno</system:String>
+  <system:String x:Key="lunai.latest">Nejnovější</system:String>
+  <system:String x:Key="lunai.newversionavailable">K dispozici je nová verze</system:String>
+  <system:String x:Key="lunai.notinstalled">Nenainstalováno</system:String>
+  <system:String x:Key="lunai.outdated">Zastaralé</system:String>
+  <system:String x:Key="lunai.refresh">Obnovit</system:String>
   <system:String x:Key="lunai.search">Hledat...</system:String>
+  <system:String x:Key="lunai.section.installed">Nainstalováno</system:String>
+  <system:String x:Key="lunai.section.notinstalled">Nenainstalováno</system:String>
+  <system:String x:Key="lunai.section.updatesavailable">Dostupné aktualizace</system:String>
+  <system:String x:Key="lunai.status.error">Chyba</system:String>
+  <system:String x:Key="lunai.status.fetching">Načítání seznamu...</system:String>
+  <system:String x:Key="lunai.status.installfailed">Instalace selhala</system:String>
+  <system:String x:Key="lunai.status.installfinished">Instalace dokončena</system:String>
+  <system:String x:Key="lunai.status.installing">Instalace {0}...</system:String>
+  <system:String x:Key="lunai.status.listing">Prohledávání nainstalovaných...</system:String>
+  <system:String x:Key="lunai.status.offline">Připraveno (seznam z mezipaměti, síť není dostupná)</system:String>
+  <system:String x:Key="lunai.status.ready">Připraveno</system:String>
+  <system:String x:Key="lunai.status.uninstallfailed">Odinstalovat failed</system:String>
+  <system:String x:Key="lunai.status.uninstallfinished">Odinstalovat finished</system:String>
+  <system:String x:Key="lunai.status.uninstalling">Odinstalace {0}...</system:String>
+  <system:String x:Key="lunai.status.updatefinished">Aktualizovat finished</system:String>
+  <system:String x:Key="lunai.status.updating">Aktualizace {0}...</system:String>
   <system:String x:Key="lunai.tab.all">Vše</system:String>
+  <system:String x:Key="lunai.tab.brapa">BRAPA</system:String>
+  <system:String x:Key="lunai.tab.lunai">LUNAI</system:String>
+  <system:String x:Key="lunai.tab.ufr">UFR</system:String>
+  <system:String x:Key="lunai.uninstall">Odinstalovat</system:String>
+  <system:String x:Key="lunai.unknownversion">neznámá</system:String>
+  <system:String x:Key="lunai.update">Aktualizovat</system:String>
+  <system:String x:Key="lunai.uptodate">Aktuální</system:String>
+  <system:String x:Key="lunai.website">Web</system:String>
 
   <system:String x:Key="menu.file.exportds.v2">Exportovat DiffSinger Scripts do (v2)</system:String>
   <system:String x:Key="menu.file.exportds.v2withoutpitch">Exportovat DiffSinger Scripts do (v2, bez křivky výšky)</system:String>

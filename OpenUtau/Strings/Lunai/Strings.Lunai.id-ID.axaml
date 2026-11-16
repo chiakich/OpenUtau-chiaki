@@ -28,6 +28,7 @@
 
   <system:String x:Key="dialogs.about.close">Tutup</system:String>
   <system:String x:Key="dialogs.about.contributors.embedded">Menampilkan daftar kontributor bawaan.</system:String>
+  <system:String x:Key="dialogs.about.contributors.intro">Orang-orang ini berkontribusi pada repositori OpenUtau asli di GitHub. OpenUtau Lunai dibangun di atas karya mereka. Terima kasih kepada semua yang tercantum!</system:String>
   <system:String x:Key="dialogs.about.contributors.loading">Memuat kontributor dari GitHub...</system:String>
   <system:String x:Key="dialogs.about.contributors.title">Kontributor</system:String>
   <system:String x:Key="dialogs.about.contributors.unavailable">Tidak dapat memuat kontributor. Periksa koneksi internet Anda dan coba lagi.</system:String>
@@ -35,6 +36,8 @@
   <system:String x:Key="dialogs.about.contributors.upstream">OpenUtau ({0})</system:String>
   <system:String x:Key="dialogs.about.github.lunai">OpenUtau Lunai di GitHub</system:String>
   <system:String x:Key="dialogs.about.github.upstream">OpenUtau di GitHub</system:String>
+  <system:String x:Key="dialogs.about.license">OpenUtau dan OpenUtau Lunai adalah perangkat lunak sumber terbuka gratis di bawah lisensi MIT.</system:String>
+  <system:String x:Key="dialogs.about.lunai.message">Anda menjalankan OpenUtau Lunai, fork yang bertujuan membuat DiffSinger lebih mudah dan lebih menyenangkan digunakan. Bank UTAU klasik dan semua jenis voicebank lain yang sudah didukung OpenUtau tetap berfungsi seperti biasa. Juga menyertakan banyak fitur dari pull request upstream yang belum dirilis atau digabungkan ke OpenUtau asli.</system:String>
   <system:String x:Key="dialogs.about.message">OpenUtau bertujuan menjadi lingkungan penyuntingan sumber terbuka untuk komunitas UTAU, dengan pengalaman pengguna modern dan dukungan fonologi yang cerdas. Kunjungi kami di Github.</system:String>
   <system:String x:Key="dialogs.about.upstream.message">OpenUtau bertujuan menjadi lingkungan penyuntingan sumber terbuka untuk komunitas UTAU, dengan pengalaman pengguna modern dan dukungan fonologi yang cerdas.</system:String>
   <system:String x:Key="dialogs.dropproject.caption">Buka atau impor proyek</system:String>
@@ -74,6 +77,15 @@
   <system:String x:Key="dialogs.importproject.timesig">Tanda birama</system:String>
   <system:String x:Key="dialogs.messagebox.openlink">Buka halaman unduhan</system:String>
   <system:String x:Key="dialogs.messagebox.openpackages">Pengelola Paket</system:String>
+  <system:String x:Key="dialogs.reportissue.discord.description">Gabung server kami dan jelaskan bug di #help. Lampirkan log dari Bantuan → Buka Lokasi Log jika diperlukan.</system:String>
+  <system:String x:Key="dialogs.reportissue.discord.open">Buka Discord</system:String>
+  <system:String x:Key="dialogs.reportissue.discord.title">Discord</system:String>
+  <system:String x:Key="dialogs.reportissue.email.address">lunaiproject@gmail.com</system:String>
+  <system:String x:Key="dialogs.reportissue.email.copy">Salin alamat</system:String>
+  <system:String x:Key="dialogs.reportissue.email.description">Tulis kepada kami dan lampirkan log jika masalahnya sulit direproduksi.</system:String>
+  <system:String x:Key="dialogs.reportissue.email.title">Email</system:String>
+  <system:String x:Key="dialogs.reportissue.email.write">Tulis email</system:String>
+  <system:String x:Key="dialogs.reportissue.message">Beritahu kami apa yang salah. Lebih baik Discord #help agar kami bisa membalas cepat; sertakan berkas log jika membantu. Anda juga bisa mengirim email.</system:String>
 
   <system:String x:Key="harmony.interval.fifthabove">5+</system:String>
   <system:String x:Key="harmony.interval.fifthbelow">5-</system:String>
@@ -84,8 +96,52 @@
   <system:String x:Key="key.picker.analyzing">Menganalisis...</system:String>
   <system:String x:Key="key.picker.suggested">Kunci yang disarankan</system:String>
 
+  <system:String x:Key="lunai.caption">Singer Hub</system:String>
+  <system:String x:Key="lunai.col.action">Aksi</system:String>
+  <system:String x:Key="lunai.col.installed">Terpasang</system:String>
+  <system:String x:Key="lunai.col.name">Nama</system:String>
+  <system:String x:Key="lunai.col.version">Versi</system:String>
+  <system:String x:Key="lunai.company">LUNAI Project</system:String>
+  <system:String x:Key="lunai.confirm.install.caption">Pasang Penyanyi</system:String>
+  <system:String x:Key="lunai.confirm.install.message">Pasang {0}?</system:String>
+  <system:String x:Key="lunai.confirm.install.tos">Penyanyi ini memiliki syarat penggunaan. Dengan mengeklik Ya, Anda menyetujui syarat tersebut.</system:String>
+  <system:String x:Key="lunai.confirm.uninstall.caption">Hapus instalasi penyanyi</system:String>
+  <system:String x:Key="lunai.confirm.uninstall.message">Hapus instalasi {0}?</system:String>
+  <system:String x:Key="lunai.confirm.update.caption">Perbarui penyanyi</system:String>
+  <system:String x:Key="lunai.confirm.update.message">Perbarui {0} ke versi {1}?</system:String>
+  <system:String x:Key="lunai.install">Pasang</system:String>
+  <system:String x:Key="lunai.installed">Terpasang</system:String>
+  <system:String x:Key="lunai.latest">Terbaru</system:String>
+  <system:String x:Key="lunai.newversionavailable">Versi baru tersedia</system:String>
+  <system:String x:Key="lunai.notinstalled">Belum terpasang</system:String>
+  <system:String x:Key="lunai.outdated">Usang</system:String>
+  <system:String x:Key="lunai.refresh">Segarkan</system:String>
   <system:String x:Key="lunai.search">Cari...</system:String>
+  <system:String x:Key="lunai.section.installed">Terpasang</system:String>
+  <system:String x:Key="lunai.section.notinstalled">Belum terpasang</system:String>
+  <system:String x:Key="lunai.section.updatesavailable">Pembaruan tersedia</system:String>
+  <system:String x:Key="lunai.status.error">Kesalahan</system:String>
+  <system:String x:Key="lunai.status.fetching">Mengambil daftar...</system:String>
+  <system:String x:Key="lunai.status.installfailed">Pemasangan gagal</system:String>
+  <system:String x:Key="lunai.status.installfinished">Pemasangan selesai</system:String>
+  <system:String x:Key="lunai.status.installing">Memasang {0}...</system:String>
+  <system:String x:Key="lunai.status.listing">Memindai yang terpasang...</system:String>
+  <system:String x:Key="lunai.status.offline">Siap (daftar cache, jaringan tidak tersedia)</system:String>
+  <system:String x:Key="lunai.status.ready">Siap</system:String>
+  <system:String x:Key="lunai.status.uninstallfailed">Gagal menghapus instalasi</system:String>
+  <system:String x:Key="lunai.status.uninstallfinished">Penghapusan instalasi selesai</system:String>
+  <system:String x:Key="lunai.status.uninstalling">Menghapus instalasi {0}...</system:String>
+  <system:String x:Key="lunai.status.updatefinished">Pembaruan selesai</system:String>
+  <system:String x:Key="lunai.status.updating">Memperbarui {0}...</system:String>
   <system:String x:Key="lunai.tab.all">Semua</system:String>
+  <system:String x:Key="lunai.tab.brapa">BRAPA</system:String>
+  <system:String x:Key="lunai.tab.lunai">LUNAI</system:String>
+  <system:String x:Key="lunai.tab.ufr">UFR</system:String>
+  <system:String x:Key="lunai.uninstall">Hapus instalasi</system:String>
+  <system:String x:Key="lunai.unknownversion">tidak diketahui</system:String>
+  <system:String x:Key="lunai.update">Perbarui</system:String>
+  <system:String x:Key="lunai.uptodate">Sudah terbaru</system:String>
+  <system:String x:Key="lunai.website">Situs web</system:String>
 
   <system:String x:Key="menu.file.exportds.v2">Ekspor Skrip DiffSinger Ke (v2)</system:String>
   <system:String x:Key="menu.file.exportds.v2withoutpitch">Ekspor Skrip DiffSinger Ke (v2, tanpa kurva nada)</system:String>

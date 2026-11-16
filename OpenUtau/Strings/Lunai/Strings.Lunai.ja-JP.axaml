@@ -28,6 +28,7 @@
 
   <system:String x:Key="dialogs.about.close">閉じる</system:String>
   <system:String x:Key="dialogs.about.contributors.embedded">埋め込みの貢献者リストを表示しています。</system:String>
+  <system:String x:Key="dialogs.about.contributors.intro">以下の方々は、GitHub上のオリジナル OpenUtau リポジトリに貢献されました。OpenUtau Lunai はその成果の上に成り立っています。皆様に感謝します！</system:String>
   <system:String x:Key="dialogs.about.contributors.loading">GitHubから貢献者を読み込み中...</system:String>
   <system:String x:Key="dialogs.about.contributors.title">貢献者</system:String>
   <system:String x:Key="dialogs.about.contributors.unavailable">貢献者を読み込めませんでした。インターネット接続を確認して、もう一度お試しください。</system:String>
@@ -35,6 +36,8 @@
   <system:String x:Key="dialogs.about.contributors.upstream">OpenUtau ({0})</system:String>
   <system:String x:Key="dialogs.about.github.lunai">GitHub上の OpenUtau Lunai</system:String>
   <system:String x:Key="dialogs.about.github.upstream">GitHub上の OpenUtau</system:String>
+  <system:String x:Key="dialogs.about.license">OpenUtau および OpenUtau Lunai は、MITライセンスの無料オープンソースソフトウェアです。</system:String>
+  <system:String x:Key="dialogs.about.lunai.message">お使いの環境は OpenUtau Lunai です。DiffSinger をより簡単に、快適に使えることを目指したフォークです。従来のUTAU音源や、OpenUtauがすでに対応している他のボイスバンク種別もこれまでどおり利用できます。また、オリジナルの OpenUtau にまだ未リリース・未マージの上流プルリクエスト由来の機能も多数含まれています。</system:String>
   <system:String x:Key="dialogs.about.message">OpenUtau は、UTAUコミュニティ向けのオープンソース編集環境を目指し、モダンな操作性といい音韻サポートを提供します。GitHubでご覧ください。</system:String>
   <system:String x:Key="dialogs.about.upstream.message">OpenUtau は、UTAUコミュニティ向けのオープンソース編集環境を目指し、モダンな操作性といい音韻サポートを提供します。</system:String>
   <system:String x:Key="dialogs.dropproject.caption">プロジェクトを開く / インポート</system:String>
@@ -74,6 +77,15 @@
   <system:String x:Key="dialogs.importproject.timesig">拍子記号</system:String>
   <system:String x:Key="dialogs.messagebox.openlink">ダウンロードページを開く</system:String>
   <system:String x:Key="dialogs.messagebox.openpackages">パッケージマネージャー</system:String>
+  <system:String x:Key="dialogs.reportissue.discord.description">サーバーに参加し、#help で不具合を説明してください。必要に応じて「ヘルプ → ログの場所を開く」からログを添付してください。</system:String>
+  <system:String x:Key="dialogs.reportissue.discord.open">Discordを開く</system:String>
+  <system:String x:Key="dialogs.reportissue.discord.title">Discord</system:String>
+  <system:String x:Key="dialogs.reportissue.email.address">lunaiproject@gmail.com</system:String>
+  <system:String x:Key="dialogs.reportissue.email.copy">アドレスをコピー</system:String>
+  <system:String x:Key="dialogs.reportissue.email.description">再現が難しい場合は、ログを添付してメールでご連絡ください。</system:String>
+  <system:String x:Key="dialogs.reportissue.email.title">メール</system:String>
+  <system:String x:Key="dialogs.reportissue.email.write">メールを作成</system:String>
+  <system:String x:Key="dialogs.reportissue.message">何が起きたか教えてください。素早く返信できるよう Discord #help を推奨します。必要ならログファイルも添付してください。メールでもご連絡いただけます。</system:String>
 
   <system:String x:Key="harmony.interval.fifthabove">5+</system:String>
   <system:String x:Key="harmony.interval.fifthbelow">5-</system:String>
@@ -84,8 +96,52 @@
   <system:String x:Key="key.picker.analyzing">解析中...</system:String>
   <system:String x:Key="key.picker.suggested">候補のキー</system:String>
 
+  <system:String x:Key="lunai.caption">Singer Hub</system:String>
+  <system:String x:Key="lunai.col.action">操作</system:String>
+  <system:String x:Key="lunai.col.installed">インストール済み</system:String>
+  <system:String x:Key="lunai.col.name">名前</system:String>
+  <system:String x:Key="lunai.col.version">バージョン</system:String>
+  <system:String x:Key="lunai.company">LUNAI Project</system:String>
+  <system:String x:Key="lunai.confirm.install.caption">シンガーをインストール</system:String>
+  <system:String x:Key="lunai.confirm.install.message">{0} をインストールしますか？</system:String>
+  <system:String x:Key="lunai.confirm.install.tos">このシンガーには利用規約があります。「はい」をクリックすると規約に同意したことになります。</system:String>
+  <system:String x:Key="lunai.confirm.uninstall.caption">シンガーをアンインストール</system:String>
+  <system:String x:Key="lunai.confirm.uninstall.message">{0} をアンインストールしますか？</system:String>
+  <system:String x:Key="lunai.confirm.update.caption">シンガーを更新</system:String>
+  <system:String x:Key="lunai.confirm.update.message">{0} をバージョン {1} に更新しますか？</system:String>
+  <system:String x:Key="lunai.install">インストール</system:String>
+  <system:String x:Key="lunai.installed">インストール済み</system:String>
+  <system:String x:Key="lunai.latest">最新</system:String>
+  <system:String x:Key="lunai.newversionavailable">新しいバージョンがあります</system:String>
+  <system:String x:Key="lunai.notinstalled">未インストール</system:String>
+  <system:String x:Key="lunai.outdated">古いバージョン</system:String>
+  <system:String x:Key="lunai.refresh">更新</system:String>
   <system:String x:Key="lunai.search">検索...</system:String>
+  <system:String x:Key="lunai.section.installed">インストール済み</system:String>
+  <system:String x:Key="lunai.section.notinstalled">未インストール</system:String>
+  <system:String x:Key="lunai.section.updatesavailable">更新あり</system:String>
+  <system:String x:Key="lunai.status.error">エラー</system:String>
+  <system:String x:Key="lunai.status.fetching">リストを取得中...</system:String>
+  <system:String x:Key="lunai.status.installfailed">インストールに失敗しました</system:String>
+  <system:String x:Key="lunai.status.installfinished">インストールが完了しました</system:String>
+  <system:String x:Key="lunai.status.installing">{0} をインストール中...</system:String>
+  <system:String x:Key="lunai.status.listing">インストール済みをスキャン中...</system:String>
+  <system:String x:Key="lunai.status.offline">準備完了（キャッシュ済みリスト、ネットワーク利用不可）</system:String>
+  <system:String x:Key="lunai.status.ready">準備完了</system:String>
+  <system:String x:Key="lunai.status.uninstallfailed">アンインストールに失敗しました</system:String>
+  <system:String x:Key="lunai.status.uninstallfinished">アンインストールが完了しました</system:String>
+  <system:String x:Key="lunai.status.uninstalling">{0} をアンインストール中...</system:String>
+  <system:String x:Key="lunai.status.updatefinished">更新が完了しました</system:String>
+  <system:String x:Key="lunai.status.updating">{0} を更新中...</system:String>
   <system:String x:Key="lunai.tab.all">すべて</system:String>
+  <system:String x:Key="lunai.tab.brapa">BRAPA</system:String>
+  <system:String x:Key="lunai.tab.lunai">LUNAI</system:String>
+  <system:String x:Key="lunai.tab.ufr">UFR</system:String>
+  <system:String x:Key="lunai.uninstall">アンインストール</system:String>
+  <system:String x:Key="lunai.unknownversion">不明</system:String>
+  <system:String x:Key="lunai.update">更新</system:String>
+  <system:String x:Key="lunai.uptodate">最新です</system:String>
+  <system:String x:Key="lunai.website">ウェブサイト</system:String>
 
   <system:String x:Key="menu.file.exportds.v2">DiffSingerスクリプトをエクスポート (v2)</system:String>
   <system:String x:Key="menu.file.exportds.v2withoutpitch">DiffSingerスクリプトをエクスポート (v2、ピッチ曲線なし)</system:String>

@@ -28,6 +28,7 @@
 
   <system:String x:Key="dialogs.about.close">Đóng</system:String>
   <system:String x:Key="dialogs.about.contributors.embedded">Đang hiển thị danh sách người đóng góp được nhúng.</system:String>
+  <system:String x:Key="dialogs.about.contributors.intro">Những người này đã đóng góp cho kho OpenUtau gốc trên GitHub. OpenUtau Lunai được xây dựng dựa trên công việc của họ. Cảm ơn tất cả mọi người trong danh sách!</system:String>
   <system:String x:Key="dialogs.about.contributors.loading">Đang tải người đóng góp từ GitHub...</system:String>
   <system:String x:Key="dialogs.about.contributors.title">Người đóng góp</system:String>
   <system:String x:Key="dialogs.about.contributors.unavailable">Không thể tải danh sách người đóng góp. Kiểm tra kết nối internet và thử lại.</system:String>
@@ -35,6 +36,8 @@
   <system:String x:Key="dialogs.about.contributors.upstream">OpenUtau ({0})</system:String>
   <system:String x:Key="dialogs.about.github.lunai">OpenUtau Lunai trên GitHub</system:String>
   <system:String x:Key="dialogs.about.github.upstream">OpenUtau trên GitHub</system:String>
+  <system:String x:Key="dialogs.about.license">OpenUtau và OpenUtau Lunai là phần mềm mã nguồn mở miễn phí theo giấy phép MIT.</system:String>
+  <system:String x:Key="dialogs.about.lunai.message">Bạn đang chạy OpenUtau Lunai, một bản fork nhằm giúp DiffSinger dễ dùng và thú vị hơn. Các bank UTAU cổ điển và mọi loại thư viện giọng mà OpenUtau đã hỗ trợ vẫn hoạt động bình thường. Đồng thời bao gồm nhiều tính năng từ các pull request gốc chưa được phát hành hoặc hợp nhất vào OpenUtau gốc.</system:String>
   <system:String x:Key="dialogs.about.message">OpenUtau hướng tới trở thành môi trường chỉnh sửa mã nguồn mở cho cộng đồng UTAU, với trải nghiệm hiện đại và hỗ trợ ngữ âm thông minh. Hãy ghé thăm chúng tôi trên Github.</system:String>
   <system:String x:Key="dialogs.about.upstream.message">OpenUtau hướng tới trở thành môi trường chỉnh sửa mã nguồn mở cho cộng đồng UTAU, với trải nghiệm hiện đại và hỗ trợ ngữ âm thông minh.</system:String>
   <system:String x:Key="dialogs.dropproject.caption">Mở hoặc nhập dự án</system:String>
@@ -74,6 +77,15 @@
   <system:String x:Key="dialogs.importproject.timesig">Nhịp điệu</system:String>
   <system:String x:Key="dialogs.messagebox.openlink">Mở trang tải xuống</system:String>
   <system:String x:Key="dialogs.messagebox.openpackages">Trình quản lý gói</system:String>
+  <system:String x:Key="dialogs.reportissue.discord.description">Tham gia máy chủ của chúng tôi và mô tả lỗi trong #help. Đính kèm nhật ký từ Trợ giúp → Mở vị trí nhật ký nếu cần.</system:String>
+  <system:String x:Key="dialogs.reportissue.discord.open">Mở Discord</system:String>
+  <system:String x:Key="dialogs.reportissue.discord.title">Discord</system:String>
+  <system:String x:Key="dialogs.reportissue.email.address">lunaiproject@gmail.com</system:String>
+  <system:String x:Key="dialogs.reportissue.email.copy">Sao chép địa chỉ</system:String>
+  <system:String x:Key="dialogs.reportissue.email.description">Viết cho chúng tôi và đính kèm nhật ký nếu sự cố khó tái hiện.</system:String>
+  <system:String x:Key="dialogs.reportissue.email.title">Email</system:String>
+  <system:String x:Key="dialogs.reportissue.email.write">Viết email</system:String>
+  <system:String x:Key="dialogs.reportissue.message">Hãy cho chúng tôi biết vấn đề. Nên dùng Discord #help để chúng tôi phản hồi nhanh; đính kèm tệp nhật ký khi hữu ích. Bạn cũng có thể gửi email.</system:String>
 
   <system:String x:Key="harmony.interval.fifthabove">5+</system:String>
   <system:String x:Key="harmony.interval.fifthbelow">5-</system:String>
@@ -84,8 +96,52 @@
   <system:String x:Key="key.picker.analyzing">Đang phân tích...</system:String>
   <system:String x:Key="key.picker.suggested">Giọng gợi ý</system:String>
 
+  <system:String x:Key="lunai.caption">Singer Hub</system:String>
+  <system:String x:Key="lunai.col.action">Thao tác</system:String>
+  <system:String x:Key="lunai.col.installed">Đã cài</system:String>
+  <system:String x:Key="lunai.col.name">Tên</system:String>
+  <system:String x:Key="lunai.col.version">Phiên bản</system:String>
+  <system:String x:Key="lunai.company">LUNAI Project</system:String>
+  <system:String x:Key="lunai.confirm.install.caption">Cài đặt ca sĩ</system:String>
+  <system:String x:Key="lunai.confirm.install.message">Cài đặt {0}?</system:String>
+  <system:String x:Key="lunai.confirm.install.tos">Ca sĩ này có điều khoản sử dụng. Nhấn Có nghĩa là bạn đồng ý với các điều khoản này.</system:String>
+  <system:String x:Key="lunai.confirm.uninstall.caption">Gỡ cài đặt ca sĩ</system:String>
+  <system:String x:Key="lunai.confirm.uninstall.message">Gỡ cài đặt {0}?</system:String>
+  <system:String x:Key="lunai.confirm.update.caption">Cập nhật ca sĩ</system:String>
+  <system:String x:Key="lunai.confirm.update.message">Cập nhật {0} lên phiên bản {1}?</system:String>
+  <system:String x:Key="lunai.install">Cài đặt</system:String>
+  <system:String x:Key="lunai.installed">Đã cài</system:String>
+  <system:String x:Key="lunai.latest">Mới nhất</system:String>
+  <system:String x:Key="lunai.newversionavailable">Có phiên bản mới</system:String>
+  <system:String x:Key="lunai.notinstalled">Chưa cài</system:String>
+  <system:String x:Key="lunai.outdated">Lỗi thời</system:String>
+  <system:String x:Key="lunai.refresh">Làm mới</system:String>
   <system:String x:Key="lunai.search">Tìm kiếm...</system:String>
+  <system:String x:Key="lunai.section.installed">Đã cài</system:String>
+  <system:String x:Key="lunai.section.notinstalled">Chưa cài</system:String>
+  <system:String x:Key="lunai.section.updatesavailable">Có cập nhật</system:String>
+  <system:String x:Key="lunai.status.error">Lỗi</system:String>
+  <system:String x:Key="lunai.status.fetching">Đang lấy danh sách...</system:String>
+  <system:String x:Key="lunai.status.installfailed">Cài đặt thất bại</system:String>
+  <system:String x:Key="lunai.status.installfinished">Cài đặt hoàn tất</system:String>
+  <system:String x:Key="lunai.status.installing">Đang cài đặt {0}...</system:String>
+  <system:String x:Key="lunai.status.listing">Đang quét mục đã cài...</system:String>
+  <system:String x:Key="lunai.status.offline">Sẵn sàng (danh sách cache, mạng không khả dụng)</system:String>
+  <system:String x:Key="lunai.status.ready">Sẵn sàng</system:String>
+  <system:String x:Key="lunai.status.uninstallfailed">Gỡ cài đặt thất bại</system:String>
+  <system:String x:Key="lunai.status.uninstallfinished">Gỡ cài đặt hoàn tất</system:String>
+  <system:String x:Key="lunai.status.uninstalling">Đang gỡ cài đặt {0}...</system:String>
+  <system:String x:Key="lunai.status.updatefinished">Cập nhật hoàn tất</system:String>
+  <system:String x:Key="lunai.status.updating">Đang cập nhật {0}...</system:String>
   <system:String x:Key="lunai.tab.all">Tất cả</system:String>
+  <system:String x:Key="lunai.tab.brapa">BRAPA</system:String>
+  <system:String x:Key="lunai.tab.lunai">LUNAI</system:String>
+  <system:String x:Key="lunai.tab.ufr">UFR</system:String>
+  <system:String x:Key="lunai.uninstall">Gỡ cài đặt</system:String>
+  <system:String x:Key="lunai.unknownversion">không rõ</system:String>
+  <system:String x:Key="lunai.update">Cập nhật</system:String>
+  <system:String x:Key="lunai.uptodate">Đã cập nhật</system:String>
+  <system:String x:Key="lunai.website">Trang web</system:String>
 
   <system:String x:Key="menu.file.exportds.v2">Xuất script DiffSinger tới (v2)</system:String>
   <system:String x:Key="menu.file.exportds.v2withoutpitch">Xuất script DiffSinger tới (v2, không có đường cong cao độ)</system:String>

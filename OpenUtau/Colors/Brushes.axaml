@@ -113,6 +113,8 @@
                    Color="{DynamicResource BackgroundColorPointerOver}"/>
   <SolidColorBrush x:Key="SystemControlForegroundBaseHighBrush"
                    Color="{DynamicResource ForegroundColor}" />
+  <SolidColorBrush x:Key="ForegroundBrushSecondary"
+                   Color="{DynamicResource ForegroundColor}" Opacity="0.65" />
   <SolidColorBrush x:Key="SystemControlForegroundBaseHighBrushPointerOver"
                    Color="{DynamicResource ForegroundColorPointerOver}" />
   <SolidColorBrush x:Key="SystemControlForegroundBaseHighBrushDisabled"
@@ -156,6 +158,10 @@
   <!--text box disabled text-->
   <SolidColorBrush x:Key="TextControlForegroundDisabled"
                    Color="{DynamicResource ForegroundColorDisabled}" />
+  <SolidColorBrush x:Key="TextControlBorderBrush"
+                   Color="{DynamicResource BorderColor}" />
+  <SolidColorBrush x:Key="TextControlBorderBrushPointerOver"
+                   Color="{DynamicResource BorderColorPointerOver}" />
   <SolidColorBrush x:Key="TextControlBorderBrushDisabled"
                    Color="{DynamicResource TextControlBorderColorDisabled}" />
   <SolidColorBrush x:Key="SystemControlDisabledChromeDisabledLowBrush"

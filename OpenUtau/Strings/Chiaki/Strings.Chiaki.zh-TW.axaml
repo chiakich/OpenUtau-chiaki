@@ -1,0 +1,14 @@
+<!--OpenUtau Chiaki overlay for zh-TW. Merged after the Lunai overlays in App.SetLanguage.-->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:system="clr-namespace:System;assembly=mscorlib"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <system:String x:Key="dialogs.about.contributors.intro">以下人員為 GitHub 上原始 OpenUtau 存放庫做出了貢獻。OpenUtau Lunai 與本版本都建立在他們的成果之上。感謝所有列出的貢獻者！</system:String>
+  <system:String x:Key="dialogs.about.license">本版本所基於的 OpenUtau 與 OpenUtau Lunai 皆為採用 MIT 授權的免費開源軟體。</system:String>
+  <system:String x:Key="dialogs.about.lunai.message">您正在執行 OpenUtau Chiaki，這是 OpenUtau Lunai 的個人版本，內建 Chiaki DiffSinger 聲庫與 DiffSinger 芬蘭文音素器。OpenUtau Lunai 是一個旨在讓 DiffSinger 更易用、更愉快的分支。</system:String>
+  <system:String x:Key="dialogs.reportissue.message">請在 GitHub issues 回報問題，有幫助時請附上記錄檔。</system:String>
+  <system:String x:Key="dialogs.reportissue.github.description">描述發生了什麼問題以及重現步驟。如有需要，請從「說明 → 開啟記錄檔位置」附加記錄檔。</system:String>
+  <system:String x:Key="dialogs.reportissue.github.open">開啟 issues</system:String>
+  <system:String x:Key="dialogs.reportissue.github.title">GitHub Issues</system:String>
+  <system:String x:Key="pianoroll.toggle.hidepianoroll">隱藏鋼琴卷軸</system:String>
+</ResourceDictionary>
