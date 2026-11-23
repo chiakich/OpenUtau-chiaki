@@ -103,6 +103,7 @@
   <ItemGroup>
     <EmbeddedResource Include="DiffSinger\Data\lunai-dsunvoiced.yaml" />
     <EmbeddedResource Include="DiffSinger\Data\lunai-phoneme-variance-remap.yaml" />
+    <EmbeddedResource Include="G2p\Data\chiaki-extra-rules.json" LogicalName="DiffSingerChiakiExtra.rules.json" />
     <EmbeddedResource Update="Analysis\Crepe\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

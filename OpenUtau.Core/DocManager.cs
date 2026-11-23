@@ -135,6 +135,11 @@ namespace OpenUtau.Core {
             } catch (Exception e) {
                 Log.Error(e, "Failed to search plugins.");
             }
+            // Standalone Finnish/Latin/Extra plugins share type names with the built-in copies; skip them to avoid duplicate entries.
+            var builtinPhonemizers = GetType().Assembly.GetExportedTypes()
+                .Where(t => !t.IsAbstract && t.IsSubclassOf(typeof(Phonemizer)))
+                .Select(t => t.FullName)
+                .ToHashSet();
             foreach (var file in files) {
                 Assembly assembly;
                 try {
@@ -149,7 +154,11 @@ namespace OpenUtau.Core {
                     assembly = PluginLoadContext.LoadPlugin(file);
                     foreach (var type in assembly.GetExportedTypes()) {
                         if (!type.IsAbstract && type.IsSubclassOf(typeof(Phonemizer))) {
-                            PhonemizerFactory.Get(type);
+                            if (builtinPhonemizers.Contains(type.FullName)) {
+                                Log.Information($"Skipping {type.FullName} from {file}: built in");
+                            } else {
+                                PhonemizerFactory.Get(type);
+                            }
                         }
                         if (Path.GetFileName(file) != kBuiltin
                             && typeof(BatchEdit).IsAssignableFrom(type)
