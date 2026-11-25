@@ -16,6 +16,7 @@ namespace OpenUtau.App {
         public static string? PendingOpenFile { get; set; }
 
         void SubscribeFileActivation() {
+            StartAgentServerWhenReady();
             if (this.TryGetFeature<IActivatableLifetime>() is { } activatable) {
                 activatable.Activated += OnActivated;
             }
