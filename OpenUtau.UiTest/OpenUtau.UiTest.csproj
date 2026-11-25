@@ -26,5 +26,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OpenUtau\OpenUtau.csproj" />
+    <!-- Built, not referenced: CliParityTest runs OpenUtau.Cli as a process. -->
+    <ProjectReference Include="..\OpenUtau.Cli\OpenUtau.Cli.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\OpenUtau.Test\Cli\CliProcess.cs" Link="CliProcess.cs" />
   </ItemGroup>
 </Project>

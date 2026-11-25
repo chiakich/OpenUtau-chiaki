@@ -92,6 +92,7 @@ public static class ThemeHubClient {
     }
 
     public static async Task<ThemeHubSyncResult> SyncAsync(CancellationToken ct = default) {
+        if (Headless.ReadOnlyUserData) { return new ThemeHubSyncResult { Ok = true }; }
         try {
             Directory.CreateDirectory(HubPath);
             string catalogUrl = ResolveCatalogUrl();
