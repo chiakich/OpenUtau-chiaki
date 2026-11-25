@@ -119,7 +119,7 @@ A request is one line, `{"op": name, ...fields}`; a reply is one line with `ok`,
 | `get` | notes with their ids and phonemes; `detail`: `notes`, `phonemes` (timing), `phrases` (what the renderer is given); `from_tick`/`to_tick`, `curves` |
 | `add_notes`, `edit_notes`, `delete_notes` | `[[lyric, tone, duration], ...]` at a tick or after a note; `{id, lyric?, tone?, tick?, duration?}`; ids |
 | `set_curve` | draw `points`, `clear`, or set the track `default` of an expression such as `pitd` or `genc` |
-| `set_tempo`, `set_track` | tempo; a track's singer and phonemizer |
+| `set_tempo`, `set_track` | tempo; a track's singer and phonemizer (a new singer brings the phonemizer last used with it in the app, else its default, unless one is given) |
 | `load_pitch` | write the model's predicted pitch into `pitd`, as *Load Rendered Pitch* |
 | `render` | wav of the project, or of `from_tick`..`to_tick` only (the file then starts at `from_tick`) |
 | `undo`, `redo` | the app's undo stack, the user's edits included |
@@ -136,7 +136,7 @@ Socket paths must be short (104 bytes on macOS). The socket file is readable and
 
 The app listens only when asked to, by either `"AgentServer": true` in its `prefs.json` or the environment variable `OPENUTAU_AGENT=1`. It then listens on `agent.sock` in its data folder (`OPENUTAU_AGENT_SOCKET` overrides the path), which is where `send --gui` and `mcp --gui` connect. Any process of the same user that can reach that socket can edit the open project and write files through `save` and `render`, which is why it is off by default.
 
-What differs from `serve`: singers are the installed ones (`--singer DIR` does not exist there), `--seed` does not apply, `new` and `open` are refused with code `unsaved_changes` while the project has unsaved changes unless the request says `"discard_changes": true`, and `add_notes` without a `part` goes to the part open in the piano roll.
+What differs from `serve`: singers are the installed ones (`--singer DIR` does not exist there), `--seed` does not apply, `new` and `open` are refused with code `unsaved_changes` while the project has unsaved changes unless the request says `"discard_changes": true`, and `add_notes` without a `part` goes to the part open in the piano roll. When no part is open there, `add_notes` opens the one it wrote to, so the user sees the notes.
 
 ### MCP
 

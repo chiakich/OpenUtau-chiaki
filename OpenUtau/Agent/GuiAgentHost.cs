@@ -105,6 +105,17 @@ namespace OpenUtau.App.Agent {
             });
         }
 
+        public void ShowPart(UVoicePart part, int tick) {
+            // After the edit that is being made: opening the piano roll takes turns of the UI thread.
+            Dispatcher.UIThread.Post(async () => {
+                try {
+                    await window.AgentShowPart(part, tick);
+                } catch (Exception e) {
+                    Serilog.Log.Error(e, "Failed to show the part an agent edited.");
+                }
+            });
+        }
+
         public void OnNext(UCommand cmd, bool isUndo) {
             // An edit made from the welcome page would otherwise stay behind it.
             if (!(cmd is UNotification) && window.DataContext is MainWindowViewModel viewModel && viewModel.Page == 0) {

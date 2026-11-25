@@ -626,6 +626,7 @@ namespace OpenUtau.Core.Agent {
                 }
                 Exec(new AddNoteCommand(part, notes));
                 FitPart(project, part);
+                host.ShowPart(part, part.position + notes[0].position);
                 return new JsonObject {
                     ["notes"] = new JsonArray(notes.Select(n => (JsonNode)NoteJson(project, part, n)).ToArray()),
                     ["next_tick"] = cursor,
@@ -821,6 +822,8 @@ namespace OpenUtau.Core.Agent {
                 var track = project.tracks[trackIndex];
                 if (singer != null) {
                     Exec(new TrackChangeSingerCommand(project, track, singer));
+                    // As picking a singer in the app: the phonemizer the user last used with it, else the singer's own.
+                    factory ??= SingerPhonemizer(singer);
                     if (!Renderers.GetSupportedRenderers(singer.SingerType).Contains(track.RendererSettings?.renderer)) {
                         Exec(new TrackChangeRenderSettingCommand(project, track, new URenderSettings {
                             renderer = Renderers.GetDefaultRenderer(singer.SingerType),
@@ -832,6 +835,15 @@ namespace OpenUtau.Core.Agent {
                 }
                 return new JsonObject { ["tracks"] = ProjectReport.Tracks(project) };
             });
+        }
+
+        static OpenUtau.Api.PhonemizerFactory? SingerPhonemizer(USinger singer) {
+            var names = new List<string?>();
+            if (!string.IsNullOrEmpty(singer.Id) && Util.Preferences.Default.SingerPhonemizers.TryGetValue(singer.Id, out var used)) {
+                names.Add(used);
+            }
+            names.Add(singer.DefaultPhonemizer);
+            return names.Where(n => !string.IsNullOrEmpty(n)).Select(n => OpenUtau.Api.PhonemizerFactory.Get(n!)).FirstOrDefault(f => f != null);
         }
 
         JsonObject LoadPitch(Request request) {
@@ -1015,7 +1027,7 @@ namespace OpenUtau.Core.Agent {
                         "default: value the whole track takes wherever no curve is drawn; reset_default: true removes it",
                         "part or track"),
                     ["set_tempo"] = Op("Set the tempo at the start of the project.", "bpm"),
-                    ["set_track"] = Op("Change a track's singer or phonemizer.", "track: default 0", "singer", "phonemizer: id, tag or name"),
+                    ["set_track"] = Op("Change a track's singer or phonemizer.", "track: default 0", "singer", "phonemizer: id, tag or name; with a singer and none given, the one last used with that singer in the app, else the singer's default"),
                     ["load_pitch"] = Op("Write the pitch the singer's model predicts into the pitd curve, as the app's Load Rendered Pitch.",
                         "mode: untuned (default; only phrases without a drawn pitch) or all", "part"),
                     ["render"] = Op("Render to wav.",

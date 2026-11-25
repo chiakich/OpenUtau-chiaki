@@ -29,6 +29,8 @@ namespace OpenUtau.Core.Agent {
 
         // What the user is looking at, where there is a user: the open part, the selection, the playhead.
         JsonObject? UiState(Func<UNote, int> noteId);
+        // Brings a part the agent wrote to in front of the user, unless they have another one open.
+        void ShowPart(UVoicePart part, int tick);
     }
 
     public static class AgentHostExtensions {
