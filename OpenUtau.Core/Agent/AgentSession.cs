@@ -1,0 +1,974 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using OpenUtau.Core.Render;
+using OpenUtau.Core.Ustx;
+
+namespace OpenUtau.Core.Agent {
+    // One open project that an agent edits step by step: a request in, a reply out, both JSON objects.
+    // The same requests work on the app's open project and on a project held by a process without a window.
+    public sealed class AgentSession : ICmdSubscriber, IDisposable {
+        public const int ProtocolVersion = 1;
+        const int WholeNote = 1920;
+
+        static readonly JsonSerializerOptions Compact = new JsonSerializerOptions {
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        };
+        static readonly JsonDocumentOptions Lenient = new JsonDocumentOptions {
+            CommentHandling = JsonCommentHandling.Skip,
+            AllowTrailingCommas = true,
+        };
+
+        readonly IAgentHost host;
+        readonly object gate = new object();
+        readonly Dictionary<string, Func<Request, JsonObject>> ops;
+        // Ids follow the note object, so they survive edits and undo, and end when the project is reloaded.
+        readonly ConditionalWeakTable<UNote, object> ids = new ConditionalWeakTable<UNote, object>();
+        readonly Dictionary<int, WeakReference<UNote>> notesById = new Dictionary<int, WeakReference<UNote>>();
+        int nextId = 1;
+        int reportedDiagnostics;
+        int executed;
+        // Counts edits, the user's included. Not the document's own revision, which also moves when the phonemizer answers.
+        long revision;
+
+        public bool ShutdownRequested { get; private set; }
+
+        public AgentSession(IAgentHost host) {
+            this.host = host;
+            ops = new Dictionary<string, Func<Request, JsonObject>> {
+                ["help"] = Help,
+                ["status"] = Status,
+                ["new"] = New,
+                ["open"] = Open,
+                ["save"] = Save,
+                ["get"] = Get,
+                ["add_notes"] = AddNotes,
+                ["edit_notes"] = EditNotes,
+                ["delete_notes"] = DeleteNotes,
+                ["set_curve"] = SetCurve,
+                ["set_tempo"] = SetTempo,
+                ["set_track"] = SetTrack,
+                ["load_pitch"] = LoadPitch,
+                ["render"] = Render,
+                ["undo"] = r => UndoRedo(r, undo: true),
+                ["redo"] = r => UndoRedo(r, undo: false),
+                ["singers"] = Singers,
+                ["phonemizers"] = Phonemizers,
+                ["expressions"] = Expressions,
+                ["shutdown"] = Shutdown,
+            };
+            host.Invoke(() => DocManager.Inst.AddSubscriber(this));
+        }
+
+        public void OnNext(UCommand cmd, bool isUndo) {
+            if (!(cmd is UNotification) || cmd is LoadProjectNotification) {
+                revision++;
+            }
+        }
+
+        public void Dispose() {
+            host.Invoke(() => DocManager.Inst.RemoveSubscriber(this));
+        }
+
+        // Never throws: a failure is a reply with ok false.
+        public string HandleLine(string line) {
+            string op = string.Empty;
+            JsonNode? id = null;
+            JsonObject? result = null;
+            AgentException? error = null;
+            lock (gate) {
+                try {
+                    using var document = JsonDocument.Parse(line, Lenient);
+                    var root = document.RootElement;
+                    if (root.ValueKind != JsonValueKind.Object) {
+                        throw Invalid("A request is a JSON object with an \"op\".");
+                    }
+                    if (root.TryGetProperty("id", out var idValue)) {
+                        id = JsonNode.Parse(idValue.GetRawText());
+                    }
+                    if (!root.TryGetProperty("op", out var opValue) || opValue.ValueKind != JsonValueKind.String) {
+                        throw Invalid("A request needs an \"op\". Send {\"op\":\"help\"} for the list.");
+                    }
+                    op = opValue.GetString()!;
+                    if (!ops.TryGetValue(op, out var handler)) {
+                        throw Invalid($"Unknown op \"{op}\". Send {{\"op\":\"help\"}} for the list.");
+                    }
+                    result = handler(new Request(root));
+                } catch (JsonException e) {
+                    error = Invalid($"The request is not valid JSON: {e.Message}");
+                } catch (AgentException e) {
+                    error = e;
+                } catch (Exception e) {
+                    error = new AgentException("internal", e.ToString());
+                }
+
+                var reply = new JsonObject { ["ok"] = error == null, ["op"] = op };
+                if (id != null) {
+                    reply["id"] = id;
+                }
+                if (error != null) {
+                    reply["error"] = new JsonObject { ["code"] = error.Code, ["message"] = error.Message };
+                }
+                try {
+                    reply["revision"] = host.Invoke(() => revision);
+                } catch (Exception) {
+                    // The host is going away; the reply still says what happened.
+                }
+                if (result != null) {
+                    foreach (var pair in result.ToList()) {
+                        result.Remove(pair.Key);
+                        reply[pair.Key] = pair.Value;
+                    }
+                }
+                AddMessages(reply);
+                return reply.ToJsonString(Compact);
+            }
+        }
+
+        void AddMessages(JsonObject reply) {
+            var warnings = new JsonArray();
+            if (reply["warnings"] is JsonArray own) {
+                reply.Remove("warnings");
+                foreach (var item in own.ToList()) {
+                    own.Remove(item);
+                    warnings.Add(item);
+                }
+            }
+            lock (host.Warnings) {
+                foreach (string warning in host.Warnings) {
+                    warnings.Add(warning);
+                }
+                host.Warnings.Clear();
+            }
+            var diagnostics = host.Diagnostics;
+            reply["warnings"] = warnings;
+            reply["diagnostics"] = new JsonArray(diagnostics.Skip(reportedDiagnostics).Select(d => (JsonNode)d).ToArray());
+            reportedDiagnostics = diagnostics.Count;
+        }
+
+        // ---- Requests ------------------------------------------------------------------------------
+
+        sealed class Request {
+            readonly JsonElement root;
+            readonly HashSet<string> read = new HashSet<string> { "op", "id", "expect_revision" };
+
+            public Request(JsonElement root) {
+                this.root = root;
+            }
+
+            public long? ExpectRevision => root.TryGetProperty("expect_revision", out var value) && value.ValueKind == JsonValueKind.Number
+                ? value.GetInt64()
+                : (long?)null;
+
+            public bool TryGet(string name, out JsonElement value) {
+                read.Add(name);
+                return root.TryGetProperty(name, out value) && value.ValueKind != JsonValueKind.Null;
+            }
+
+            public JsonElement Required(string name, string what) {
+                if (!TryGet(name, out var value)) {
+                    throw Invalid($"\"{name}\" is required: {what}.");
+                }
+                return value;
+            }
+
+            public string? Str(string name) {
+                if (!TryGet(name, out var value)) {
+                    return null;
+                }
+                if (value.ValueKind != JsonValueKind.String) {
+                    throw Invalid($"\"{name}\" must be a string.");
+                }
+                return value.GetString();
+            }
+
+            public int? Int(string name) {
+                if (!TryGet(name, out var value)) {
+                    return null;
+                }
+                if (value.ValueKind != JsonValueKind.Number || !value.TryGetInt32(out int result)) {
+                    throw Invalid($"\"{name}\" must be a whole number.");
+                }
+                return result;
+            }
+
+            public double? Number(string name) {
+                if (!TryGet(name, out var value)) {
+                    return null;
+                }
+                if (value.ValueKind != JsonValueKind.Number) {
+                    throw Invalid($"\"{name}\" must be a number.");
+                }
+                return value.GetDouble();
+            }
+
+            public bool Flag(string name) {
+                if (!TryGet(name, out var value)) {
+                    return false;
+                }
+                if (value.ValueKind != JsonValueKind.True && value.ValueKind != JsonValueKind.False) {
+                    throw Invalid($"\"{name}\" must be true or false.");
+                }
+                return value.GetBoolean();
+            }
+
+            // After every field was read: a misspelt field must not pass for an absent one.
+            public void Done() {
+                foreach (var property in root.EnumerateObject()) {
+                    if (!read.Contains(property.Name)) {
+                        throw Invalid($"Unknown field \"{property.Name}\" for this op.");
+                    }
+                }
+            }
+        }
+
+        static AgentException Invalid(string message) => new AgentException("invalid_request", message, AgentException.ExitUsage);
+
+        // ---- Document access -----------------------------------------------------------------------
+
+        static UProject RequireProject() {
+            var project = DocManager.Inst.Project;
+            if (project == null) {
+                throw new AgentException("no_project", "No project is open. Use the new or open op first.");
+            }
+            return project;
+        }
+
+        int IdOf(UNote note) {
+            if (ids.TryGetValue(note, out var boxed)) {
+                return (int)boxed;
+            }
+            int id = nextId++;
+            ids.Add(note, id);
+            notesById[id] = new WeakReference<UNote>(note);
+            return id;
+        }
+
+        (UVoicePart Part, UNote Note) Find(UProject project, int id) {
+            if (notesById.TryGetValue(id, out var reference) && reference.TryGetTarget(out var note)) {
+                foreach (var part in project.parts.OfType<UVoicePart>()) {
+                    if (part.notes.Contains(note)) {
+                        return (part, note);
+                    }
+                }
+            }
+            throw new AgentException("note_not_found",
+                $"No note has id {id}. Ids come from get and add_notes, and end when the note is deleted or the project is reloaded.");
+        }
+
+        // The part an edit goes to when the request names none: the one the user has open, else the first.
+        UVoicePart TargetPart(UProject project, int? partIndex, int? trackIndex, bool create) {
+            if (partIndex.HasValue) {
+                if (partIndex.Value < 0 || partIndex.Value >= project.parts.Count || !(project.parts[partIndex.Value] is UVoicePart named)) {
+                    throw Invalid($"The project has no voice part {partIndex.Value}. The status op lists the parts.");
+                }
+                return named;
+            }
+            if (!trackIndex.HasValue && host.UiState(IdOf)?["part"] is JsonValue open
+                    && open.TryGetValue(out int openIndex) && openIndex >= 0 && openIndex < project.parts.Count
+                    && project.parts[openIndex] is UVoicePart openPart) {
+                return openPart;
+            }
+            int track = trackIndex ?? 0;
+            if (track < 0 || track >= project.tracks.Count) {
+                throw Invalid($"The project has no track {track}.");
+            }
+            var first = project.parts.OfType<UVoicePart>()
+                .Where(p => !trackIndex.HasValue || p.trackNo == track)
+                .OrderBy(p => p.trackNo).ThenBy(p => p.position)
+                .FirstOrDefault();
+            if (first != null) {
+                return first;
+            }
+            if (!create) {
+                throw new AgentException("no_part", "The project has no voice part yet. add_notes makes one.");
+            }
+            var part = new UVoicePart { name = "Part", trackNo = track, position = 0, Duration = WholeNote * 4 };
+            Exec(new AddPartCommand(project, part));
+            return part;
+        }
+
+        // One request is one step of undo.
+        T Edit<T>(Request request, Func<UProject, T> action) {
+            long? expected = request.ExpectRevision;
+            return host.Invoke(() => {
+                var project = RequireProject();
+                var doc = DocManager.Inst;
+                if (expected.HasValue && expected.Value != revision) {
+                    throw new AgentException("conflict",
+                        $"The project is at revision {revision}, not {expected.Value}: it changed since you read it. Read it again.");
+                }
+                if (doc.HasOpenUndoGroup) {
+                    throw new AgentException("busy", "An edit is in progress in the app. Try again when it is done.");
+                }
+                executed = 0;
+                long before = revision;
+                doc.StartUndoGroup();
+                try {
+                    T result = action(project);
+                    doc.EndUndoGroup();
+                    return result;
+                } catch {
+                    if (executed == 0) {
+                        doc.EndUndoGroup();
+                    } else {
+                        doc.RollBackUndoGroup();
+                    }
+                    // A refused request leaves the project as it was, so the revision too.
+                    revision = before;
+                    throw;
+                }
+            });
+        }
+
+        void Exec(UCommand command) {
+            executed++;
+            DocManager.Inst.ExecuteCmd(command);
+        }
+
+        void FitPart(UProject project, UVoicePart part) {
+            int needed = part.GetMinDurTick(project);
+            if (needed > part.Duration) {
+                Exec(new ResizeVoicePartCommand(project, part, needed - part.Duration, false));
+            }
+        }
+
+        JsonObject NoteJson(UProject project, UVoicePart part, UNote note) {
+            return new JsonObject {
+                ["id"] = IdOf(note),
+                ["part"] = project.parts.IndexOf(part),
+                ["lyric"] = note.lyric,
+                ["tone"] = note.tone,
+                ["tone_name"] = MusicMath.GetToneName(note.tone),
+                ["tick"] = part.position + note.position,
+                ["end_tick"] = part.position + note.End,
+            };
+        }
+
+        static JsonArray Overlaps(UProject project, IEnumerable<UVoicePart> parts) {
+            var warnings = new JsonArray();
+            foreach (var part in parts.Distinct()) {
+                UNote? previous = null;
+                foreach (var note in part.notes) {
+                    if (previous != null && previous.End > note.position) {
+                        warnings.Add($"Part {project.parts.IndexOf(part)}: \"{previous.lyric}\" at tick {part.position + previous.position} "
+                            + $"overlaps \"{note.lyric}\" at tick {part.position + note.position}.");
+                    }
+                    previous = note;
+                }
+            }
+            return warnings;
+        }
+
+        // ---- Ops -----------------------------------------------------------------------------------
+
+        JsonObject Status(Request request) {
+            request.Done();
+            return host.Invoke(StatusOnMain);
+        }
+
+        JsonObject StatusOnMain() {
+            var doc = DocManager.Inst;
+            var project = doc.Project;
+            var result = new JsonObject {
+                ["protocol"] = ProtocolVersion,
+                ["host"] = host.Kind,
+                ["seed"] = host.Seed,
+            };
+            if (project == null) {
+                result["project"] = null;
+                return result;
+            }
+            var info = ProjectReport.Project(project);
+            info["saved"] = doc.ChangesSaved && !string.IsNullOrEmpty(project.FilePath);
+            result["project"] = info;
+            result["tracks"] = ProjectReport.Tracks(project);
+            var parts = new JsonArray();
+            for (int i = 0; i < project.parts.Count; i++) {
+                if (project.parts[i] is UVoicePart part) {
+                    parts.Add(new JsonObject {
+                        ["index"] = i,
+                        ["track"] = part.trackNo,
+                        ["name"] = part.name,
+                        ["tick"] = part.position,
+                        ["end_tick"] = part.End,
+                        ["notes"] = part.notes.Count,
+                    });
+                }
+            }
+            result["parts"] = parts;
+            result["can_undo"] = doc.GetUndoState(out _);
+            result["can_redo"] = doc.GetRedoState(out _);
+            result["ui"] = host.UiState(IdOf);
+            return result;
+        }
+
+        void GuardUnsaved(bool discard) {
+            bool unsaved = host.Invoke(() => DocManager.Inst.Project != null && !DocManager.Inst.ChangesSaved);
+            if (host.Kind == "gui" && unsaved && !discard) {
+                throw new AgentException("unsaved_changes",
+                    "The project open in the app has unsaved changes. Save it, or pass \"discard_changes\": true if the user agreed to lose them.");
+            }
+        }
+
+        JsonObject New(Request request) {
+            bool discard = request.Flag("discard_changes");
+            var score = request.Required("score", "{bpm, singer, phonemizer, notes?, curves?, name?, time_signature?, start?}");
+            request.Done();
+            GuardUnsaved(discard);
+            var project = ScoreBuilder.Build(score, host, null, allowEmpty: true);
+            host.LoadProject(project);
+            return host.Invoke(StatusOnMain);
+        }
+
+        JsonObject Open(Request request) {
+            bool discard = request.Flag("discard_changes");
+            string path = request.Str("path") ?? throw Invalid("\"path\" is required: the project file.");
+            request.Done();
+            GuardUnsaved(discard);
+            host.OpenProject(path);
+            return host.Invoke(StatusOnMain);
+        }
+
+        JsonObject Save(Request request) {
+            string? path = request.Str("path");
+            request.Done();
+            return host.Invoke(() => {
+                var project = RequireProject();
+                path ??= project.FilePath;
+                if (string.IsNullOrEmpty(path)) {
+                    throw Invalid("\"path\" is required: this project has not been saved before.");
+                }
+                host.SaveProject(project, path);
+                return new JsonObject { ["path"] = project.FilePath };
+            });
+        }
+
+        JsonObject Get(Request request) {
+            int? partIndex = request.Int("part");
+            int from = request.Int("from_tick") ?? int.MinValue;
+            int to = request.Int("to_tick") ?? int.MaxValue;
+            string detail = request.Str("detail") ?? "notes";
+            if (detail != "notes" && detail != "phonemes" && detail != "phrases") {
+                throw Invalid("\"detail\" must be notes, phonemes or phrases.");
+            }
+            var curveNames = new List<string>();
+            if (request.TryGet("curves", out var curvesValue)) {
+                if (curvesValue.ValueKind != JsonValueKind.Array || curvesValue.EnumerateArray().Any(c => c.ValueKind != JsonValueKind.String)) {
+                    throw Invalid("\"curves\" must be an array of expression abbreviations.");
+                }
+                curveNames.AddRange(curvesValue.EnumerateArray().Select(c => c.GetString()!.ToLowerInvariant()));
+            }
+            request.Done();
+
+            var project = host.Invoke(RequireProject);
+            AgentOps.WaitPhonemized(host, project);
+            return host.Invoke(() => {
+                var errors = new JsonArray();
+                var parts = ProjectReport.Parts(project, errors, IdOf);
+                var kept = new JsonArray();
+                foreach (var node in parts.ToList()) {
+                    var part = (JsonObject)node!;
+                    parts.Remove(node);
+                    int index = part["index"]!.GetValue<int>();
+                    if (partIndex.HasValue && index != partIndex.Value) {
+                        continue;
+                    }
+                    Trim(part, detail, from, to);
+                    if (curveNames.Count > 0) {
+                        part["curves"] = Curves((UVoicePart)project.parts[index], curveNames, from, to);
+                    }
+                    kept.Add(part);
+                }
+                if (partIndex.HasValue && kept.Count == 0) {
+                    throw Invalid($"The project has no voice part {partIndex.Value}.");
+                }
+                return new JsonObject {
+                    ["project"] = ProjectReport.Project(project),
+                    ["parts"] = kept,
+                    ["errors"] = errors,
+                };
+            });
+        }
+
+        // Cuts a part's report down to a tick range and a level of detail: a whole song is too much to read at once.
+        static void Trim(JsonObject part, string detail, int from, int to) {
+            bool InRange(JsonNode? node) {
+                int tick = node!["tick"]!.GetValue<int>();
+                int end = node["end_tick"]?.GetValue<int>() ?? tick + 1;
+                return end > from && tick < to;
+            }
+            void Filter(string name) {
+                var array = (JsonArray)part[name]!;
+                for (int i = array.Count - 1; i >= 0; i--) {
+                    if (!InRange(array[i])) {
+                        array.RemoveAt(i);
+                    }
+                }
+            }
+            var phonemes = (JsonArray)part["phonemes"]!;
+            if (detail == "notes") {
+                var names = phonemes.Select(p => p!["phoneme"]!.GetValue<string>()).ToArray();
+                foreach (var note in (JsonArray)part["notes"]!) {
+                    var indexes = ((JsonArray)note!["phonemes"]!).Select(i => i!.GetValue<int>()).ToArray();
+                    note["phonemes"] = new JsonArray(indexes.Select(i => (JsonNode)names[i]).ToArray());
+                }
+                part.Remove("phonemes");
+                part.Remove("phrases");
+            } else {
+                Filter("phonemes");
+                if (detail == "phonemes") {
+                    part.Remove("phrases");
+                } else {
+                    Filter("phrases");
+                }
+            }
+            Filter("notes");
+        }
+
+        static JsonObject Curves(UVoicePart part, List<string> names, int from, int to) {
+            var result = new JsonObject();
+            foreach (string abbr in names) {
+                var points = new JsonArray();
+                var curve = part.curves.FirstOrDefault(c => c.abbr == abbr);
+                for (int i = 0; curve != null && i < curve.xs.Count; i++) {
+                    int tick = part.position + curve.xs[i];
+                    if (tick >= from && tick <= to) {
+                        points.Add(new JsonArray(tick, curve.ys[i]));
+                    }
+                }
+                result[abbr] = points;
+            }
+            return result;
+        }
+
+        JsonObject AddNotes(Request request) {
+            int? partIndex = request.Int("part");
+            int? trackIndex = request.Int("track");
+            int? at = request.Int("at");
+            int? after = request.Int("after");
+            var notesValue = request.Required("notes", "an array of [lyric, tone, duration], {\"rest\": duration} or {lyric, tone, duration, tick}");
+            request.Done();
+            if (at.HasValue && after.HasValue) {
+                throw Invalid("Give \"at\" or \"after\", not both.");
+            }
+            return Edit(request, project => {
+                UVoicePart part;
+                int cursor;
+                if (after.HasValue) {
+                    var found = Find(project, after.Value);
+                    part = partIndex.HasValue ? TargetPart(project, partIndex, trackIndex, true) : found.Part;
+                    cursor = found.Part.position + found.Note.End;
+                } else {
+                    part = TargetPart(project, partIndex, trackIndex, true);
+                    cursor = at ?? (part.notes.Count > 0
+                        ? part.position + part.notes.Max(n => n.End)
+                        : Math.Max(part.position, WholeNote));
+                }
+                var notes = ScoreBuilder.ParseNotes(project, notesValue, ref cursor);
+                if (notes.Count == 0) {
+                    throw Invalid("\"notes\" has no notes.");
+                }
+                foreach (var note in notes) {
+                    note.position -= part.position;
+                    if (note.position < 0) {
+                        throw Invalid($"\"{note.lyric}\" would start before its part, which begins at tick {part.position}.");
+                    }
+                }
+                Exec(new AddNoteCommand(part, notes));
+                FitPart(project, part);
+                return new JsonObject {
+                    ["notes"] = new JsonArray(notes.Select(n => (JsonNode)NoteJson(project, part, n)).ToArray()),
+                    ["next_tick"] = cursor,
+                    ["warnings"] = Overlaps(project, new[] { part }),
+                };
+            });
+        }
+
+        JsonObject EditNotes(Request request) {
+            var notesValue = request.Required("notes", "an array of {id, lyric?, tone?, tick?, duration?}");
+            request.Done();
+            if (notesValue.ValueKind != JsonValueKind.Array || notesValue.GetArrayLength() == 0) {
+                throw Invalid("\"notes\" must be a non-empty array of {id, lyric?, tone?, tick?, duration?}.");
+            }
+            return Edit(request, project => {
+                var edited = new List<(UVoicePart, UNote)>();
+                int index = 0;
+                foreach (var item in notesValue.EnumerateArray()) {
+                    string where = $"notes[{index++}]";
+                    if (item.ValueKind != JsonValueKind.Object) {
+                        throw Invalid($"{where} must be an object with an id.");
+                    }
+                    foreach (var property in item.EnumerateObject()) {
+                        if (property.Name != "id" && property.Name != "lyric" && property.Name != "tone"
+                                && property.Name != "tick" && property.Name != "duration") {
+                            throw Invalid($"{where}: unknown field \"{property.Name}\".");
+                        }
+                    }
+                    if (!item.TryGetProperty("id", out var idValue) || !idValue.TryGetInt32(out int id)) {
+                        throw Invalid($"{where} needs the note's id.");
+                    }
+                    var (part, note) = Find(project, id);
+                    if (item.TryGetProperty("lyric", out var lyric)) {
+                        if (lyric.ValueKind != JsonValueKind.String || string.IsNullOrEmpty(lyric.GetString())) {
+                            throw Invalid($"{where}: lyric must be a non-empty string.");
+                        }
+                        Exec(new ChangeNoteLyricCommand(part, note, lyric.GetString()!));
+                    }
+                    int deltaTone = item.TryGetProperty("tone", out var tone) ? ScoreBuilder.Tone(tone, where) - note.tone : 0;
+                    int deltaTick = 0;
+                    if (item.TryGetProperty("tick", out var tick)) {
+                        if (!tick.TryGetInt32(out int target)) {
+                            throw Invalid($"{where}: tick must be a whole number.");
+                        }
+                        deltaTick = target - (part.position + note.position);
+                        if (note.position + deltaTick < 0) {
+                            throw Invalid($"{where}: the note would start before its part, which begins at tick {part.position}.");
+                        }
+                    }
+                    if (deltaTone != 0 || deltaTick != 0) {
+                        Exec(new MoveNoteCommand(part, note, deltaTick, deltaTone));
+                    }
+                    if (item.TryGetProperty("duration", out var duration)) {
+                        int delta = ScoreBuilder.Duration(duration, where) - note.duration;
+                        if (delta != 0) {
+                            Exec(new ResizeNoteCommand(part, note, delta));
+                        }
+                    }
+                    edited.Add((part, note));
+                }
+                foreach (var part in edited.Select(e => e.Item1).Distinct()) {
+                    FitPart(project, part);
+                }
+                return new JsonObject {
+                    ["notes"] = new JsonArray(edited.Select(e => (JsonNode)NoteJson(project, e.Item1, e.Item2)).ToArray()),
+                    ["warnings"] = Overlaps(project, edited.Select(e => e.Item1)),
+                };
+            });
+        }
+
+        JsonObject DeleteNotes(Request request) {
+            var idsValue = request.Required("ids", "an array of note ids");
+            request.Done();
+            if (idsValue.ValueKind != JsonValueKind.Array || idsValue.GetArrayLength() == 0
+                    || idsValue.EnumerateArray().Any(i => i.ValueKind != JsonValueKind.Number || !i.TryGetInt32(out _))) {
+                throw Invalid("\"ids\" must be a non-empty array of note ids.");
+            }
+            var wanted = idsValue.EnumerateArray().Select(i => i.GetInt32()).Distinct().ToArray();
+            return Edit(request, project => {
+                var found = wanted.Select(id => Find(project, id)).ToList();
+                foreach (var group in found.GroupBy(f => f.Part)) {
+                    Exec(new RemoveNoteCommand(group.Key, group.Select(f => f.Note).ToList()));
+                }
+                return new JsonObject { ["deleted"] = found.Count };
+            });
+        }
+
+        JsonObject SetCurve(Request request) {
+            int? partIndex = request.Int("part");
+            int? trackIndex = request.Int("track");
+            string abbr = (request.Str("abbr") ?? throw Invalid("\"abbr\" is required: the expression, such as pitd or genc.")).ToLowerInvariant();
+            bool hasDefault = request.TryGet("default", out var defaultValue);
+            bool resetDefault = request.Flag("reset_default");
+            bool hasPoints = request.TryGet("points", out var pointsValue);
+            bool clear = request.Flag("clear");
+            int? from = request.Int("from_tick");
+            int? to = request.Int("to_tick");
+            request.Done();
+            int modes = (hasDefault ? 1 : 0) + (resetDefault ? 1 : 0) + (hasPoints ? 1 : 0) + (clear ? 1 : 0);
+            if (modes != 1) {
+                throw Invalid("Give exactly one of \"points\" ([[tick, value], ...]), \"clear\": true, \"default\": value or \"reset_default\": true.");
+            }
+            return Edit(request, project => {
+                if (hasDefault || resetDefault) {
+                    int track = trackIndex ?? (partIndex.HasValue ? TargetPart(project, partIndex, null, false).trackNo : 0);
+                    if (track < 0 || track >= project.tracks.Count) {
+                        throw Invalid($"The project has no track {track}.");
+                    }
+                    var descriptor = ScoreBuilder.CurveDescriptor(project, project.tracks[track], abbr);
+                    float? value = null;
+                    if (hasDefault) {
+                        if (defaultValue.ValueKind != JsonValueKind.Number) {
+                            throw Invalid("\"default\" must be a number.");
+                        }
+                        ScoreBuilder.CheckRange(descriptor, defaultValue.GetDouble());
+                        value = (float)defaultValue.GetDouble();
+                    }
+                    Exec(new SetTrackExpressionDefaultCommand(project, project.tracks[track], abbr, value));
+                    return new JsonObject { ["abbr"] = abbr, ["track"] = track, ["default"] = value };
+                }
+
+                var part = TargetPart(project, partIndex, trackIndex, false);
+                var curveDescriptor = ScoreBuilder.CurveDescriptor(project, project.tracks[part.trackNo], abbr);
+                if (clear) {
+                    if (from.HasValue || to.HasValue) {
+                        Exec(new EraseCurveCommand(project, part, abbr,
+                            (from ?? part.position) - part.position, (to ?? part.End) - part.position));
+                    } else {
+                        Exec(new ClearCurveCommand(part, abbr));
+                    }
+                } else {
+                    if (pointsValue.ValueKind != JsonValueKind.Array || pointsValue.GetArrayLength() == 0) {
+                        throw Invalid("\"points\" must be a non-empty array of [tick, value].");
+                    }
+                    var points = new SortedDictionary<int, int>();
+                    foreach (var point in pointsValue.EnumerateArray()) {
+                        if (point.ValueKind != JsonValueKind.Array || point.GetArrayLength() != 2
+                                || point[0].ValueKind != JsonValueKind.Number || point[1].ValueKind != JsonValueKind.Number) {
+                            throw Invalid("Each point must be [tick, value].");
+                        }
+                        ScoreBuilder.CheckRange(curveDescriptor, point[1].GetDouble());
+                        points[(int)Math.Round(point[0].GetDouble()) - part.position] = (int)Math.Round(point[1].GetDouble());
+                    }
+                    // As dragging the pen through the points: a line between each two, replacing what was there.
+                    var previous = points.First();
+                    foreach (var point in points) {
+                        Exec(new SetCurveCommand(project, part, abbr, point.Key, point.Value, previous.Key, previous.Value));
+                        previous = point;
+                    }
+                    if (part.curves.All(c => c.abbr != abbr)) {
+                        throw new AgentException("curve_unavailable", $"This project cannot draw \"{abbr}\" as a curve.");
+                    }
+                }
+                return new JsonObject {
+                    ["abbr"] = abbr,
+                    ["part"] = project.parts.IndexOf(part),
+                    ["points"] = part.curves.FirstOrDefault(c => c.abbr == abbr)?.xs.Count ?? 0,
+                };
+            });
+        }
+
+        JsonObject SetTempo(Request request) {
+            double bpm = request.Number("bpm") ?? throw Invalid("\"bpm\" is required.");
+            request.Done();
+            if (bpm < 10 || bpm > 1000) {
+                throw Invalid("\"bpm\" must be between 10 and 1000.");
+            }
+            return Edit(request, project => {
+                Exec(new BpmCommand(project, bpm));
+                return new JsonObject { ["project"] = ProjectReport.Project(project) };
+            });
+        }
+
+        JsonObject SetTrack(Request request) {
+            int trackIndex = request.Int("track") ?? 0;
+            string? singerName = request.Str("singer");
+            string? phonemizerName = request.Str("phonemizer");
+            request.Done();
+            if (singerName == null && phonemizerName == null) {
+                throw Invalid("Give \"singer\", \"phonemizer\" or both.");
+            }
+            var singer = singerName == null ? null : Queries.ResolveSinger(host, singerName);
+            var factory = phonemizerName == null ? null : ScoreBuilder.FindPhonemizer(phonemizerName);
+            return Edit(request, project => {
+                if (trackIndex < 0 || trackIndex >= project.tracks.Count) {
+                    throw Invalid($"The project has no track {trackIndex}.");
+                }
+                var track = project.tracks[trackIndex];
+                if (singer != null) {
+                    Exec(new TrackChangeSingerCommand(project, track, singer));
+                    if (!Renderers.GetSupportedRenderers(singer.SingerType).Contains(track.RendererSettings?.renderer)) {
+                        Exec(new TrackChangeRenderSettingCommand(project, track, new URenderSettings {
+                            renderer = Renderers.GetDefaultRenderer(singer.SingerType),
+                        }));
+                    }
+                }
+                if (factory != null) {
+                    Exec(new TrackChangePhonemizerCommand(project, track, factory.Create()));
+                }
+                return new JsonObject { ["tracks"] = ProjectReport.Tracks(project) };
+            });
+        }
+
+        JsonObject LoadPitch(Request request) {
+            int? partIndex = request.Int("part");
+            string mode = request.Str("mode") ?? AgentOps.PitchUntuned;
+            request.Done();
+            if (mode != AgentOps.PitchUntuned && mode != AgentOps.PitchAll) {
+                throw Invalid("\"mode\" must be untuned or all.");
+            }
+            var (project, part) = host.Invoke(() => {
+                var p = RequireProject();
+                return (p, partIndex.HasValue ? TargetPart(p, partIndex, null, false) : null);
+            });
+            AgentOps.CheckSingers(host, project);
+            AgentOps.WaitPhonemized(host, project);
+            AgentOps.LoadRenderedPitch(host, project, mode, part);
+            return new JsonObject { ["mode"] = mode };
+        }
+
+        JsonObject Render(Request request) {
+            string outPath = request.Str("out") ?? throw Invalid("\"out\" is required: the wav file to write.");
+            int from = request.Int("from_tick") ?? 0;
+            int to = request.Int("to_tick") ?? -1;
+            int track = request.Int("track") ?? -1;
+            bool mixdown = request.Flag("mixdown");
+            bool allowErrors = request.Flag("allow_errors");
+            request.Done();
+            if (from < 0 || (to >= 0 && to <= from)) {
+                throw Invalid("\"from_tick\" must not be negative, and \"to_tick\" must come after it.");
+            }
+            var project = host.Invoke(RequireProject);
+            if (track >= host.Invoke(() => project.tracks.Count)) {
+                throw Invalid($"The project has no track {track}.");
+            }
+            AgentOps.CheckSingers(host, project);
+            AgentOps.WaitPhonemized(host, project);
+            var errors = host.Invoke(() => project.parts.OfType<UVoicePart>()
+                .SelectMany(p => p.phonemes.Where(ph => ph.Error)
+                    .Select(ph => $"\"{ph.Parent?.lyric}\" at tick {p.position + ph.position}: {ph.ErrorException?.Message ?? "phoneme error"}"))
+                .ToList());
+            if (errors.Count > 0 && !allowErrors) {
+                throw new AgentException("phoneme_errors",
+                    $"{errors.Count} phoneme(s) have errors, e.g. {string.Join("; ", errors.Take(3))}. Fix the notes, or pass \"allow_errors\": true.");
+            }
+            var outputs = AgentOps.Render(host, project, outPath, mixdown, track, from, to);
+            return new JsonObject {
+                ["outputs"] = OutputsJson(outputs),
+                ["from_tick"] = from,
+                ["to_tick"] = to < 0 ? null : to,
+                ["from_ms"] = ProjectReport.Round(host.Invoke(() => project.timeAxis.TickPosToMsPos(from))),
+            };
+        }
+
+        public static JsonArray OutputsJson(IEnumerable<RenderOutput> outputs) {
+            return new JsonArray(outputs.Select(o => (JsonNode)new JsonObject {
+                ["track"] = o.Track < 0 ? null : o.Track,
+                ["path"] = o.Path,
+                ["channels"] = o.Channels,
+                ["sample_rate"] = o.SampleRate,
+                ["bits"] = o.BitsPerSample,
+                ["samples"] = o.Samples,
+                ["duration_ms"] = ProjectReport.Round(o.Samples * 1000.0 / o.SampleRate),
+                ["sha256"] = o.Sha256,
+            }).ToArray());
+        }
+
+        JsonObject UndoRedo(Request request, bool undo) {
+            request.Done();
+            return host.Invoke(() => {
+                RequireProject();
+                var doc = DocManager.Inst;
+                if (doc.HasOpenUndoGroup) {
+                    throw new AgentException("busy", "An edit is in progress in the app. Try again when it is done.");
+                }
+                if (!(undo ? doc.GetUndoState(out _) : doc.GetRedoState(out _))) {
+                    throw new AgentException(undo ? "nothing_to_undo" : "nothing_to_redo", undo ? "There is nothing to undo." : "There is nothing to redo.");
+                }
+                if (undo) {
+                    doc.Undo();
+                } else {
+                    doc.Redo();
+                }
+                return new JsonObject { ["can_undo"] = doc.GetUndoState(out _), ["can_redo"] = doc.GetRedoState(out _) };
+            });
+        }
+
+        JsonObject Singers(Request request) {
+            request.Done();
+            host.SearchInstalledSingers();
+            return new JsonObject { ["singers"] = host.Invoke(Queries.Singers) };
+        }
+
+        JsonObject Phonemizers(Request request) {
+            string? singerName = request.Str("singer");
+            request.Done();
+            var singer = singerName == null ? null : Queries.ResolveSinger(host, singerName);
+            return new JsonObject { ["singer_id"] = singer?.Id, ["phonemizers"] = Queries.Phonemizers(singer) };
+        }
+
+        JsonObject Expressions(Request request) {
+            string? singerName = request.Str("singer");
+            int? trackIndex = request.Int("track");
+            request.Done();
+            USinger singer;
+            if (singerName != null) {
+                singer = Queries.ResolveSinger(host, singerName);
+            } else {
+                singer = host.Invoke(() => {
+                    var project = RequireProject();
+                    int track = trackIndex ?? 0;
+                    if (track < 0 || track >= project.tracks.Count || project.tracks[track].Singer == null || !project.tracks[track].Singer.Found) {
+                        throw Invalid($"Track {track} has no singer. Give \"singer\".");
+                    }
+                    return project.tracks[track].Singer;
+                });
+            }
+            return Queries.Expressions(host, singer);
+        }
+
+        JsonObject Shutdown(Request request) {
+            request.Done();
+            if (host.Kind == "gui") {
+                throw new AgentException("unsupported", "The app is closed by its user, not by an agent.");
+            }
+            ShutdownRequested = true;
+            return new JsonObject();
+        }
+
+        JsonObject Help(Request request) {
+            request.Done();
+            var help = Describe();
+            help["host"] = host.Kind;
+            return help;
+        }
+
+        // The protocol in its own words; also what other front ends (MCP) show.
+        public static JsonObject Describe() {
+            JsonObject Op(string summary, params string[] fields) {
+                return new JsonObject { ["summary"] = summary, ["fields"] = new JsonArray(fields.Select(f => (JsonNode)f).ToArray()) };
+            }
+            return new JsonObject {
+                ["protocol"] = ProtocolVersion,
+                ["format"] = "One JSON object per line in, one per line out. A request is {\"op\": name, ...fields}; \"id\" is echoed. "
+                    + "A reply has ok, revision, warnings, diagnostics, and error {code, message} when ok is false.",
+                ["units"] = "Ticks: 480 per quarter note, counted from the start of the project. Tones: MIDI numbers or names like \"C4\". "
+                    + "Durations: ticks, or a fraction of a whole note like \"1/8\", dotted with a trailing \".\".",
+                ["revisions"] = "\"revision\" goes up with every change, including the user's in the app. Any editing op takes \"expect_revision\" and fails with code conflict if the project moved on.",
+                ["ops"] = new JsonObject {
+                    ["status"] = Op("The open project: tempo, tracks, parts, undo state; in the app also the open part, selection and playhead."),
+                    ["new"] = Op("Replace the open project with a new one-track project.",
+                        "score: {bpm, singer, phonemizer?, notes?, curves?, name?, time_signature?, start?}; singer is an installed singer's id or name, or without the app a voicebank folder",
+                        "discard_changes: in the app, required when the open project has unsaved changes"),
+                    ["open"] = Op("Open a project file.", "path", "discard_changes"),
+                    ["save"] = Op("Save as .ustx.", "path: needed the first time"),
+                    ["get"] = Op("Notes with their ids, and how they are sung. Waits for the phonemizer.",
+                        "part: index; all voice parts if absent",
+                        "from_tick, to_tick: only what overlaps this range",
+                        "detail: notes (default; each note lists its phoneme names), phonemes (adds each phoneme's timing in ticks, ms and frames), phrases (adds what the renderer is given)",
+                        "curves: abbreviations whose drawn points to return, e.g. [\"pitd\"]"),
+                    ["add_notes"] = Op("Add notes; they follow one another unless a note has its own tick.",
+                        "notes: [[lyric, tone, duration], {\"rest\": duration}, {lyric, tone, duration, tick?}]; lyric \"+\" continues the syllable before it",
+                        "at: tick of the first note; or after: id of the note to follow; default: after the part's last note",
+                        "part or track: where; default is the part open in the app, else the first part"),
+                    ["edit_notes"] = Op("Change notes.", "notes: [{id, lyric?, tone?, tick?, duration?}]"),
+                    ["delete_notes"] = Op("Delete notes.", "ids: [id, ...]"),
+                    ["set_curve"] = Op("Draw, erase or set the resting value of an expression curve (pitd, dyn, genc, velc, ...). The expressions op lists them with their ranges.",
+                        "abbr",
+                        "points: [[tick, value], ...] draws straight lines through the points",
+                        "clear: true erases the drawn curve, within from_tick..to_tick if given",
+                        "default: value the whole track takes wherever no curve is drawn; reset_default: true removes it",
+                        "part or track"),
+                    ["set_tempo"] = Op("Set the tempo at the start of the project.", "bpm"),
+                    ["set_track"] = Op("Change a track's singer or phonemizer.", "track: default 0", "singer", "phonemizer: id, tag or name"),
+                    ["load_pitch"] = Op("Write the pitch the singer's model predicts into the pitd curve, as the app's Load Rendered Pitch.",
+                        "mode: untuned (default; only phrases without a drawn pitch) or all", "part"),
+                    ["render"] = Op("Render to wav.",
+                        "out: file path",
+                        "from_tick, to_tick: render only this range; the file then starts at from_tick",
+                        "track: only this track", "mixdown: one stereo file of all tracks", "allow_errors"),
+                    ["undo"] = Op("Undo the last change, the user's included."),
+                    ["redo"] = Op("Redo."),
+                    ["singers"] = Op("The installed singers."),
+                    ["phonemizers"] = Op("Phonemizers, or those offered for a singer.", "singer"),
+                    ["expressions"] = Op("The expressions a singer supports, with ranges and defaults.", "singer or track"),
+                    ["shutdown"] = Op("End a session that runs without the app."),
+                },
+            };
+        }
+    }
+}
