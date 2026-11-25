@@ -71,6 +71,7 @@ namespace OpenUtau.Cli {
         }
 
         public IReadOnlyList<string> Diagnostics => sink.Errors();
+        public IReadOnlyList<string> TakeDiagnostics() => sink.Errors(take: true);
 
         public static HeadlessHost Start(HostOptions options) {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -320,9 +321,13 @@ namespace OpenUtau.Cli {
                 }
             }
 
-            public IReadOnlyList<string> Errors() {
+            public IReadOnlyList<string> Errors(bool take = false) {
                 lock (errors) {
-                    return errors.ToArray();
+                    var result = errors.ToArray();
+                    if (take) {
+                        errors.Clear();
+                    }
+                    return result;
                 }
             }
 

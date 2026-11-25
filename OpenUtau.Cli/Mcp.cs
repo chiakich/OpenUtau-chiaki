@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Threading;
 using OpenUtau.Core.Agent;
 
 namespace OpenUtau.Cli {
@@ -13,6 +15,7 @@ namespace OpenUtau.Cli {
         const string LatestProtocol = "2025-06-18";
         static readonly string[] KnownProtocols = { "2025-06-18", "2025-03-26", "2024-11-05" };
         static readonly UTF8Encoding Utf8 = new UTF8Encoding(false);
+        static readonly TimeSpan ProgressInterval = TimeSpan.FromSeconds(10);
 
         sealed record Tool(string Name, string Op, bool ReadOnly, JsonObject Properties, string[] Required);
 
@@ -42,7 +45,7 @@ namespace OpenUtau.Cli {
             new Tool("get_notes", "get", true, Props(("part", P("integer")), ("from_tick", P("integer")), ("to_tick", P("integer")),
                 ("detail", new JsonObject { ["type"] = "string", ["enum"] = new JsonArray("notes", "phonemes", "phrases") }),
                 ("curves", ArrayOf(P("string")))), new string[0]),
-            new Tool("add_notes", "add_notes", false, Props(("notes", ArrayOf()), ("at", P("integer")), ("after", P("integer")),
+            new Tool("add_notes", "add_notes", false, Props(("notes", ArrayOf(new JsonObject())), ("at", P("integer")), ("after", P("integer")),
                 ("part", P("integer")), ("track", P("integer")), ("expect_revision", P("integer"))), new[] { "notes" }),
             new Tool("edit_notes", "edit_notes", false, Props(("notes", ArrayOf(new JsonObject {
                 ["type"] = "object",
@@ -79,24 +82,38 @@ namespace OpenUtau.Cli {
         }
 
         public void Serve(Stream input, Stream output) {
+            void Write(JsonObject message) {
+                byte[] bytes = Utf8.GetBytes(message.ToJsonString() + "\n");
+                lock (output) {
+                    output.Write(bytes, 0, bytes.Length);
+                    output.Flush();
+                }
+            }
+            // Tools run one at a time on their own thread: a render takes minutes, and a client pings meanwhile.
+            using var calls = new BlockingCollection<JsonObject>();
+            var worker = new Thread(() => {
+                foreach (var message in calls.GetConsumingEnumerable()) {
+                    Write(CallWithProgress(message, Write));
+                }
+            }) { IsBackground = true, Name = "MCP tools" };
+            worker.Start();
             using var reader = new StreamReader(input, Utf8, false, 4096, leaveOpen: true);
             string? line;
             while ((line = reader.ReadLine()) != null) {
                 if (line.Trim().Length == 0) {
                     continue;
                 }
-                var reply = Handle(line);
-                if (reply == null) {
-                    continue;
+                var reply = Handle(line, calls.Add);
+                if (reply != null) {
+                    Write(reply);
                 }
-                byte[] bytes = Utf8.GetBytes(reply.ToJsonString() + "\n");
-                output.Write(bytes, 0, bytes.Length);
-                output.Flush();
             }
+            calls.CompleteAdding();
+            worker.Join();
         }
 
-        // Null for a notification, which gets no reply.
-        public JsonObject? Handle(string line) {
+        // Null for a notification, which gets no reply, and for a tool call handed to later.
+        public JsonObject? Handle(string line, Action<JsonObject>? later = null) {
             JsonObject? message;
             try {
                 message = JsonNode.Parse(line) as JsonObject;
@@ -120,11 +137,57 @@ namespace OpenUtau.Cli {
                     case "initialize": return Result(id, Initialize(message["params"] as JsonObject));
                     case "ping": return Result(id, new JsonObject());
                     case "tools/list": return Result(id, new JsonObject { ["tools"] = new JsonArray(Tools.Select(t => (JsonNode)Describe(t)).ToArray()) });
-                    case "tools/call": return Result(id, Call(message["params"] as JsonObject));
+                    case "tools/call":
+                        if (later != null) {
+                            later(message);
+                            return null;
+                        }
+                        return Result(id, Call(message["params"] as JsonObject));
                     default: return Error(id, -32601, $"Unknown method {method}.");
                 }
             } catch (ArgumentException e) {
                 return Error(id, -32602, e.Message);
+            } catch (Exception e) {
+                // The server outlives a request it could not answer.
+                return Error(id, -32603, e.Message);
+            }
+        }
+
+        // A client that sent a progress token is told the call is alive, which also resets its timeout.
+        JsonObject CallWithProgress(JsonObject message, Action<JsonObject> write) {
+            var id = message["id"]!.DeepClone();
+            var parameters = message["params"] as JsonObject;
+            var token = (parameters?["_meta"] as JsonObject)?["progressToken"];
+            int beats = 0;
+            using var timer = token == null ? null : new Timer(_ => {
+                try {
+                    write(new JsonObject {
+                        ["jsonrpc"] = "2.0",
+                        ["method"] = "notifications/progress",
+                        ["params"] = new JsonObject {
+                            ["progressToken"] = token.DeepClone(),
+                            ["progress"] = Interlocked.Increment(ref beats),
+                            ["message"] = "Still working.",
+                        },
+                    });
+                } catch (Exception) {
+                    // The client went away; the call still finishes.
+                }
+            }, null, ProgressInterval, ProgressInterval);
+            try {
+                return Result(id, Call(parameters));
+            } catch (ArgumentException e) {
+                return Error(id, -32602, e.Message);
+            } catch (Exception e) {
+                return Error(id, -32603, e.Message);
+            } finally {
+                // No progress may follow the reply.
+                if (timer != null) {
+                    using var stopped = new ManualResetEvent(false);
+                    if (timer.Dispose(stopped)) {
+                        stopped.WaitOne();
+                    }
+                }
             }
         }
 
@@ -184,7 +247,7 @@ namespace OpenUtau.Cli {
             bool failed;
             try {
                 reply = send(request.ToJsonString());
-                failed = !(JsonNode.Parse(reply) is JsonObject json && json["ok"]?.GetValue<bool>() == true);
+                failed = !(JsonNode.Parse(reply) is JsonObject json && json["ok"] is JsonValue ok && ok.TryGetValue(out bool fine) && fine);
             } catch (AgentException e) {
                 // Typically the app not running: the tool failed, the server goes on.
                 reply = new JsonObject {

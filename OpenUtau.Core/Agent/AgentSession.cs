@@ -31,7 +31,6 @@ namespace OpenUtau.Core.Agent {
         readonly ConditionalWeakTable<UNote, object> ids = new ConditionalWeakTable<UNote, object>();
         readonly Dictionary<int, WeakReference<UNote>> notesById = new Dictionary<int, WeakReference<UNote>>();
         int nextId = 1;
-        int reportedDiagnostics;
         int executed;
         // Counts edits, the user's included. Not the document's own revision, which also moves when the phonemizer answers.
         long revision;
@@ -148,10 +147,8 @@ namespace OpenUtau.Core.Agent {
                 }
                 host.Warnings.Clear();
             }
-            var diagnostics = host.Diagnostics;
             reply["warnings"] = warnings;
-            reply["diagnostics"] = new JsonArray(diagnostics.Skip(reportedDiagnostics).Select(d => (JsonNode)d).ToArray());
-            reportedDiagnostics = diagnostics.Count;
+            reply["diagnostics"] = new JsonArray(host.TakeDiagnostics().Select(d => (JsonNode)d).ToArray());
         }
 
         // ---- Requests ------------------------------------------------------------------------------

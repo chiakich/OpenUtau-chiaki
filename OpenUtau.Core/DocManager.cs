@@ -305,6 +305,7 @@ namespace OpenUtau.Core {
             if (Project == null) {
                 return;
             }
+            if (Util.Headless.ReadOnlyUserData) { return; } // Fork: tests and the cli write nothing by themselves.
             if (undoQueue.LastOrDefault() == autosavedPoint) {
                 Log.Information("Autosave skipped.");
                 return;

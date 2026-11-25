@@ -184,6 +184,14 @@ namespace OpenUtau.Cli {
     }
 
     public class McpTest {
+        // Tool calls are answered when they finish, other requests at once: replies are matched by id.
+        static System.Collections.Generic.Dictionary<string, JsonElement> Replies(string stdout) {
+            return stdout.Split('\n').Where(l => l.Trim().Length > 0)
+                .Select(l => JsonDocument.Parse(l).RootElement)
+                .Where(r => r.TryGetProperty("id", out _))
+                .ToDictionary(r => r.GetProperty("id").ToString(), r => r);
+        }
+
         [Fact]
         public void ToolsAreListedAndCalled() {
             string input = string.Join("\n",
@@ -196,17 +204,16 @@ namespace OpenUtau.Cli {
                 "{\"jsonrpc\":\"2.0\",\"id\":6,\"method\":\"resources/list\"}") + "\n";
             var result = CliProcess.RunWithInput(input, "mcp");
             Assert.True(result.ExitCode == 0, result.Stderr);
-            var replies = result.Stdout.Split('\n').Where(l => l.Trim().Length > 0)
-                .Select(l => JsonDocument.Parse(l).RootElement).ToArray();
+            var replies = Replies(result.Stdout);
             // The notification gets no reply.
-            Assert.Equal(6, replies.Length);
-            Assert.All(replies, r => Assert.Equal("2.0", r.GetProperty("jsonrpc").GetString()));
+            Assert.Equal(6, replies.Count);
+            Assert.All(replies.Values, r => Assert.Equal("2.0", r.GetProperty("jsonrpc").GetString()));
 
-            var init = replies[0].GetProperty("result");
+            var init = replies["1"].GetProperty("result");
             Assert.Equal("2025-03-26", init.GetProperty("protocolVersion").GetString());
             Assert.Equal(JsonValueKind.Object, init.GetProperty("capabilities").GetProperty("tools").ValueKind);
 
-            var tools = replies[1].GetProperty("result").GetProperty("tools").EnumerateArray().ToArray();
+            var tools = replies["2"].GetProperty("result").GetProperty("tools").EnumerateArray().ToArray();
             Assert.Contains("get_notes", tools.Select(t => t.GetProperty("name").GetString()));
             Assert.DoesNotContain("shutdown", tools.Select(t => t.GetProperty("name").GetString()));
             Assert.All(tools, t => {
@@ -214,19 +221,18 @@ namespace OpenUtau.Cli {
                 Assert.Equal("object", t.GetProperty("inputSchema").GetProperty("type").GetString());
             });
 
-            Assert.Equal("a", replies[2].GetProperty("id").GetString());
-            var added = replies[2].GetProperty("result");
+            var added = replies["a"].GetProperty("result");
             Assert.False(added.GetProperty("isError").GetBoolean());
             var reply = JsonDocument.Parse(added.GetProperty("content")[0].GetProperty("text").GetString()!).RootElement;
             Assert.Equal(1, reply.GetProperty("notes")[0].GetProperty("id").GetInt32());
 
             // A refused request is a tool error the model can read, not a protocol error.
-            var refused = replies[3].GetProperty("result");
+            var refused = replies["4"].GetProperty("result");
             Assert.True(refused.GetProperty("isError").GetBoolean());
             Assert.Contains("note_not_found", refused.GetProperty("content")[0].GetProperty("text").GetString());
 
-            Assert.Equal(-32602, replies[4].GetProperty("error").GetProperty("code").GetInt32());
-            Assert.Equal(-32601, replies[5].GetProperty("error").GetProperty("code").GetInt32());
+            Assert.Equal(-32602, replies["5"].GetProperty("error").GetProperty("code").GetInt32());
+            Assert.Equal(-32601, replies["6"].GetProperty("error").GetProperty("code").GetInt32());
         }
 
         [Fact]
@@ -237,12 +243,11 @@ namespace OpenUtau.Cli {
                 "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"ping\"}") + "\n";
             var result = CliProcess.RunWithInput(input, "mcp", "--socket", socket);
             Assert.True(result.ExitCode == 0, result.Stderr);
-            var replies = result.Stdout.Split('\n').Where(l => l.Trim().Length > 0)
-                .Select(l => JsonDocument.Parse(l).RootElement).ToArray();
-            Assert.Equal(2, replies.Length);
-            Assert.True(replies[0].GetProperty("result").GetProperty("isError").GetBoolean());
-            Assert.Contains("not_listening", replies[0].GetProperty("result").GetProperty("content")[0].GetProperty("text").GetString());
-            Assert.Equal(JsonValueKind.Object, replies[1].GetProperty("result").ValueKind);
+            var replies = Replies(result.Stdout);
+            Assert.Equal(2, replies.Count);
+            Assert.True(replies["1"].GetProperty("result").GetProperty("isError").GetBoolean());
+            Assert.Contains("not_listening", replies["1"].GetProperty("result").GetProperty("content")[0].GetProperty("text").GetString());
+            Assert.Equal(JsonValueKind.Object, replies["2"].GetProperty("result").ValueKind);
         }
     }
 

@@ -30,6 +30,8 @@ namespace OpenUtau.App {
                 try {
                     var host = new GuiAgentHost(window);
                     agentServer = new AgentSocketServer(new AgentSession(host), AgentTransport.GuiSocketPath);
+                    // Before the document goes away: a request arriving later is refused instead of lost.
+                    window.Closed += (_, _) => agentServer?.Dispose();
                     Log.Information($"Agent connection listening on {agentServer.Path}");
                 } catch (Exception e) {
                     Log.Error(e, "Failed to start the agent connection.");

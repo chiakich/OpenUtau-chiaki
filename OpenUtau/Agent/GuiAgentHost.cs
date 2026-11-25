@@ -31,6 +31,14 @@ namespace OpenUtau.App.Agent {
             }
         }
 
+        public IReadOnlyList<string> TakeDiagnostics() {
+            lock (diagnostics) {
+                var result = diagnostics.ToArray();
+                diagnostics.Clear();
+                return result;
+            }
+        }
+
         public GuiAgentHost(MainWindow window) {
             this.window = window;
             Invoke(() => {
@@ -52,6 +60,7 @@ namespace OpenUtau.App.Agent {
         public UProject OpenProject(string path) {
             return Invoke(() => {
                 ViewModel.OpenProject(new[] { path });
+                ViewModel.Page = 1;
                 return DocManager.Inst.Project;
             });
         }
@@ -62,6 +71,7 @@ namespace OpenUtau.App.Agent {
                 DocManager.Inst.Recovered = false;
                 // Loading validated against the previous document; phonemize again now that this one is current.
                 project.ValidateFull();
+                ViewModel.Page = 1;
                 ViewModel.RaisePropertyChanged(nameof(MainWindowViewModel.Title));
                 return true;
             });
@@ -96,6 +106,10 @@ namespace OpenUtau.App.Agent {
         }
 
         public void OnNext(UCommand cmd, bool isUndo) {
+            // An edit made from the welcome page would otherwise stay behind it.
+            if (!(cmd is UNotification) && window.DataContext is MainWindowViewModel viewModel && viewModel.Page == 0) {
+                viewModel.Page = 1;
+            }
             if (cmd is ErrorMessageNotification error) {
                 string message = error.e is MessageCustomizableException mce
                     ? $"{mce.Message} {mce.SubstanceException?.Message}".Trim()

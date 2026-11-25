@@ -33,12 +33,16 @@ namespace OpenUtau.UiTest {
                     Assert.True(status.GetProperty("ok").GetBoolean(), status.GetRawText());
                     Assert.Equal("gui", status.GetProperty("host").GetString());
                     Assert.Equal(JsonValueKind.Object, status.GetProperty("ui").ValueKind);
+                    var viewModel = Assert.IsType<OpenUtau.App.ViewModels.MainWindowViewModel>(window.DataContext);
+                    Assert.Equal(0, viewModel.Page);
 
                     var added = Send(session, "{\"op\":\"add_notes\",\"notes\":[[\"la\",\"C4\",\"1/4\"],[\"la\",\"D4\",\"1/4\"]]}");
                     Assert.True(added.GetProperty("ok").GetBoolean(), added.GetRawText());
                     long afterAdd = added.GetProperty("revision").GetInt64();
                     var part = Assert.Single(DocManager.Inst.Project.parts.OfType<UVoicePart>());
                     Assert.Equal(new[] { 60, 62 }, part.notes.Select(n => n.tone));
+                    // The user must see what was edited, not the welcome page.
+                    Assert.Equal(1, viewModel.Page);
 
                     // One request is one step of the app's own undo.
                     DocManager.Inst.Undo();
@@ -58,6 +62,11 @@ namespace OpenUtau.UiTest {
                     // The project has unsaved work the user has not agreed to lose.
                     var replaced = Send(session, "{\"op\":\"new\",\"score\":{\"bpm\":120,\"singer\":\"nobody\",\"phonemizer\":\"OpenUtau.Core.DefaultPhonemizer\"}}");
                     Assert.Equal("unsaved_changes", replaced.GetProperty("error").GetProperty("code").GetString());
+                    // The app does not run in the agent's folder, and a missing file is the agent's mistake.
+                    var relative = Send(session, "{\"op\":\"open\",\"path\":\"song.ustx\",\"discard_changes\":true}");
+                    Assert.Equal("invalid_request", relative.GetProperty("error").GetProperty("code").GetString());
+                    var missing = Send(session, "{\"op\":\"open\",\"path\":\"/nowhere/song.ustx\",\"discard_changes\":true}");
+                    Assert.Equal("file_not_found", missing.GetProperty("error").GetProperty("code").GetString());
                     // And over the socket the app listens on, from a thread that is not the UI's.
                     string socket = System.IO.Path.Combine(OperatingSystem.IsWindows() ? System.IO.Path.GetTempPath() : "/tmp", $"ou-{Guid.NewGuid():N}.sock");
                     using (var server = new AgentSocketServer(session, socket)) {
@@ -70,6 +79,7 @@ namespace OpenUtau.UiTest {
                     var quit = Send(session, "{\"op\":\"shutdown\"}");
                     Assert.Equal("unsupported", quit.GetProperty("error").GetProperty("code").GetString());
                     Assert.False(session.ShutdownRequested);
+                    Assert.Empty(HeadlessUi.Errors.Snapshot());
                 } finally {
                     session?.Dispose();
                     host?.Dispose();

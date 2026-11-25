@@ -12,6 +12,8 @@ namespace OpenUtau.Core.Agent {
         TaskScheduler Scheduler { get; }
         IList<string> Warnings { get; }
         IReadOnlyList<string> Diagnostics { get; }
+        // The diagnostics since the last call: a long session reports each once and keeps none.
+        IReadOnlyList<string> TakeDiagnostics();
         uint? Seed { get; }
 
         // Runs on the thread that owns the document.
