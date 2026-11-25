@@ -29,14 +29,19 @@ namespace OpenUtau.Cli {
         static float[] Noise(uint seed) => DiffSingerNoise.Create(DiffSingerNoise.StageAcoustic, seed, 1, 2, 3).ToArray();
 
         [Fact]
-        public void TheHostSeedReplacesThePhraseSeedOnlyWhenSet() {
+        public void TheHostSeedIsMixedWithThePhraseSeedOnlyWhenSet() {
             var previous = Headless.NoiseSeed;
             try {
                 Headless.NoiseSeed = null;
                 Assert.Equal(Noise(111), FilledNoise(111));
                 Headless.NoiseSeed = 5;
-                Assert.Equal(Noise(5), FilledNoise(111));
+                // Repeatable, set by the host seed, and still different from phrase to phrase.
+                Assert.Equal(FilledNoise(111), FilledNoise(111));
                 Assert.NotEqual(Noise(111), FilledNoise(111));
+                Assert.NotEqual(FilledNoise(113), FilledNoise(111));
+                var withFive = FilledNoise(111);
+                Headless.NoiseSeed = 6;
+                Assert.NotEqual(withFive, FilledNoise(111));
             } finally {
                 Headless.NoiseSeed = previous;
             }

@@ -175,8 +175,8 @@ namespace OpenUtau.Core.Util {
 
         private static void Load() {
             try {
-                PathManager.Inst.TryMigratePortableFromTfmOutputFolders();
-                PathManager.Inst.TryMigrateFromLegacyOpenUtau();
+                if (!Headless.ReadOnlyUserData) PathManager.Inst.TryMigratePortableFromTfmOutputFolders();
+                if (!Headless.ReadOnlyUserData) PathManager.Inst.TryMigrateFromLegacyOpenUtau();
                 if (File.Exists(PathManager.Inst.PrefsFilePath)) {
                     var json = File.ReadAllText(PathManager.Inst.PrefsFilePath, Encoding.UTF8);
                     Default = JsonConvert.DeserializeObject<SerializablePreferences>(json);

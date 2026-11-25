@@ -106,9 +106,17 @@ namespace OpenUtau.Cli {
                 uint seed = options.Seed.Value;
                 Headless.NoiseSeed = seed;
                 Headless.OnnxModelFilter = model => {
-                    var patched = OnnxSeedPatcher.Patch(model, seed, out int count);
-                    Interlocked.Add(ref seededNodes, count);
-                    return patched;
+                    try {
+                        var patched = OnnxSeedPatcher.Patch(model, seed, out int count);
+                        Interlocked.Add(ref seededNodes, count);
+                        return patched;
+                    } catch (Exception e) {
+                        // Loaded as it is rather than not at all; the render is then not repeatable.
+                        lock (Warnings) {
+                            Warnings.Add($"A model could not be seeded ({e.Message}); its random numbers are not fixed.");
+                        }
+                        return model;
+                    }
                 };
             }
             ToolsManager.Inst.Initialize();
@@ -125,6 +133,7 @@ namespace OpenUtau.Cli {
             } else {
                 PrefsFileUsed = File.Exists(PathManager.Inst.PrefsFilePath);
                 _ = Preferences.Default;
+                WarnAboutRunner();
             }
             var prefs = Preferences.Default;
             // Both would start model runs behind the command's back.
@@ -137,7 +146,7 @@ namespace OpenUtau.Cli {
             if (!string.IsNullOrEmpty(prefs.OnnxRunner) && !runners.Contains(prefs.OnnxRunner)) {
                 if (options.PrefOverrides.Any(p => p.Key == nameof(prefs.OnnxRunner))) {
                     throw new AgentException("runner_unavailable",
-                        $"Runner \"{prefs.OnnxRunner}\" is not available here. Available: {string.Join(", ", runners)}.");
+                        $"Runner \"{prefs.OnnxRunner}\" is not available here. Available: {string.Join(", ", runners)}.", AgentException.ExitUsage);
                 }
                 Warnings.Add($"Runner \"{prefs.OnnxRunner}\" from the preferences is not available here; using CPU.");
                 prefs.OnnxRunner = string.Empty;
@@ -175,6 +184,23 @@ namespace OpenUtau.Cli {
                 return Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
             }
             throw new InvalidCastException();
+        }
+
+        // Loading the preferences drops a runner this machine lacks without a word; the app's renders differ then.
+        void WarnAboutRunner() {
+            try {
+                if (!PrefsFileUsed) {
+                    return;
+                }
+                using var json = System.Text.Json.JsonDocument.Parse(File.ReadAllText(PathManager.Inst.PrefsFilePath));
+                string? saved = json.RootElement.TryGetProperty(nameof(Preferences.Default.OnnxRunner), out var value)
+                    && value.ValueKind == System.Text.Json.JsonValueKind.String ? value.GetString() : null;
+                if (!string.IsNullOrEmpty(saved) && saved != Preferences.Default.OnnxRunner) {
+                    Warnings.Add($"Runner \"{saved}\" from the preferences is not available here; using {EffectiveRunner()}.");
+                }
+            } catch (Exception) {
+                // The preferences were loaded all the same; this only explains them.
+            }
         }
 
         public string EffectiveRunner() {

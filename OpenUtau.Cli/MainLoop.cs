@@ -34,11 +34,15 @@ namespace OpenUtau.Cli {
             ready.Wait();
         }
 
-        public void Post(Action action) {
+        public void Post(Action action) => TryPost(action);
+
+        bool TryPost(Action action) {
             try {
                 queue.Add(action);
+                return true;
             } catch (InvalidOperationException) {
                 // Shutting down.
+                return false;
             }
         }
 
@@ -49,7 +53,7 @@ namespace OpenUtau.Cli {
             T result = default!;
             ExceptionDispatchInfo? error = null;
             var done = new ManualResetEventSlim();
-            Post(() => {
+            bool posted = TryPost(() => {
                 try {
                     result = func();
                 } catch (Exception e) {
@@ -58,7 +62,12 @@ namespace OpenUtau.Cli {
                     done.Set();
                 }
             });
-            done.Wait();
+            // Nothing would ever run it, and the caller would wait forever.
+            while (!done.Wait(200)) {
+                if (!posted || !Thread.IsAlive) {
+                    throw new ObjectDisposedException(nameof(MainLoop), "The main thread has stopped.");
+                }
+            }
             error?.Throw();
             return result;
         }
@@ -72,6 +81,10 @@ namespace OpenUtau.Cli {
 
         public void Dispose() {
             queue.CompleteAdding();
+            if (Thread.CurrentThread != Thread) {
+                // What was queued still runs; a stuck action must not hold the process.
+                Thread.Join(TimeSpan.FromSeconds(5));
+            }
         }
 
         sealed class LoopContext : SynchronizationContext {

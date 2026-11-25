@@ -11,7 +11,7 @@ dotnet build OpenUtau.Cli/OpenUtau.Cli.csproj
 scripts/openutau-cli.sh help
 ```
 
-`scripts/openutau-cli.sh` runs the built CLI and builds it first if it has never been built. It looks for `dotnet` on `PATH`, then in `~/.dotnet`; set `DOTNET=/path/to/dotnet` to name another one. Without the script: `dotnet OpenUtau.Cli/bin/Debug/net10.0/OpenUtau.Cli.dll <command>`. Developed and tested on macOS (Apple Silicon).
+`scripts/openutau-cli.sh` runs the built CLI and builds it first if it has never been built. It does not notice later source changes: run once with `OPENUTAU_CLI_REBUILD=1` after pulling or editing. It looks for `dotnet` on `PATH`, then in `~/.dotnet`; set `DOTNET=/path/to/dotnet` to name another one. Without the script: `dotnet OpenUtau.Cli/bin/Debug/net10.0/OpenUtau.Cli.dll <command>`. Developed and tested on macOS (Apple Silicon).
 
 A sentence from text to audio, with the voicebank in a folder that is not installed:
 
@@ -270,8 +270,11 @@ Notes get the portamento and vibrato a note drawn in the app gets, from your not
 
 **Rendering is random unless seeded**, here as in the app. DiffSinger models draw their diffusion noise inside the model, from random nodes that ONNX Runtime seeds from the clock; the vocoder draws noise too. Two unseeded renders of the same project differ.
 
-**`--seed N` makes a render repeatable.** Before a model is loaded, its random nodes are given a `seed` attribute in memory (the file on disk is not changed); `settings.seeded_random_nodes` counts them. For models that take their noise as an input instead, the seed replaces the per-phrase one. With the same seed, project, voicebank, settings, runner and machine, the wav is byte-identical: check `outputs[].sha256`. Verified on Apple Silicon for both the CPU and the WebGPU runner, with a voicebank of the first kind. Things to know:
+**`--seed N` makes a render repeatable.** Before a model is loaded, its random nodes are given a `seed` attribute in memory (the file on disk is not changed); `settings.seeded_random_nodes` counts them. For models that take their noise as an input instead, the seed is combined with the per-phrase one (not tried on a voicebank of that kind). With the same seed, project, voicebank, settings, runner and machine, the wav is byte-identical: check `outputs[].sha256`. Verified on Apple Silicon for both the CPU and the WebGPU runner, with a voicebank of the first kind. Things to know:
 
+- Repeatable means: a fresh process doing the same runs in the same order. A model's random nodes advance with every run, so a second render in one `serve` session, or a render that takes some phrases from `--cache-dir`, draws other numbers than a first, uncached one.
+- Seeds are told apart modulo 16777215: `--seed 1` and `--seed 16777216` give the same render.
+- A model that keeps its weights in a separate data file cannot be loaded with `--seed`.
 - CPU and WebGPU give different audio for the same seed (their arithmetic differs), each repeatable on its own.
 - A seeded render is one of the renders the app could have produced, not a particular one: the app cannot be seeded.
 - Each model keeps drawing from one random stream for the whole run, so the noise a phrase gets depends on the phrases rendered before it. Changing an early phrase changes the noise of the later ones.
@@ -290,6 +293,8 @@ Notes get the portamento and vibrato a note drawn in the app gets, from your not
 | `part00_phrase000.vocoder.npz` | Render, per phrase | vocoder |
 
 Each `.npz` holds the tensors exactly as fed, named `in.<input name>` (`in.tokens`, `in.durations`, `in.f0`, `in.velocity`, `in.gender`, `in.spk_embed`, `in.depth`, `in.steps`, …), and what the model returned, named `out.<output name>` (`out.mel`, `out.waveform`, …). Phrase numbers match `phrases[].index` of the result.
+
+Files of an earlier run in the same folder are not removed: go by the manifest, or use a fresh folder.
 
 `manifest.json` lists `models` (per track, the model file behind each stage) and `entries`:
 
