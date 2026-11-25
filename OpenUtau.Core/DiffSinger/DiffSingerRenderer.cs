@@ -681,6 +681,7 @@ namespace OpenUtau.Core.DiffSinger {
                     acousticCache?.Save(acousticOutputs);
                     phrase.AddCacheFile(acousticCache?.Filename);
                 }
+                DiffSingerTap.Report(DiffSingerTap.Acoustic, phrase, acousticInputs, acousticOutputs, acousticCache);
                 mel = acousticOutputs.First().AsTensor<float>().Clone();
                 if (previousAcoustic != null && acousticRetakeMask != null) {
                     var previousMel = DiffSingerAcousticRetake.RestoreMel(previousAcoustic);
@@ -743,6 +744,7 @@ namespace OpenUtau.Core.DiffSinger {
                     vocoderCache?.Save(vocoderOutputs);
                     phrase.AddCacheFile(vocoderCache?.Filename);
                 }
+                DiffSingerTap.Report(DiffSingerTap.Vocoder, phrase, vocoderInputs, vocoderOutputs, vocoderCache);
                 Tensor<float> samplesTensor = vocoderOutputs.First().AsTensor<float>();
                 //Check the size of samplesTensor
                 int[] expectedShape = new int[] { 1, -1 };

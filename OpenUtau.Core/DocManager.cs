@@ -24,7 +24,7 @@ namespace OpenUtau.Core {
         public bool SkipPhoneme;
     }
 
-    public class DocManager : SingletonBase<DocManager> {
+    public partial class DocManager : SingletonBase<DocManager> {
         DocManager() {
             Project = new UProject();
         }

@@ -420,6 +420,7 @@ namespace OpenUtau.Core {
         }
 
         public static InferenceSession getInferenceSession(byte[] model, OnnxRunnerChoice runnerChoice = OnnxRunnerChoice.Default) {
+            model = Headless.OnnxModelFilter?.Invoke(model) ?? model;
             if (runnerChoice == OnnxRunnerChoice.CPU) {
                 return new InferenceSession(model);
             }
@@ -436,6 +437,7 @@ namespace OpenUtau.Core {
         }
 
         public static InferenceSession getInferenceSession(string modelPath, OnnxRunnerChoice runnerChoice = OnnxRunnerChoice.Default) {
+            if (Headless.OnnxModelFilter != null) { return getInferenceSession(File.ReadAllBytes(modelPath), runnerChoice); }
             if (runnerChoice == OnnxRunnerChoice.CPU) {
                 return new InferenceSession(modelPath);
             }

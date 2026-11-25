@@ -259,6 +259,7 @@ namespace OpenUtau.Core.DiffSinger {
             int outDims = dims.Length >= 3 ? dims[2] : defaultBins;
             int nFrames = dims.Length >= 4 ? dims[3] : t;
             uint seed = ctx.NoiseSeed ?? 1u;
+            seed = Util.Headless.NoiseSeed ?? seed;
             var tensor = DiffSingerNoise.Create(ctx.NoiseStage, seed, feats, outDims, nFrames);
             // If ONNX rank/layout differs from the standard 4D tensor, fall back to flat Gaussian fill.
             if (dims.Length != 4 || dims[0] != 1 || dims[1] != feats || dims[2] != outDims || dims[3] != nFrames) {

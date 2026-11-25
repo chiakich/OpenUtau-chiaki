@@ -35,6 +35,7 @@ namespace OpenUtau.Core.Util {
         }
 
         public static void Save() {
+            if (Headless.ReadOnlyUserData) { return; }
             EnsureOverlayScrollbars();
             ClampVoiceColorCurveMax();
             string path = PathManager.Inst.PrefsFilePath;

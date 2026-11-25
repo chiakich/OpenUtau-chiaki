@@ -16,6 +16,7 @@ namespace OpenUtau.Core.Util {
         }
 
         public static void Save() {
+            if (Headless.ReadOnlyUserData) { return; }
             try {
                 File.WriteAllText(PathManager.Inst.NotePresetsFilePath,
                     JsonConvert.SerializeObject(Default, Formatting.Indented),
