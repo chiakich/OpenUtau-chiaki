@@ -1,6 +1,20 @@
 # OpenUtau Chiaki
 
-Personal build of [OpenUtau Lunai](https://github.com/keirokeer/OpenUtau-lunai) with the Chiaki DiffSinger voicebank built in.
+[Chiaki](https://chiaki.ch/character/chiaki) is a free, multilingual DiffSinger voicebank for OpenUtau, built from the voice of Suzukaze Chiaki. She sings in 28 languages, strongest in Japanese, English and Chinese, and the songs you make with her can be used commercially.
+
+This repo is a build of [OpenUtau Lunai](https://github.com/keirokeer/OpenUtau-lunai) with Chiaki bundled, so you can install one app and start singing.
+
+## Download
+
+- **App with Chiaki built in**: [Windows](https://github.com/chiakich/OpenUtau-chiaki/releases/latest/download/OpenUtau-Chiaki-win-x64-Setup.exe), [macOS (Apple Silicon)](https://github.com/chiakich/OpenUtau-chiaki/releases/latest/download/OpenUtau-Chiaki-osx-arm64.dmg), other platforms on the [releases page](https://github.com/chiakich/OpenUtau-chiaki/releases/latest).
+- **Voicebank only**, for an existing OpenUtau: [Chiaki.zip](https://github.com/chiakich/OpenUtau-chiaki/releases/download/voicebank-v7/Chiaki.zip). Drag it into OpenUtau and pick the DiffSinger phonemizer for your language.
+- Demos in every language, the terms of use and the character profile: [chiaki.ch/character/chiaki](https://chiaki.ch/character/chiaki).
+
+## Languages
+
+- **Trained**: Japanese, Chinese, English, Korean, French, Spanish, Italian, Portuguese, German, Russian, Polish, Ukrainian, Thai.
+- **Finnish and Latin (Ecclesiastical)**: phonemizers are built into this app; plain OpenUtau needs the DiffSinger Finnish and Latin phonemizer plugins.
+- **Built from existing phonemes, with a stronger accent**: Belarusian, Bulgarian, Macedonian, Serbo-Croatian, Lao, Catalan, Galician, Indonesian, Malay, Esperanto, Swahili, Hawaiian, Māori. These need the [Chiaki Extra Languages phonemizers](https://github.com/chiakich/OpenUtau-chiaki/releases/download/phonemizers-v2/ChiakiPhonemizers.zip), which this app also has built in.
 
 ## Differences from Lunai
 
@@ -8,7 +22,7 @@ Personal build of [OpenUtau Lunai](https://github.com/keirokeer/OpenUtau-lunai) 
 - **DiffSinger Finnish and Latin phonemizers built in**, so Finnish and Latin (Ecclesiastical) tracks need no extra plugin DLL.
 - **Singer Hub removed.**
 - **Own identity**: the app is `OpenUtau-Chiaki` with its own data folder, so it can sit next to Lunai.
-- **Updates come from this repo's releases.** On Windows the Velopack updater reads a GitHub token from `OPENUTAU_CHIAKI_GITHUB_TOKEN` because the repo is private; on macOS and Linux the updater opens the releases page.
+- **Updates come from this repo's releases.** On Windows the Velopack updater installs them (it uses a GitHub token from `OPENUTAU_CHIAKI_GITHUB_TOKEN` if one is set); on macOS and Linux it opens the releases page.
 - Fixes on top of Lunai: portrait cropping on HiDPI displays, and expanding a detached piano roll.
 
 ## Building
@@ -44,4 +58,6 @@ git merge upstream/master
 
 Based on [OpenUtau Lunai](https://github.com/keirokeer/OpenUtau-lunai) and [OpenUtau](https://github.com/openutau/OpenUtau); credit belongs to their authors and everyone listed in **Help → About OpenUtau**. Code is under the upstream license (`LICENSE.txt`).
 
-The Chiaki voicebank is licensed under CC BY-NC 4.0 (no commercial use), as is its `tgm_hifigan` vocoder; see `Singers/Chiaki/readme.txt` and `Singers/Chiaki/tgm_hifigan/documents`. The illustration is not covered by that license.
+The Chiaki voicebank has its own terms of use (`Singers/Chiaki/terms.txt`, also on [chiaki.ch](https://chiaki.ch/character/chiaki)). In short: works made with it may be used and sold commercially, with a credit such as "Vocal: Chiaki"; the voicebank itself may not be redistributed on its own, and models trained on its output are limited to research and non-commercial use.
+
+Its vocoder, `chiaki_vocoder 2026.11`, is an NSF-HiFiGAN trained from scratch for this voicebank and licensed under Apache License 2.0 (`Singers/Chiaki/dsvocoder/LICENSE`, `NOTICE.txt`). The portrait and icon are by shONe, who keeps the copyright. They may be shown wherever the content is about this voicebank, such as wiki pages and songs made with Chiaki; other uses are not allowed.
