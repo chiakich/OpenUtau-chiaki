@@ -117,7 +117,7 @@ namespace OpenUtau.Core.Agent {
             var parts = host.Invoke(() => project.parts.OfType<UVoicePart>()
                 .Where(p => p.notes.Count > 0 && (only == null || p == only)).ToArray());
             foreach (var part in parts) {
-                var renderer = project.tracks[part.trackNo].RendererSettings.Renderer;
+                var renderer = host.Invoke(() => project.tracks[part.trackNo].RendererSettings.Renderer);
                 if (renderer == null || !renderer.SupportsRenderPitch) {
                     throw new AgentException("load_pitch_failed",
                         $"Track {part.trackNo}: renderer {renderer} cannot generate pitch.");
@@ -133,9 +133,19 @@ namespace OpenUtau.Core.Agent {
                     throw new AgentException("load_pitch_failed", $"Load rendered pitch failed: {e.Message}", inner: e);
                 }
             }
-            // The edit commits on the main thread, which validates and phonemizes again.
-            host.Invoke(() => { });
+            // The edit commits on the main thread, in its turn, and waits out an edit the user has in progress.
+            var deadline = DateTime.UtcNow.AddSeconds(15);
+            do {
+                using var applied = new ManualResetEventSlim();
+                DocManager.Inst.PostOnUIThread(applied.Set);
+                applied.Wait(PhonemizeTimeout);
+            } while (host.Invoke(() => DocManager.Inst.HasOpenUndoGroup) && DateTime.UtcNow < deadline && Wait(50));
             WaitPhonemized(host, project);
+        }
+
+        static bool Wait(int ms) {
+            Thread.Sleep(ms);
+            return true;
         }
 
         // As File > Save: the app's own save, which also marks the undo history as saved. Main thread.
@@ -178,18 +188,19 @@ namespace OpenUtau.Core.Agent {
             try {
                 if (mixdown) {
                     // Wave parts load in the background; the mix only takes the loaded ones.
-                    Task.WaitAll(project.parts.OfType<UWavePart>().Select(p => (Task)p.Peaks).Where(t => t != null).ToArray());
+                    Task.WaitAll(host.Invoke(() => project.parts.OfType<UWavePart>().Select(p => (Task)p.Peaks).Where(t => t != null).ToArray()));
                     var mix = engine.RenderMixdown(host.Scheduler, ref cancellation!, wait: true,
                         applyMixFx: Preferences.Default.MixFxApplyOnExportMixdown, planner).Item1;
                     WaveFileWriter.CreateWaveFile16(outPath, Cut(new ExportAdapter(mix)));
                     outputs.Add(Describe(outPath, -1));
                 } else {
                     var trackMixes = engine.RenderTracks(host.Scheduler, ref cancellation!, planner);
+                    var tracks = host.Invoke(() => project.tracks.ToArray());
                     var exported = Enumerable.Range(0, trackMixes.Count)
-                        .Where(i => trackMixes[i] != null && i < project.tracks.Count && !project.tracks[i].Muted)
+                        .Where(i => trackMixes[i] != null && i < tracks.Length && !tracks[i].Muted)
                         .ToArray();
                     foreach (int i in exported) {
-                        string file = exported.Length == 1 ? outPath : PathManager.Inst.GetExportPath(outPath, project.tracks[i]);
+                        string file = exported.Length == 1 ? outPath : PathManager.Inst.GetExportPath(outPath, tracks[i]);
                         WaveFileWriter.CreateWaveFile16(file, Cut(new ExportAdapter(trackMixes[i])).ToMono(1, 0));
                         outputs.Add(Describe(file, i));
                     }

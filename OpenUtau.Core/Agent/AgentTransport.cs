@@ -50,12 +50,14 @@ namespace OpenUtau.Core.Agent {
             using var stream = new NetworkStream(socket);
             // A request is one line; line breaks inside it are only layout.
             byte[] bytes = Utf8.GetBytes(request.Replace("\r", " ").Replace("\n", " ") + "\n");
-            stream.Write(bytes, 0, bytes.Length);
-            using var reader = new StreamReader(stream, Utf8);
             try {
+                stream.Write(bytes, 0, bytes.Length);
+                using var reader = new StreamReader(stream, Utf8);
                 return reader.ReadLine() ?? throw new AgentException("no_reply", "The connection closed without a reply.");
-            } catch (IOException e) {
+            } catch (IOException e) when (e.InnerException is SocketException { SocketErrorCode: SocketError.TimedOut }) {
                 throw new AgentException("timeout", $"No reply within {timeout.TotalSeconds:0} s.", inner: e);
+            } catch (IOException e) {
+                throw new AgentException("no_reply", $"The connection was lost: {e.Message}", inner: e);
             }
         }
     }
@@ -104,8 +106,12 @@ namespace OpenUtau.Core.Agent {
                 using var probe = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
                 probe.Connect(AgentTransport.EndPoint(path));
                 return true;
-            } catch (SocketException) {
+            } catch (SocketException e) when (e.SocketErrorCode == SocketError.ConnectionRefused) {
+                // A socket nobody listens on any more.
                 return false;
+            } catch (SocketException e) {
+                // Anything else at this path is someone's file, not ours to replace.
+                throw new AgentException("socket_failed", $"{path} exists and is not a socket of a session: {e.Message}", inner: e);
             }
         }
 

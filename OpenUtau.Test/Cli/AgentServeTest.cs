@@ -75,6 +75,43 @@ namespace OpenUtau.Cli {
         }
 
         [Fact]
+        public void ARefusedEditLeavesTheSessionUsable() {
+            var replies = Session(
+                "{\"op\":\"add_notes\",\"notes\":[[\"la\",\"C4\",\"1/4\"]]}",
+                // The first change is made and rolled back when the second is refused.
+                "{\"op\":\"edit_notes\",\"notes\":[{\"id\":1,\"tone\":\"E4\"},{\"id\":99,\"tone\":\"E4\"}]}",
+                "{\"op\":\"edit_notes\",\"notes\":[{\"id\":1,\"tone\":\"G4\"}]}",
+                "{\"op\":\"undo\"}",
+                "{\"op\":\"get\"}");
+            Assert.Equal("note_not_found", Code(replies[1]));
+            Assert.True(replies[2].GetProperty("ok").GetBoolean(), replies[2].GetRawText());
+            Assert.True(replies[3].GetProperty("ok").GetBoolean(), replies[3].GetRawText());
+            // One undo takes back one request, and nothing of the refused one.
+            Assert.Equal(60, replies[4].GetProperty("parts")[0].GetProperty("notes")[0].GetProperty("tone").GetInt32());
+        }
+
+        [Fact]
+        public void RevisionsAndValuesAreChecked() {
+            string missing = Path.Combine(Path.GetTempPath(), $"never-{Guid.NewGuid():N}.ustx").Replace("\\", "\\\\");
+            var replies = Session(
+                "{\"op\":\"add_notes\",\"notes\":[[\"la\",\"C4\",\"1/4\"]]}",
+                "{\"op\":\"edit_notes\",\"notes\":[{\"id\":1,\"tone\":\"E4\"}],\"expect_revision\":\"1\"}",
+                "{\"op\":\"get\",\"expect_revision\":1}",
+                "{\"op\":\"undo\",\"expect_revision\":0}",
+                "{\"op\":\"open\",\"path\":\"" + missing + "\"}",
+                "{\"op\":\"new\",\"score\":{\"bpm\":120,\"start\":-480}}",
+                "{\"op\":\"render\",\"out\":\"x.wav\",\"track\":-5}",
+                "{\"op\":\"edit_notes\",\"notes\":[{\"id\":1,\"lyric\":\"la\"}]}",
+                "{\"op\":\"get\"}");
+            Assert.Equal(new[] { "invalid_request", "invalid_request", "conflict", "file_not_found", "invalid_score", "invalid_request" },
+                replies.Skip(1).Take(6).Select(Code));
+            long revision = replies[0].GetProperty("revision").GetInt64();
+            // Writing the lyric a note already has changes nothing.
+            Assert.All(replies.Skip(1), r => Assert.Equal(revision, r.GetProperty("revision").GetInt64()));
+            Assert.Single(replies[8].GetProperty("parts")[0].GetProperty("notes").EnumerateArray());
+        }
+
+        [Fact]
         public void SaveWritesAProjectThatOpensAgain() {
             string dir = Path.Combine(Path.GetTempPath(), $"openutau-serve-{Guid.NewGuid():N}");
             Directory.CreateDirectory(dir);

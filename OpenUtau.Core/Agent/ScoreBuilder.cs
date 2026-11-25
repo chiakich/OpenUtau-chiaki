@@ -47,6 +47,9 @@ namespace OpenUtau.Core.Agent {
                 }
             }
             int start = score.TryGetProperty("start", out var startValue) ? Integer(startValue, "start") : DefaultStart;
+            if (start < 0) {
+                throw Invalid("start must not be negative.");
+            }
 
             if (!score.TryGetProperty("singer", out var singerValue) || singerValue.ValueKind != JsonValueKind.String) {
                 throw Invalid("singer is required: a voicebank folder, or the id of an installed singer.");
@@ -187,6 +190,9 @@ namespace OpenUtau.Core.Agent {
                 }
                 if (item.TryGetProperty("position", out var position) || item.TryGetProperty("tick", out position)) {
                     cursor = Integer(position, where + ".tick");
+                    if (cursor < 0) {
+                        throw Invalid($"{where}.tick must not be negative.");
+                    }
                 }
                 lyric = item.TryGetProperty("lyric", out var lyricValue) && lyricValue.ValueKind == JsonValueKind.String
                     ? lyricValue.GetString()

@@ -128,7 +128,7 @@ A request is one line, `{"op": name, ...fields}`; a reply is one line with `ok`,
 
 Ticks are 480 per quarter note from the start of the project. A note's `id` stays the same for as long as the project is loaded, through edits and undo.
 
-`get` waits for the phonemizer, so what it returns is never stale. `revision` goes up with every change to the project, the user's in the app included, and not when nothing changed (a refused request, a phonemizer answer). An editing request may carry `"expect_revision": N` and is then refused with code `conflict` if the project moved on since the reply that said `N`. A request that fails part-way is rolled back whole.
+`get` waits for the phonemizer, so what it returns is never stale. `revision` goes up with every change to the project, the user's in the app included, and not when nothing changed (a refused request, a phonemizer answer). An editing request (also `undo`, `redo`, `new`, `open` and `load_pitch`) may carry `"expect_revision": N` and is then refused with code `conflict` if the project moved on since the reply that said `N`. A request that fails part-way is rolled back whole. Each editing request is one undo step, except `load_pitch`, which is one step per part as in the app. `open`, `save` and `render` take paths relative to the folder the session runs in; in the app they must be absolute.
 
 Socket paths must be short (104 bytes on macOS). The socket file is readable and writable by its owner only.
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Encodings.Web;
@@ -34,6 +35,8 @@ namespace OpenUtau.Core.Agent {
         int executed;
         // Counts edits, the user's included. Not the document's own revision, which also moves when the phonemizer answers.
         long revision;
+        // The revision the current reply describes, taken in the same turn of the main thread as its content.
+        long? seen;
 
         public bool ShutdownRequested { get; private set; }
 
@@ -97,6 +100,7 @@ namespace OpenUtau.Core.Agent {
                     if (!ops.TryGetValue(op, out var handler)) {
                         throw Invalid($"Unknown op \"{op}\". Send {{\"op\":\"help\"}} for the list.");
                     }
+                    seen = null;
                     result = handler(new Request(root));
                 } catch (JsonException e) {
                     error = Invalid($"The request is not valid JSON: {e.Message}");
@@ -114,7 +118,7 @@ namespace OpenUtau.Core.Agent {
                     reply["error"] = new JsonObject { ["code"] = error.Code, ["message"] = error.Message };
                 }
                 try {
-                    reply["revision"] = host.Invoke(() => revision);
+                    reply["revision"] = error == null && seen.HasValue ? seen.Value : host.Invoke(() => revision);
                 } catch (Exception) {
                     // The host is going away; the reply still says what happened.
                 }
@@ -154,15 +158,23 @@ namespace OpenUtau.Core.Agent {
 
         sealed class Request {
             readonly JsonElement root;
-            readonly HashSet<string> read = new HashSet<string> { "op", "id", "expect_revision" };
+            readonly HashSet<string> read = new HashSet<string> { "op", "id" };
 
             public Request(JsonElement root) {
                 this.root = root;
             }
 
-            public long? ExpectRevision => root.TryGetProperty("expect_revision", out var value) && value.ValueKind == JsonValueKind.Number
-                ? value.GetInt64()
-                : (long?)null;
+            public long? ExpectRevision {
+                get {
+                    if (!TryGet("expect_revision", out var value)) {
+                        return null;
+                    }
+                    if (value.ValueKind != JsonValueKind.Number || !value.TryGetInt64(out long expected)) {
+                        throw Invalid("\"expect_revision\" must be a whole number: the revision of an earlier reply.");
+                    }
+                    return expected;
+                }
+            }
 
             public bool TryGet(string name, out JsonElement value) {
                 read.Add(name);
@@ -217,7 +229,11 @@ namespace OpenUtau.Core.Agent {
             }
 
             // After every field was read: a misspelt field must not pass for an absent one.
-            public void Done() {
+            // An op that edits also takes "expect_revision", read once it holds the main thread.
+            public void Done(bool edits = false) {
+                if (edits) {
+                    read.Add("expect_revision");
+                }
                 foreach (var property in root.EnumerateObject()) {
                     if (!read.Contains(property.Name)) {
                         throw Invalid($"Unknown field \"{property.Name}\" for this op.");
@@ -260,6 +276,22 @@ namespace OpenUtau.Core.Agent {
                 $"No note has id {id}. Ids come from get and add_notes, and end when the note is deleted or the project is reloaded.");
         }
 
+        // Main thread.
+        void CheckRevision(long? expected) {
+            if (expected.HasValue && expected.Value != revision) {
+                throw new AgentException("conflict",
+                    $"The project is at revision {revision}, not {expected.Value}: it changed since you read it. Read it again.");
+            }
+        }
+
+        // open, save and render name files. The app's working folder is not the agent's, so there a path must be whole.
+        string FullPath(string path, string field) {
+            if (host.Kind == "gui" && !Path.IsPathFullyQualified(path)) {
+                throw Invalid($"\"{field}\" must be an absolute path: the app does not run in your folder.");
+            }
+            return Path.GetFullPath(path);
+        }
+
         // The part an edit goes to when the request names none: the one the user has open, else the first.
         UVoicePart TargetPart(UProject project, int? partIndex, int? trackIndex, bool create) {
             if (partIndex.HasValue) {
@@ -298,10 +330,7 @@ namespace OpenUtau.Core.Agent {
             return host.Invoke(() => {
                 var project = RequireProject();
                 var doc = DocManager.Inst;
-                if (expected.HasValue && expected.Value != revision) {
-                    throw new AgentException("conflict",
-                        $"The project is at revision {revision}, not {expected.Value}: it changed since you read it. Read it again.");
-                }
+                CheckRevision(expected);
                 if (doc.HasOpenUndoGroup) {
                     throw new AgentException("busy", "An edit is in progress in the app. Try again when it is done.");
                 }
@@ -311,13 +340,14 @@ namespace OpenUtau.Core.Agent {
                 try {
                     T result = action(project);
                     doc.EndUndoGroup();
+                    seen = revision;
                     return result;
                 } catch {
-                    if (executed == 0) {
-                        doc.EndUndoGroup();
-                    } else {
+                    if (executed > 0) {
                         doc.RollBackUndoGroup();
                     }
+                    // Rolling back empties the group but leaves it open.
+                    doc.EndUndoGroup();
                     // A refused request leaves the project as it was, so the revision too.
                     revision = before;
                     throw;
@@ -372,6 +402,7 @@ namespace OpenUtau.Core.Agent {
         }
 
         JsonObject StatusOnMain() {
+            seen = revision;
             var doc = DocManager.Inst;
             var project = doc.Project;
             var result = new JsonObject {
@@ -407,8 +438,11 @@ namespace OpenUtau.Core.Agent {
             return result;
         }
 
-        void GuardUnsaved(bool discard) {
-            bool unsaved = host.Invoke(() => DocManager.Inst.Project != null && !DocManager.Inst.ChangesSaved);
+        void GuardUnsaved(bool discard, long? expected) {
+            bool unsaved = host.Invoke(() => {
+                CheckRevision(expected);
+                return DocManager.Inst.Project != null && !DocManager.Inst.ChangesSaved;
+            });
             if (host.Kind == "gui" && unsaved && !discard) {
                 throw new AgentException("unsaved_changes",
                     "The project open in the app has unsaved changes. Save it, or pass \"discard_changes\": true if the user agreed to lose them.");
@@ -418,8 +452,9 @@ namespace OpenUtau.Core.Agent {
         JsonObject New(Request request) {
             bool discard = request.Flag("discard_changes");
             var score = request.Required("score", "{bpm, singer, phonemizer, notes?, curves?, name?, time_signature?, start?}");
+            long? expected = request.ExpectRevision;
             request.Done();
-            GuardUnsaved(discard);
+            GuardUnsaved(discard, expected);
             var project = ScoreBuilder.Build(score, host, null, allowEmpty: true);
             host.LoadProject(project);
             return host.Invoke(StatusOnMain);
@@ -428,15 +463,27 @@ namespace OpenUtau.Core.Agent {
         JsonObject Open(Request request) {
             bool discard = request.Flag("discard_changes");
             string path = request.Str("path") ?? throw Invalid("\"path\" is required: the project file.");
+            long? expected = request.ExpectRevision;
             request.Done();
-            GuardUnsaved(discard);
-            host.OpenProject(path);
+            path = FullPath(path, "path");
+            if (!File.Exists(path)) {
+                throw new AgentException("file_not_found", $"Project file not found: {path}");
+            }
+            GuardUnsaved(discard, expected);
+            try {
+                host.OpenProject(path);
+            } catch (Exception e) when (!(e is AgentException)) {
+                throw new AgentException("invalid_project", $"Failed to open {path}: {e.Message}", inner: e);
+            }
             return host.Invoke(StatusOnMain);
         }
 
         JsonObject Save(Request request) {
             string? path = request.Str("path");
             request.Done();
+            if (path != null) {
+                path = FullPath(path, "path");
+            }
             return host.Invoke(() => {
                 var project = RequireProject();
                 path ??= project.FilePath;
@@ -468,6 +515,7 @@ namespace OpenUtau.Core.Agent {
             var project = host.Invoke(RequireProject);
             AgentOps.WaitPhonemized(host, project);
             return host.Invoke(() => {
+                seen = revision;
                 var errors = new JsonArray();
                 var parts = ProjectReport.Parts(project, errors, IdOf);
                 var kept = new JsonArray();
@@ -552,7 +600,7 @@ namespace OpenUtau.Core.Agent {
             int? at = request.Int("at");
             int? after = request.Int("after");
             var notesValue = request.Required("notes", "an array of [lyric, tone, duration], {\"rest\": duration} or {lyric, tone, duration, tick}");
-            request.Done();
+            request.Done(edits: true);
             if (at.HasValue && after.HasValue) {
                 throw Invalid("Give \"at\" or \"after\", not both.");
             }
@@ -591,7 +639,7 @@ namespace OpenUtau.Core.Agent {
 
         JsonObject EditNotes(Request request) {
             var notesValue = request.Required("notes", "an array of {id, lyric?, tone?, tick?, duration?}");
-            request.Done();
+            request.Done(edits: true);
             if (notesValue.ValueKind != JsonValueKind.Array || notesValue.GetArrayLength() == 0) {
                 throw Invalid("\"notes\" must be a non-empty array of {id, lyric?, tone?, tick?, duration?}.");
             }
@@ -617,7 +665,9 @@ namespace OpenUtau.Core.Agent {
                         if (lyric.ValueKind != JsonValueKind.String || string.IsNullOrEmpty(lyric.GetString())) {
                             throw Invalid($"{where}: lyric must be a non-empty string.");
                         }
-                        Exec(new ChangeNoteLyricCommand(part, note, lyric.GetString()!));
+                        if (lyric.GetString() != note.lyric) {
+                            Exec(new ChangeNoteLyricCommand(part, note, lyric.GetString()!));
+                        }
                     }
                     int deltaTone = item.TryGetProperty("tone", out var tone) ? ScoreBuilder.Tone(tone, where) - note.tone : 0;
                     int deltaTick = 0;
@@ -653,7 +703,7 @@ namespace OpenUtau.Core.Agent {
 
         JsonObject DeleteNotes(Request request) {
             var idsValue = request.Required("ids", "an array of note ids");
-            request.Done();
+            request.Done(edits: true);
             if (idsValue.ValueKind != JsonValueKind.Array || idsValue.GetArrayLength() == 0
                     || idsValue.EnumerateArray().Any(i => i.ValueKind != JsonValueKind.Number || !i.TryGetInt32(out _))) {
                 throw Invalid("\"ids\" must be a non-empty array of note ids.");
@@ -678,7 +728,7 @@ namespace OpenUtau.Core.Agent {
             bool clear = request.Flag("clear");
             int? from = request.Int("from_tick");
             int? to = request.Int("to_tick");
-            request.Done();
+            request.Done(edits: true);
             int modes = (hasDefault ? 1 : 0) + (resetDefault ? 1 : 0) + (hasPoints ? 1 : 0) + (clear ? 1 : 0);
             if (modes != 1) {
                 throw Invalid("Give exactly one of \"points\" ([[tick, value], ...]), \"clear\": true, \"default\": value or \"reset_default\": true.");
@@ -722,6 +772,9 @@ namespace OpenUtau.Core.Agent {
                             throw Invalid("Each point must be [tick, value].");
                         }
                         ScoreBuilder.CheckRange(curveDescriptor, point[1].GetDouble());
+                        if (!(point[0].GetDouble() >= part.position && point[0].GetDouble() <= part.End)) {
+                            throw Invalid($"Tick {point[0].GetRawText()} is outside its part, {part.position}..{part.End}.");
+                        }
                         points[(int)Math.Round(point[0].GetDouble()) - part.position] = (int)Math.Round(point[1].GetDouble());
                     }
                     // As dragging the pen through the points: a line between each two, replacing what was there.
@@ -744,7 +797,7 @@ namespace OpenUtau.Core.Agent {
 
         JsonObject SetTempo(Request request) {
             double bpm = request.Number("bpm") ?? throw Invalid("\"bpm\" is required.");
-            request.Done();
+            request.Done(edits: true);
             if (bpm < 10 || bpm > 1000) {
                 throw Invalid("\"bpm\" must be between 10 and 1000.");
             }
@@ -758,7 +811,7 @@ namespace OpenUtau.Core.Agent {
             int trackIndex = request.Int("track") ?? 0;
             string? singerName = request.Str("singer");
             string? phonemizerName = request.Str("phonemizer");
-            request.Done();
+            request.Done(edits: true);
             if (singerName == null && phonemizerName == null) {
                 throw Invalid("Give \"singer\", \"phonemizer\" or both.");
             }
@@ -787,12 +840,14 @@ namespace OpenUtau.Core.Agent {
         JsonObject LoadPitch(Request request) {
             int? partIndex = request.Int("part");
             string mode = request.Str("mode") ?? AgentOps.PitchUntuned;
+            long? expected = request.ExpectRevision;
             request.Done();
             if (mode != AgentOps.PitchUntuned && mode != AgentOps.PitchAll) {
                 throw Invalid("\"mode\" must be untuned or all.");
             }
             var (project, part) = host.Invoke(() => {
                 var p = RequireProject();
+                CheckRevision(expected);
                 return (p, partIndex.HasValue ? TargetPart(p, partIndex, null, false) : null);
             });
             AgentOps.CheckSingers(host, project);
@@ -804,24 +859,30 @@ namespace OpenUtau.Core.Agent {
         JsonObject Render(Request request) {
             string outPath = request.Str("out") ?? throw Invalid("\"out\" is required: the wav file to write.");
             int from = request.Int("from_tick") ?? 0;
-            int to = request.Int("to_tick") ?? -1;
-            int track = request.Int("track") ?? -1;
+            int? toGiven = request.Int("to_tick");
+            int? trackGiven = request.Int("track");
             bool mixdown = request.Flag("mixdown");
             bool allowErrors = request.Flag("allow_errors");
             request.Done();
-            if (from < 0 || (to >= 0 && to <= from)) {
+            if (from < 0 || (toGiven.HasValue && toGiven.Value <= from)) {
                 throw Invalid("\"from_tick\" must not be negative, and \"to_tick\" must come after it.");
             }
+            int to = toGiven ?? -1;
+            int track = trackGiven ?? -1;
+            outPath = FullPath(outPath, "out");
             var project = host.Invoke(RequireProject);
-            if (track >= host.Invoke(() => project.tracks.Count)) {
+            if (trackGiven.HasValue && (track < 0 || track >= host.Invoke(() => project.tracks.Count))) {
                 throw Invalid($"The project has no track {track}.");
             }
             AgentOps.CheckSingers(host, project);
             AgentOps.WaitPhonemized(host, project);
-            var errors = host.Invoke(() => project.parts.OfType<UVoicePart>()
+            var errors = host.Invoke(() => {
+                seen = revision;
+                return project.parts.OfType<UVoicePart>()
                 .SelectMany(p => p.phonemes.Where(ph => ph.Error)
                     .Select(ph => $"\"{ph.Parent?.lyric}\" at tick {p.position + ph.position}: {ph.ErrorException?.Message ?? "phoneme error"}"))
-                .ToList());
+                .ToList();
+            });
             if (errors.Count > 0 && !allowErrors) {
                 throw new AgentException("phoneme_errors",
                     $"{errors.Count} phoneme(s) have errors, e.g. {string.Join("; ", errors.Take(3))}. Fix the notes, or pass \"allow_errors\": true.");
@@ -849,9 +910,11 @@ namespace OpenUtau.Core.Agent {
         }
 
         JsonObject UndoRedo(Request request, bool undo) {
+            long? expected = request.ExpectRevision;
             request.Done();
             return host.Invoke(() => {
                 RequireProject();
+                CheckRevision(expected);
                 var doc = DocManager.Inst;
                 if (doc.HasOpenUndoGroup) {
                     throw new AgentException("busy", "An edit is in progress in the app. Try again when it is done.");
@@ -864,6 +927,7 @@ namespace OpenUtau.Core.Agent {
                 } else {
                     doc.Redo();
                 }
+                seen = revision;
                 return new JsonObject { ["can_undo"] = doc.GetUndoState(out _), ["can_redo"] = doc.GetRedoState(out _) };
             });
         }
@@ -928,7 +992,7 @@ namespace OpenUtau.Core.Agent {
                     + "A reply has ok, revision, warnings, diagnostics, and error {code, message} when ok is false.",
                 ["units"] = "Ticks: 480 per quarter note, counted from the start of the project. Tones: MIDI numbers or names like \"C4\". "
                     + "Durations: ticks, or a fraction of a whole note like \"1/8\", dotted with a trailing \".\".",
-                ["revisions"] = "\"revision\" goes up with every change, including the user's in the app. Any editing op takes \"expect_revision\" and fails with code conflict if the project moved on.",
+                ["revisions"] = "\"revision\" goes up with every change, including the user's in the app. Any editing op, and undo, redo, new, open and load_pitch, takes \"expect_revision\" and fails with code conflict if the project moved on.",
                 ["ops"] = new JsonObject {
                     ["status"] = Op("The open project: tempo, tracks, parts, undo state; in the app also the open part, selection and playhead."),
                     ["new"] = Op("Replace the open project with a new one-track project.",
