@@ -43,6 +43,28 @@ scripts/fetch-voicebank.sh --from ~/Library/OpenUtau/Singers/Chiaki
 
 The build copies `Singers/` next to the executable. To publish a new voicebank, upload a zip whose top folder is `Chiaki` to a new release tag and update `scripts/voicebank.json`.
 
+## Command line
+
+`OpenUtau.Cli` runs the app's phonemizer and renderer without the window, for scripts and agents. It prints one JSON object on stdout, reports failures on stderr with a non-zero exit code, and never writes to your preferences or voicebanks.
+
+```sh
+dotnet build OpenUtau.Cli/OpenUtau.Cli.csproj
+scripts/openutau-cli.sh ustx score.json --out song.ustx
+scripts/openutau-cli.sh phonemize song.ustx --singer Singers/Chiaki
+scripts/openutau-cli.sh render song.ustx --singer Singers/Chiaki --seed 1 --out song.wav --dump dump/
+```
+
+| Command | What it does |
+| --- | --- |
+| `phonemize IN.ustx` | Every phoneme with its note and its start and end, in ticks, milliseconds and model frames: the timing the piano roll shows. |
+| `render IN.ustx --out OUT.wav` | Renders to wav. `--seed` makes it repeatable, `--load-pitch` runs *Load Rendered Pitch* first, `--bpm`, `--tempo-scale` and `--curve velc=150` override the project, and `--dump DIR` saves the inputs and outputs of every DiffSinger model as `.npz`. |
+| `ustx SCORE.json --out OUT.ustx` | Writes a project from a JSON score of lyrics, pitches and lengths. |
+| `singers`, `expressions`, `phonemizers` | List the singers, the expressions a singer supports, and the phonemizers. |
+
+For step-by-step work, `serve` keeps a project open and takes edit, query and render requests as JSON lines, `mcp` offers the same as a Model Context Protocol server, and both can instead work on the project open in the app (`send --gui`, `mcp --gui`) once the app is started with `OPENUTAU_AGENT=1`.
+
+`--singer DIR` uses a voicebank folder that is not installed. Every option, every JSON field and the notes on reproducibility are in [OpenUtau.Cli/README.md](OpenUtau.Cli/README.md).
+
 ## Releases
 
 `.github/workflows/release.yml` tests once, then builds Windows (x64, ARM64), macOS (Apple Silicon, Intel) and Linux (x64, ARM64). Push a `v1.2.3` tag to publish a release, or run the workflow by hand to get build artifacts only. macOS builds are signed and notarized once the signing secrets are set; see [RELEASING.md](RELEASING.md).
