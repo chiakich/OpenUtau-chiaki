@@ -66,9 +66,9 @@ namespace OpenUtau.Core.Agent {
             return singer;
         }
 
-        public static void CheckSingers(IAgentHost host, UProject project) {
+        public static void CheckSingers(IAgentHost host, UProject project, int track = -1) {
             host.Invoke(() => {
-                foreach (var part in project.parts.OfType<UVoicePart>().Where(p => p.notes.Count > 0)) {
+                foreach (var part in project.parts.OfType<UVoicePart>().Where(p => p.notes.Count > 0 && (track < 0 || p.trackNo == track))) {
                     var track = project.tracks[part.trackNo];
                     var singer = track.Singer;
                     if (singer == null || !singer.Found) {
@@ -113,9 +113,9 @@ namespace OpenUtau.Core.Agent {
 
         // "all" is the piano roll's Load Rendered Pitch on a whole part; "untuned" is what live pitch
         // does to a freshly opened project, leaving phrases that already have pitch alone.
-        public static void LoadRenderedPitch(IAgentHost host, UProject project, string mode, UVoicePart? only = null) {
+        public static void LoadRenderedPitch(IAgentHost host, UProject project, string mode, UVoicePart? only = null, int track = -1) {
             var parts = host.Invoke(() => project.parts.OfType<UVoicePart>()
-                .Where(p => p.notes.Count > 0 && (only == null || p == only)).ToArray());
+                .Where(p => p.notes.Count > 0 && (only == null || p == only) && (track < 0 || p.trackNo == track)).ToArray());
             foreach (var part in parts) {
                 var renderer = host.Invoke(() => project.tracks[part.trackNo].RendererSettings.Renderer);
                 if (renderer == null || !renderer.SupportsRenderPitch) {
@@ -152,10 +152,7 @@ namespace OpenUtau.Core.Agent {
         public static void Save(UProject project, string path) {
             path = Path.GetFullPath(path);
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            var before = DateTime.UtcNow.AddSeconds(-2);
-            DocManager.Inst.ExecuteCmd(new SaveProjectNotification(path));
-            // The app's save reports a failure to the user instead of throwing.
-            if (!project.Saved || !File.Exists(path) || File.GetLastWriteTimeUtc(path) < before) {
+            if (!DocManager.Inst.SaveChecked(path) || !File.Exists(path)) {
                 throw new AgentException("save_failed", $"Failed to save {path}.");
             }
         }

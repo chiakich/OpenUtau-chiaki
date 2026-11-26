@@ -69,8 +69,20 @@ namespace OpenUtau.Core.Agent {
         public void OnNext(UCommand cmd, bool isUndo) {
             if (!(cmd is UNotification) || cmd is LoadProjectNotification) {
                 revision++;
+                if (loadingPitch) {
+                    // Rendered pitch commits as these two; anything else then is the user's edit.
+                    if (!isUndo && (cmd is MergedSetCurveCommand || cmd is ReplaceMaskedCurveCommand)) {
+                        pitchWrites++;
+                    } else {
+                        otherWrites++;
+                    }
+                }
             }
         }
+
+        bool loadingPitch;
+        int pitchWrites;
+        int otherWrites;
 
         public void Dispose() {
             host.Invoke(() => DocManager.Inst.RemoveSubscriber(this));
@@ -528,8 +540,12 @@ namespace OpenUtau.Core.Agent {
             request.Done();
             GuardUnsaved(discard, expected);
             var project = ScoreBuilder.Build(score, host, null, allowEmpty: true);
-            host.LoadProject(project);
-            return host.Invoke(Fresh);
+            return host.Invoke(() => {
+                // Again, in the turn that replaces the document: the user may have edited since the first check.
+                GuardUnsaved(discard, expected);
+                host.LoadProject(project);
+                return Fresh();
+            });
         }
 
         JsonObject Open(Request request) {
@@ -541,13 +557,16 @@ namespace OpenUtau.Core.Agent {
             if (!File.Exists(path)) {
                 throw new AgentException("file_not_found", $"Project file not found: {path}");
             }
-            GuardUnsaved(discard, expected);
             try {
-                host.OpenProject(path);
+                return host.Invoke(() => {
+                    // Checked in the turn that replaces the document.
+                    GuardUnsaved(discard, expected);
+                    host.OpenProject(path);
+                    return Fresh();
+                });
             } catch (Exception e) when (!(e is AgentException)) {
                 throw new AgentException("invalid_project", $"Failed to open {path}: {e.Message}", inner: e);
             }
-            return host.Invoke(Fresh);
         }
 
         JsonObject Save(Request request) {
@@ -587,6 +606,9 @@ namespace OpenUtau.Core.Agent {
             var project = host.Invoke(RequireProject);
             AgentOps.WaitPhonemized(host, project);
             return host.Invoke(() => {
+                if (DocManager.Inst.Project != project) {
+                    throw new AgentException("conflict", "Another project was opened while this one was being read. Read again.");
+                }
                 seen = revision;
                 var errors = new JsonArray();
                 var parts = ProjectReport.Parts(project, errors, IdOf);
@@ -681,7 +703,7 @@ namespace OpenUtau.Core.Agent {
                 int cursor;
                 if (after.HasValue) {
                     var found = Find(project, after.Value);
-                    part = partIndex.HasValue ? TargetPart(project, partIndex, trackIndex, true) : found.Part;
+                    part = partIndex.HasValue || trackIndex.HasValue ? TargetPart(project, partIndex, trackIndex, true) : found.Part;
                     cursor = found.Part.position + found.Note.End;
                 } else {
                     part = TargetPart(project, partIndex, trackIndex, true);
@@ -945,14 +967,31 @@ namespace OpenUtau.Core.Agent {
             });
             AgentOps.CheckSingers(host, project);
             AgentOps.WaitPhonemized(host, project);
-            long before = host.Invoke(() => revision);
-            AgentOps.LoadRenderedPitch(host, project, mode, part);
+            long before = host.Invoke(() => {
+                pitchWrites = otherWrites = 0;
+                loadingPitch = true;
+                return revision;
+            });
+            try {
+                AgentOps.LoadRenderedPitch(host, project, mode, part);
+            } catch {
+                host.Invoke(() => loadingPitch = false);
+                throw;
+            }
             bool written = host.Invoke(() => {
-                Settle(before);
+                loadingPitch = false;
+                if (otherWrites > 0) {
+                    // The user edited meanwhile: their steps are not this request's, and the top of undo may be theirs.
+                    seen = revision;
+                    mine.Clear();
+                    host.Warnings.Add("The project was edited in the app while pitch was loading: read it again before editing, and undo may undo the user's edit.");
+                } else {
+                    Settle(before);
+                }
                 if (mode == AgentOps.PitchAll) {
                     stalePitch.RemoveWhere(p => part == null || p == part);
                 }
-                if (revision > before) {
+                if (pitchWrites > 0 && otherWrites == 0) {
                     // One undo step per part: only a single part can be named when undone.
                     if (part != null || project.parts.OfType<UVoicePart>().Count() == 1) {
                         mine.Push((revision, currentOp));
@@ -960,7 +999,7 @@ namespace OpenUtau.Core.Agent {
                         mine.Clear();
                     }
                 }
-                return revision > before;
+                return pitchWrites > 0;
             });
             if (!written && mode == AgentOps.PitchUntuned) {
                 host.Warnings.Add("Nothing was written: every phrase already has a pitch curve. \"mode\": \"all\" rewrites them, replacing pitch drawn by hand too.");

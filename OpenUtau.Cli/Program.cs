@@ -374,12 +374,13 @@ namespace OpenUtau.Cli {
             if (track >= project.tracks.Count) {
                 throw AgentException.Usage($"--track: the project has no track {track}.");
             }
-            host.CheckSingers(project);
+            // With --track, only that track has to be able to sing.
+            host.CheckSingers(project, track);
             host.WaitPhonemized(project);
 
             using var dump = dumpDir == null ? null : new ModelDump(dumpDir, project);
             if (loadPitch != AgentOps.PitchNone) {
-                host.LoadRenderedPitch(project, loadPitch);
+                host.LoadRenderedPitch(project, loadPitch, track);
             }
             if (dump != null) {
                 dump.RecordPhonemizer = true;
@@ -402,7 +403,9 @@ namespace OpenUtau.Cli {
                 ["settings"] = settings,
                 ["dump"] = null,
             });
-            if (errors.Count > 0 && !allowErrors) {
+            bool blocked = track < 0 ? errors.Count > 0 : host.Loop.Invoke(() => errors.Any(e =>
+                project.parts[e!["part"]!.GetValue<int>()].trackNo == track));
+            if (blocked && !allowErrors) {
                 return Finish(result, host, errors, allowErrors);
             }
 
@@ -426,7 +429,7 @@ namespace OpenUtau.Cli {
                     ["manifest"] = manifest,
                 };
             }
-            return Finish(result, host, errors, allowErrors);
+            return Finish(result, host, errors, allowErrors || !blocked);
         }
 
         static int Ustx(Args args) {

@@ -164,7 +164,11 @@ namespace OpenUtau.Cli {
                 throw AgentException.Usage($"Unknown preference \"{key}\".");
             }
             try {
-                field.SetValue(Preferences.Default, ConvertValue(value, field.FieldType));
+                object converted = ConvertValue(value, field.FieldType);
+                if (field.Name == nameof(Preferences.SerializablePreferences.UndoLimit) && converted is int limit && limit < 0) {
+                    throw AgentException.Usage("UndoLimit must not be negative.");
+                }
+                field.SetValue(Preferences.Default, converted);
             } catch (Exception e) when (e is FormatException || e is InvalidCastException || e is OverflowException) {
                 throw AgentException.Usage($"Cannot set preference {field.Name} ({field.FieldType.Name}) to \"{value}\".");
             }
@@ -232,7 +236,11 @@ namespace OpenUtau.Cli {
             return singer;
         }
 
-        public UProject OpenProject(string path) => OpenProject(path, null);
+        public UProject OpenProject(string path) {
+            // Tracks find their singer while the file is read.
+            SearchInstalledSingers();
+            return OpenProject(path, null);
+        }
 
         public void LoadProject(UProject project) {
             Loop.Invoke(() => {
@@ -253,18 +261,45 @@ namespace OpenUtau.Cli {
             }
         });
 
+        readonly Dictionary<USinger, USinger?> twins = new Dictionary<USinger, USinger?>();
+
         // The installed copy of a voicebank given as a folder: its id is one the app can resolve.
         public USinger? InstalledTwin(USinger singer) {
             SearchInstalledSingers();
-            static byte[]? Config(USinger s) {
-                string file = Path.Combine(s.Location ?? string.Empty, "dsconfig.yaml");
-                return File.Exists(file) ? File.ReadAllBytes(file) : null;
+            if (twins.TryGetValue(singer, out var known)) {
+                return known;
             }
-            var config = Config(singer);
-            return config == null ? null : SingerManager.Inst.Singers.Values
+            var candidates = SingerManager.Inst.Singers.Values
                 .Where(s => !added.Contains(s) && s.Id != singer.Id && s.Name == singer.Name)
-                .OrderBy(s => s.Id, StringComparer.Ordinal)
-                .FirstOrDefault(s => Config(s) is byte[] other && other.AsSpan().SequenceEqual(config));
+                .OrderBy(s => s.Id, StringComparer.Ordinal).ToList();
+            string? print = candidates.Count == 0 ? null : Fingerprint(singer);
+            return twins[singer] = print == null ? null : candidates.FirstOrDefault(s => Fingerprint(s) == print);
+        }
+
+        // The settings and every model of a voicebank: two banks with the same settings can hold different weights.
+        static string? Fingerprint(USinger singer) {
+            string root = singer.Location ?? string.Empty;
+            if (!File.Exists(Path.Combine(root, "dsconfig.yaml"))) {
+                return null;
+            }
+            try {
+                using var hash = System.Security.Cryptography.IncrementalHash.CreateHash(System.Security.Cryptography.HashAlgorithmName.SHA256);
+                var files = Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)
+                    .Where(f => f.EndsWith(".onnx", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".yaml", StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(f => f, StringComparer.Ordinal);
+                var buffer = new byte[1 << 20];
+                foreach (string file in files) {
+                    hash.AppendData(System.Text.Encoding.UTF8.GetBytes(Path.GetRelativePath(root, file).Replace('\\', '/') + "\n"));
+                    using var stream = File.OpenRead(file);
+                    int read;
+                    while ((read = stream.Read(buffer, 0, buffer.Length)) > 0) {
+                        hash.AppendData(buffer, 0, read);
+                    }
+                }
+                return Convert.ToHexString(hash.GetHashAndReset());
+            } catch (Exception e) when (e is IOException || e is UnauthorizedAccessException) {
+                return null;
+            }
         }
 
         // Reads a project and makes it the current document, as File > Open does. configure runs on
@@ -293,10 +328,10 @@ namespace OpenUtau.Cli {
             });
         }
 
-        public void CheckSingers(UProject project) => AgentOps.CheckSingers(this, project);
+        public void CheckSingers(UProject project, int track = -1) => AgentOps.CheckSingers(this, project, track);
         public void WaitPhonemized(UProject project) => AgentOps.WaitPhonemized(this, project);
         public void Rephonemize(UProject project) => AgentOps.Rephonemize(this, project);
-        public void LoadRenderedPitch(UProject project, string mode) => AgentOps.LoadRenderedPitch(this, project, mode);
+        public void LoadRenderedPitch(UProject project, string mode, int track = -1) => AgentOps.LoadRenderedPitch(this, project, mode, null, track);
         public List<RenderOutput> Render(UProject project, string outPath, bool mixdown, int trackNo)
             => AgentOps.Render(this, project, outPath, mixdown, trackNo);
 

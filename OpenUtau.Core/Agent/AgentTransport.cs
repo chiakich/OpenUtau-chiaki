@@ -25,12 +25,15 @@ namespace OpenUtau.Core.Agent {
         }
 
         // Serves until the input ends or the session is told to shut down.
-        public static void Serve(AgentSession session, Stream input, Stream output) {
+        public static void Serve(AgentSession session, Stream input, Stream output, Func<bool>? accept = null) {
             using var reader = new StreamReader(input, Utf8, false, 4096, leaveOpen: true);
             string? line;
             while (!session.ShutdownRequested && (line = reader.ReadLine()) != null) {
                 if (line.Trim().Length == 0) {
                     continue;
+                }
+                if (accept != null && !accept()) {
+                    return;
                 }
                 byte[] reply = Utf8.GetBytes(session.HandleLine(line) + "\n");
                 output.Write(reply, 0, reply.Length);
@@ -69,6 +72,7 @@ namespace OpenUtau.Core.Agent {
         readonly Thread thread;
         readonly CancellationTokenSource closing = new CancellationTokenSource();
         volatile bool disposed;
+        readonly System.Collections.Generic.HashSet<Socket> clients = new System.Collections.Generic.HashSet<Socket>();
 
         public string Path { get; }
         // Set when a request asked the session to shut down.
@@ -82,6 +86,10 @@ namespace OpenUtau.Core.Agent {
                 // A socket file outlives a process that did not close it; a live one must not be taken over.
                 if (IsListening(Path)) {
                     throw new AgentException("socket_in_use", $"Another process is already listening on {Path}.");
+                }
+                // On Linux connecting to an ordinary file is refused just like a dead socket.
+                if (!IsSocketFile(Path)) {
+                    throw new AgentException("socket_failed", $"{Path} exists and is not a socket: it is left alone. Pick another path.");
                 }
                 File.Delete(Path);
             }
@@ -99,6 +107,24 @@ namespace OpenUtau.Core.Agent {
             }
             thread = new Thread(Accept) { IsBackground = true, Name = "Agent socket" };
             thread.Start();
+        }
+
+        // A socket has no content and cannot be opened as a file; on Windows it is a reparse point.
+        static bool IsSocketFile(string path) {
+            try {
+                if (OperatingSystem.IsWindows()) {
+                    return File.GetAttributes(path).HasFlag(FileAttributes.ReparsePoint);
+                }
+                if (new FileInfo(path).Length != 0) {
+                    return false;
+                }
+                using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                return false;
+            } catch (UnauthorizedAccessException) {
+                return false;
+            } catch (IOException) {
+                return true;
+            }
         }
 
         static bool IsListening(string path) {
@@ -124,16 +150,26 @@ namespace OpenUtau.Core.Agent {
                 } catch (Exception) {
                     return;
                 }
+                lock (clients) {
+                    if (disposed) {
+                        client.Dispose();
+                        return;
+                    }
+                    clients.Add(client);
+                }
                 var worker = new Thread(() => {
                     try {
                         using (client)
                         using (var stream = new NetworkStream(client)) {
-                            AgentTransport.Serve(session, stream, stream);
+                            AgentTransport.Serve(session, stream, stream, () => !disposed);
                         }
                     } catch (Exception e) when (e is IOException || e is SocketException || e is ObjectDisposedException) {
                         // The client went away.
                     } catch (Exception e) {
                         Log.Error(e, "Agent connection failed.");
+                    }
+                    lock (clients) {
+                        clients.Remove(client);
                     }
                     if (session.ShutdownRequested) {
                         Stopped.Set();
@@ -150,6 +186,16 @@ namespace OpenUtau.Core.Agent {
             disposed = true;
             closing.Cancel();
             listener.Dispose();
+            // A client waiting to send its next request would otherwise keep its worker, and could still send one.
+            lock (clients) {
+                foreach (var client in clients) {
+                    try {
+                        client.Dispose();
+                    } catch (Exception) {
+                    }
+                }
+                clients.Clear();
+            }
             try {
                 File.Delete(Path);
             } catch (Exception) {

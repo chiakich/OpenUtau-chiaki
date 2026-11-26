@@ -20,7 +20,7 @@ For `render`:
 | --- | --- |
 | `--out FILE.wav` | Required. One mono 16-bit 44.1 kHz file per track, as the app's *Export Wav*. With several tracks the files are named `FILE_<track name>.wav`; the result lists them. |
 | `--mixdown` | One stereo file of all tracks instead, with volume, pan and mix effects, as *Export Mixdown*. |
-| `--track N` | Render only track `N`. |
+| `--track N` | Render only track `N`. A missing singer or a phoneme error on another track does not stop it. |
 | `--seed N` | Fix the random numbers (0 to 4294967295). See [Reproducibility](#reproducibility). |
 | `--load-pitch none\|untuned\|all` | Run *Load Rendered Pitch* before rendering. `all` is the menu command on every part. `untuned` only fills phrases that have no pitch curve yet, which is what the app does by itself when it opens a project with live pitch on. Default `none`: render the project as it is. |
 | `--curve ABBR=VALUE` | Set an expression curve to one value for the whole track, replacing any drawn curve: `--curve velc=150 --curve genc=-20`. Repeatable. |

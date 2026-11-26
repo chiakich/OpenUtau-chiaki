@@ -153,6 +153,65 @@ namespace OpenUtau.Cli {
         }
 
         [Fact]
+        public void AFailedSaveIsReportedAndKeepsTheLastPath() {
+            string dir = Path.Combine(Path.GetTempPath(), $"openutau-serve-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(dir);
+            string locked = Path.Combine(dir, "locked.ustx");
+            try {
+                string path = Path.Combine(dir, "song.ustx");
+                File.WriteAllText(locked, string.Empty);
+                File.SetAttributes(locked, FileAttributes.ReadOnly);
+                var replies = Session(
+                    "{\"op\":\"add_notes\",\"notes\":[[\"la\",\"C4\",\"1/4\"]]}",
+                    "{\"op\":\"save\",\"path\":" + JsonSerializer.Serialize(path) + "}",
+                    // Written a moment ago and saved before: only the result of this write can tell.
+                    "{\"op\":\"save\",\"path\":" + JsonSerializer.Serialize(locked) + "}",
+                    "{\"op\":\"status\"}");
+                Assert.True(replies[1].GetProperty("ok").GetBoolean(), replies[1].GetRawText());
+                Assert.Equal("save_failed", Code(replies[2]));
+                Assert.Equal(path, replies[3].GetProperty("project").GetProperty("path").GetString());
+                Assert.True(replies[3].GetProperty("project").GetProperty("saved").GetBoolean());
+                Assert.Equal(0, new FileInfo(locked).Length);
+            } finally {
+                File.SetAttributes(locked, FileAttributes.Normal);
+                Directory.Delete(dir, true);
+            }
+        }
+
+        [Fact]
+        public void AfterWithATrackAddsToThatTrack() {
+            var replies = Session(
+                "{\"op\":\"add_notes\",\"notes\":[[\"la\",\"C4\",\"1/4\"]]}",
+                "{\"op\":\"add_notes\",\"after\":1,\"track\":1,\"notes\":[[\"la\",\"D4\",\"1/4\"]]}",
+                "{\"op\":\"get\"}");
+            // There is no track 1: the note must not land on the track of note 1 instead.
+            Assert.False(replies[1].GetProperty("ok").GetBoolean(), replies[1].GetRawText());
+            Assert.Single(replies[2].GetProperty("parts")[0].GetProperty("notes").EnumerateArray());
+        }
+
+        [Fact]
+        public void ANegativeUndoLimitIsRefused() {
+            var result = CliProcess.RunWithInput("{\"op\":\"status\"}\n", "serve", "--set", "UndoLimit=-1");
+            Assert.NotEqual(0, result.ExitCode);
+            Assert.Equal("usage", result.Error().GetProperty("code").GetString());
+        }
+
+        [Fact]
+        public void AFileThatIsNotASocketIsLeftAlone() {
+            string file = Path.Combine(OperatingSystem.IsWindows() ? Path.GetTempPath() : "/tmp", $"ou-{Guid.NewGuid():N}.txt");
+            // Empty, as a socket file is: on Linux connecting to it fails the way a dead socket does.
+            File.WriteAllText(file, string.Empty);
+            try {
+                var result = CliProcess.RunWithInput(string.Empty, "serve", "--socket", file);
+                Assert.NotEqual(0, result.ExitCode);
+                Assert.True(File.Exists(file), "The file was deleted.");
+                Assert.False(new FileInfo(file).Attributes.HasFlag(FileAttributes.ReparsePoint));
+            } finally {
+                File.Delete(file);
+            }
+        }
+
+        [Fact]
         public void ShutdownEndsTheSession() {
             var replies = Session("{\"op\":\"shutdown\"}", "{\"op\":\"status\"}");
             Assert.Single(replies);
@@ -165,7 +224,10 @@ namespace OpenUtau.Cli {
             string socket = Path.Combine(OperatingSystem.IsWindows() ? Path.GetTempPath() : "/tmp", $"ou-{Guid.NewGuid():N}.sock");
             using var server = CliProcess.Start(false, "serve", "--socket", socket);
             try {
-                var hello = JsonDocument.Parse(server.StandardOutput.ReadLine()!).RootElement;
+                // A serve that never says it is ready must fail the test, not hang it.
+                var ready = server.StandardOutput.ReadLineAsync();
+                Assert.True(ready.Wait(TimeSpan.FromSeconds(60)), "serve did not report its socket.");
+                var hello = JsonDocument.Parse(ready.Result!).RootElement;
                 Assert.Equal(socket, hello.GetProperty("socket").GetString());
 
                 var added = CliProcess.Run("send", "--socket", socket, "{\"op\":\"add_notes\",\"notes\":[[\"la\",\"C4\",\"1/4\"]]}");
