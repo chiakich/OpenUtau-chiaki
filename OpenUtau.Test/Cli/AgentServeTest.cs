@@ -234,6 +234,10 @@ namespace OpenUtau.Cli {
                 }
             }
             Assert.True(ready.Wait(TimeSpan.FromSeconds(60)), $"serve did not report its socket. stderr: {Stderr()}");
+            if (ready.Result == null) {
+                // The exit flushes what is left of stderr.
+                server.WaitForExit();
+            }
             Assert.True(ready.Result != null, $"serve ended before it was ready. stderr: {Stderr()}");
             return JsonDocument.Parse(ready.Result!).RootElement;
         }

@@ -138,9 +138,10 @@ namespace OpenUtau.Core.Agent {
         [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential, CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
         struct FindData {
             public uint attributes;
-            public long creationTime;
-            public long lastAccessTime;
-            public long lastWriteTime;
+            // Three FILETIMEs as pairs of 32 bits: a long would be aligned to 8 and shift the rest.
+            public uint creationLow, creationHigh;
+            public uint accessLow, accessHigh;
+            public uint writeLow, writeHigh;
             public uint sizeHigh;
             public uint sizeLow;
             public uint reserved0;
