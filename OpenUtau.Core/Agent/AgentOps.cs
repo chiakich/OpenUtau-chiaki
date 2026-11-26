@@ -69,11 +69,11 @@ namespace OpenUtau.Core.Agent {
         public static void CheckSingers(IAgentHost host, UProject project, int track = -1) {
             host.Invoke(() => {
                 foreach (var part in project.parts.OfType<UVoicePart>().Where(p => p.notes.Count > 0 && (track < 0 || p.trackNo == track))) {
-                    var track = project.tracks[part.trackNo];
-                    var singer = track.Singer;
+                    var owner = project.tracks[part.trackNo];
+                    var singer = owner.Singer;
                     if (singer == null || !singer.Found) {
                         throw new AgentException("singer_not_found",
-                            $"Track {part.trackNo}: singer \"{singer?.Name ?? track.singer}\" is not installed.");
+                            $"Track {part.trackNo}: singer \"{singer?.Name ?? owner.singer}\" is not installed.");
                     }
                     if (!singer.Loaded) {
                         throw new AgentException("singer_not_loaded",

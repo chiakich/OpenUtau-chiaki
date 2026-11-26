@@ -32,10 +32,12 @@ namespace OpenUtau.Core.Agent {
                 if (line.Trim().Length == 0) {
                     continue;
                 }
-                if (accept != null && !accept()) {
+                // Asked inside the session's turn: a request that waited there must not run after a close.
+                string? handled = session.HandleLine(line, accept);
+                if (handled == null) {
                     return;
                 }
-                byte[] reply = Utf8.GetBytes(session.HandleLine(line) + "\n");
+                byte[] reply = Utf8.GetBytes(handled + "\n");
                 output.Write(reply, 0, reply.Length);
                 output.Flush();
             }
@@ -109,21 +111,25 @@ namespace OpenUtau.Core.Agent {
             thread.Start();
         }
 
-        // A socket has no content and cannot be opened as a file; on Windows it is a reparse point.
+        // Only a path known to be a socket is deleted: anything else, or no answer, leaves it alone.
         static bool IsSocketFile(string path) {
             try {
                 if (OperatingSystem.IsWindows()) {
-                    return File.GetAttributes(path).HasFlag(FileAttributes.ReparsePoint);
+                    // A socket is a reparse point that links nowhere; a symlink or junction has a target.
+                    return File.GetAttributes(path).HasFlag(FileAttributes.ReparsePoint) && new FileInfo(path).LinkTarget == null;
                 }
-                if (new FileInfo(path).Length != 0) {
+                // .NET does not tell the file type; the shell's test does.
+                var info = new System.Diagnostics.ProcessStartInfo("/bin/sh") { UseShellExecute = false };
+                foreach (string arg in new[] { "-c", "test -S \"$1\"", "sh", path }) {
+                    info.ArgumentList.Add(arg);
+                }
+                using var test = System.Diagnostics.Process.Start(info);
+                if (test == null || !test.WaitForExit(5000)) {
                     return false;
                 }
-                using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                return test.ExitCode == 0;
+            } catch (Exception) {
                 return false;
-            } catch (UnauthorizedAccessException) {
-                return false;
-            } catch (IOException) {
-                return true;
             }
         }
 

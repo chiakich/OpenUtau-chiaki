@@ -218,16 +218,58 @@ namespace OpenUtau.Cli {
             Assert.Equal("shutdown", replies[0].GetProperty("op").GetString());
         }
 
+        // A serve that never says it is ready must fail the test with what it wrote, not hang it.
+        static JsonElement Ready(System.Diagnostics.Process server) {
+            var errors = new System.Text.StringBuilder();
+            server.ErrorDataReceived += (_, e) => {
+                lock (errors) {
+                    errors.AppendLine(e.Data);
+                }
+            };
+            server.BeginErrorReadLine();
+            var ready = server.StandardOutput.ReadLineAsync();
+            string Stderr() {
+                lock (errors) {
+                    return errors.ToString();
+                }
+            }
+            Assert.True(ready.Wait(TimeSpan.FromSeconds(60)), $"serve did not report its socket. stderr: {Stderr()}");
+            Assert.True(ready.Result != null, $"serve ended before it was ready. stderr: {Stderr()}");
+            return JsonDocument.Parse(ready.Result!).RootElement;
+        }
+
+        [Fact]
+        public void ASocketLeftByADeadSessionIsReplaced() {
+            string socket = Path.Combine(OperatingSystem.IsWindows() ? Path.GetTempPath() : "/tmp", $"ou-{Guid.NewGuid():N}.sock");
+            try {
+                using (var dead = CliProcess.Start(false, "serve", "--socket", socket)) {
+                    Ready(dead);
+                    dead.Kill(true);
+                    dead.WaitForExit(30000);
+                }
+                Assert.True(File.Exists(socket), "The killed session left no socket file to replace.");
+                using var server = CliProcess.Start(false, "serve", "--socket", socket);
+                try {
+                    Ready(server);
+                    Assert.Equal(0, CliProcess.Run("send", "--socket", socket, "shutdown").ExitCode);
+                    Assert.True(server.WaitForExit(30000), "serve did not end after shutdown.");
+                } finally {
+                    if (!server.HasExited) {
+                        server.Kill(true);
+                    }
+                }
+            } finally {
+                File.Delete(socket);
+            }
+        }
+
         [Fact]
         public void ASocketSessionIsSharedBySendCalls() {
             // Unix socket paths are short; the temp folder of a test run may not be.
             string socket = Path.Combine(OperatingSystem.IsWindows() ? Path.GetTempPath() : "/tmp", $"ou-{Guid.NewGuid():N}.sock");
             using var server = CliProcess.Start(false, "serve", "--socket", socket);
             try {
-                // A serve that never says it is ready must fail the test, not hang it.
-                var ready = server.StandardOutput.ReadLineAsync();
-                Assert.True(ready.Wait(TimeSpan.FromSeconds(60)), "serve did not report its socket.");
-                var hello = JsonDocument.Parse(ready.Result!).RootElement;
+                var hello = Ready(server);
                 Assert.Equal(socket, hello.GetProperty("socket").GetString());
 
                 var added = CliProcess.Run("send", "--socket", socket, "{\"op\":\"add_notes\",\"notes\":[[\"la\",\"C4\",\"1/4\"]]}");

@@ -286,7 +286,11 @@ namespace OpenUtau.Cli {
                 using var hash = System.Security.Cryptography.IncrementalHash.CreateHash(System.Security.Cryptography.HashAlgorithmName.SHA256);
                 var files = Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)
                     .Where(f => f.EndsWith(".onnx", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".yaml", StringComparison.OrdinalIgnoreCase))
-                    .OrderBy(f => f, StringComparer.Ordinal);
+                    .OrderBy(f => f, StringComparer.Ordinal).ToList();
+                // Without a model there is nothing that tells two banks apart.
+                if (!files.Any(f => f.EndsWith(".onnx", StringComparison.OrdinalIgnoreCase))) {
+                    return null;
+                }
                 var buffer = new byte[1 << 20];
                 foreach (string file in files) {
                     hash.AppendData(System.Text.Encoding.UTF8.GetBytes(Path.GetRelativePath(root, file).Replace('\\', '/') + "\n"));

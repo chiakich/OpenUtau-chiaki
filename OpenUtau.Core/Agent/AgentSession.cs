@@ -89,12 +89,18 @@ namespace OpenUtau.Core.Agent {
         }
 
         // Never throws: a failure is a reply with ok false.
-        public string HandleLine(string line) {
+        public string HandleLine(string line) => HandleLine(line, null)!;
+
+        // accept is asked once the request has its turn: null when it says no, and nothing was done.
+        public string? HandleLine(string line, Func<bool>? accept) {
             string op = string.Empty;
             JsonNode? id = null;
             JsonObject? result = null;
             AgentException? error = null;
             lock (gate) {
+                if (accept != null && !accept()) {
+                    return null;
+                }
                 try {
                     using var document = JsonDocument.Parse(line, Lenient);
                     var root = document.RootElement;
