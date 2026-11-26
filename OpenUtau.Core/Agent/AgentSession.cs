@@ -100,6 +100,7 @@ namespace OpenUtau.Core.Agent {
                         throw Invalid($"Unknown op \"{op}\". Send {{\"op\":\"help\"}} for the list.");
                     }
                     seen = null;
+                    currentOp = op;
                     result = handler(new Request(root));
                     if (Rephonemized.Contains(op)) {
                         result["phoneme_errors"] = CountPhonemeErrors();
@@ -161,6 +162,18 @@ namespace OpenUtau.Core.Agent {
                 }
             }
             return errors.Count;
+        }
+
+        // Parts whose notes changed after their pitch was written: the curve still follows the old notes.
+        readonly HashSet<UVoicePart> stalePitch = new HashSet<UVoicePart>();
+        // This session's own edits still on top of the undo stack, by the revision each one left.
+        readonly Stack<(long Revision, string Op)> mine = new Stack<(long, string)>();
+        string currentOp = string.Empty;
+
+        void NotesChanged(UVoicePart part) {
+            if (!(part.curves.FirstOrDefault(c => c.abbr == Format.Ustx.PITD)?.IsEmpty ?? true)) {
+                stalePitch.Add(part);
+            }
         }
 
         // One request is one revision, however many commands it took.
@@ -381,6 +394,9 @@ namespace OpenUtau.Core.Agent {
                     T result = action(project);
                     doc.EndUndoGroup();
                     Settle(before);
+                    if (revision > before) {
+                        mine.Push((revision, currentOp));
+                    }
                     return result;
                 } catch {
                     if (executed > 0) {
@@ -489,6 +505,13 @@ namespace OpenUtau.Core.Agent {
             }
         }
 
+        // Another project: nothing remembered about the last one applies.
+        JsonObject Fresh() {
+            stalePitch.Clear();
+            mine.Clear();
+            return StatusOnMain();
+        }
+
         JsonObject New(Request request) {
             bool discard = request.Flag("discard_changes");
             var score = request.Required("score", "{bpm, singer, phonemizer, notes?, curves?, name?, time_signature?, start?}");
@@ -497,7 +520,7 @@ namespace OpenUtau.Core.Agent {
             GuardUnsaved(discard, expected);
             var project = ScoreBuilder.Build(score, host, null, allowEmpty: true);
             host.LoadProject(project);
-            return host.Invoke(StatusOnMain);
+            return host.Invoke(Fresh);
         }
 
         JsonObject Open(Request request) {
@@ -515,7 +538,7 @@ namespace OpenUtau.Core.Agent {
             } catch (Exception e) when (!(e is AgentException)) {
                 throw new AgentException("invalid_project", $"Failed to open {path}: {e.Message}", inner: e);
             }
-            return host.Invoke(StatusOnMain);
+            return host.Invoke(Fresh);
         }
 
         JsonObject Save(Request request) {
@@ -668,6 +691,7 @@ namespace OpenUtau.Core.Agent {
                     }
                 }
                 Exec(new AddNoteCommand(part, notes));
+                NotesChanged(part);
                 FitPart(project, part);
                 host.ShowPart(part, part.position + notes[0].position);
                 return new JsonObject {
@@ -733,6 +757,7 @@ namespace OpenUtau.Core.Agent {
                     edited.Add((part, note));
                 }
                 foreach (var part in edited.Select(e => e.Item1).Distinct()) {
+                    NotesChanged(part);
                     FitPart(project, part);
                 }
                 return new JsonObject {
@@ -754,6 +779,7 @@ namespace OpenUtau.Core.Agent {
                 var found = wanted.Select(id => Find(project, id)).ToList();
                 foreach (var group in found.GroupBy(f => f.Part)) {
                     Exec(new RemoveNoteCommand(group.Key, group.Select(f => f.Note).ToList()));
+                    NotesChanged(group.Key);
                 }
                 return new JsonObject { ["deleted"] = found.Count };
             });
@@ -912,8 +938,25 @@ namespace OpenUtau.Core.Agent {
             AgentOps.WaitPhonemized(host, project);
             long before = host.Invoke(() => revision);
             AgentOps.LoadRenderedPitch(host, project, mode, part);
-            host.Invoke(() => Settle(before));
-            return new JsonObject { ["mode"] = mode };
+            bool written = host.Invoke(() => {
+                Settle(before);
+                if (mode == AgentOps.PitchAll) {
+                    stalePitch.RemoveWhere(p => part == null || p == part);
+                }
+                if (revision > before) {
+                    // One undo step per part: only a single part can be named when undone.
+                    if (part != null || project.parts.OfType<UVoicePart>().Count() == 1) {
+                        mine.Push((revision, currentOp));
+                    } else {
+                        mine.Clear();
+                    }
+                }
+                return revision > before;
+            });
+            if (!written && mode == AgentOps.PitchUntuned) {
+                host.Warnings.Add("Nothing was written: every phrase already has a pitch curve. \"mode\": \"all\" rewrites them, replacing pitch drawn by hand too.");
+            }
+            return new JsonObject { ["mode"] = mode, ["written"] = written };
         }
 
         JsonObject Render(Request request) {
@@ -948,6 +991,10 @@ namespace OpenUtau.Core.Agent {
                                 + "load_pitch first writes the pitch this singer's model predicts.");
                         }
                     }
+                }
+                foreach (var p in stalePitch.Where(p => project.parts.Contains(p) && (track < 0 || p.trackNo == track))) {
+                    host.Warnings.Add($"Part {project.parts.IndexOf(p)}: notes changed after its pitch curve was written, so the pitch still follows the old notes. "
+                        + "load_pitch with \"mode\": \"all\" rewrites it (pitch drawn by hand goes too, so draw vibrato after).");
                 }
                 return PhonemeErrors(project);
             });
@@ -991,13 +1038,27 @@ namespace OpenUtau.Core.Agent {
                     throw new AgentException(undo ? "nothing_to_undo" : "nothing_to_redo", undo ? "There is nothing to undo." : "There is nothing to redo.");
                 }
                 long before = revision;
+                // Null for a change that is not this session's latest: the user's, one redone, or a load_pitch over several parts.
+                string? undone = null;
                 if (undo) {
+                    if (mine.Count > 0 && mine.Peek().Revision == before) {
+                        undone = mine.Pop().Op;
+                    }
                     doc.Undo();
                 } else {
                     doc.Redo();
                 }
                 Settle(before);
-                return new JsonObject { ["can_undo"] = doc.GetUndoState(out _), ["can_redo"] = doc.GetRedoState(out _) };
+                if (undone != null && mine.Count > 0) {
+                    // The project is back at what that edit left.
+                    var top = mine.Pop();
+                    mine.Push((revision, top.Op));
+                }
+                var result = new JsonObject { ["can_undo"] = doc.GetUndoState(out _), ["can_redo"] = doc.GetRedoState(out _) };
+                if (undo) {
+                    result["undone"] = undone;
+                }
+                return result;
             });
         }
 
@@ -1066,8 +1127,10 @@ namespace OpenUtau.Core.Agent {
                     + "After an op that changes what is sung, the reply's phoneme_errors counts the phonemes that cannot be sung, and a warning shows the first; get lists them all. "
                     + "A lyric the phonemizer does not know can spell its phonemes: \"word[p h o n e m e s]\". "
                     + "A new project's first note is at tick 1920, one 4/4 bar in, which leaves room for the first consonants. "
-                    + "Without the app, notes are sung at their plain pitch until load_pitch writes the singer's own into pitd; do it before a render meant for listening, and again after changing notes. "
-                    + "There is no vibrato op: draw it into pitd, in cents. "
+                    + "Without the app, notes are sung at their plain pitch until load_pitch writes the singer's own into pitd; do it before a render meant for listening. "
+                    + "After changing notes the curve still follows the old ones: load_pitch again with mode all, which replaces everything in pitd. "
+                    + "There is no vibrato op: after the last load_pitch, read pitd with get, add the wobble to its values, and write them back with set_curve, in cents. "
+                    + "A voicebank folder is saved in the project by its folder name only; the app opens it as the installed singer of that id. "
                     + "Two renders of the same project in one session can differ slightly, seeded or not. Paths are absolute, or relative to where the session was started.",
                 ["ops"] = new JsonObject {
                     ["status"] = Op("The open project: tempo, tracks, parts, undo state; in the app also the open part, selection and playhead."),
@@ -1095,7 +1158,7 @@ namespace OpenUtau.Core.Agent {
                     ["delete_notes"] = Op("Delete notes.", "ids: [id, ...]"),
                     ["set_curve"] = Op("Draw, erase or set the resting value of an expression curve (pitd, dyn, genc, velc, ...). expressions lists them with their ranges; pitd is in cents.",
                         "abbr",
-                        "points: [[tick, value], ...] draws straight lines through the points",
+                        "points: [[tick, value], ...] draws straight lines through the points, replacing what was drawn between the first and the last",
                         "clear: true erases the drawn curve, within from_tick..to_tick if given",
                         "default: value the whole track takes wherever no curve is drawn; reset_default: true removes it",
                         "part or track"),
@@ -1103,12 +1166,12 @@ namespace OpenUtau.Core.Agent {
                     ["set_track"] = Op("Change a track's singer or phonemizer.", "track: default 0", "singer: id",
                         "phonemizer: id; a tag or name works when only one phonemizer for this singer has it. With a singer and none given: the one last used with that singer in the app, else the singer's default"),
                     ["load_pitch"] = Op("Write the pitch the singer's model predicts into the pitd curve, as the app's Load Rendered Pitch.",
-                        "mode: untuned (default; only phrases without a drawn pitch) or all", "part"),
+                        "mode: untuned (default; only phrases that have no pitch curve yet) or all (every phrase, replacing what is in pitd: use it after changing notes)", "part"),
                     ["render"] = Op("Render to wav. Refused while phonemes have errors. Without the app, a part with no pitch curve is sung at plain note pitch: see load_pitch.",
                         "out: file path",
-                        "from_tick, to_tick: render only this range; the file then starts at from_tick",
+                        "from_tick, to_tick: render only this range; the file then starts at from_tick, and ends with the last sound before to_tick",
                         "track: only this track", "mixdown: one stereo file of all tracks", "allow_errors"),
-                    ["undo"] = Op("Undo the last change, the user's included: one request of this session, or one edit of the user's."),
+                    ["undo"] = Op("Undo the last change, the user's included: one request of this session, or one edit of the user's. \"undone\" names the op when it was this session's latest edit."),
                     ["redo"] = Op("Redo."),
                     ["singers"] = Op("The installed singers."),
                     ["phonemizers"] = Op("Phonemizers, or those offered for a singer.", "singer"),

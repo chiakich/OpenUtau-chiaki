@@ -102,6 +102,7 @@ namespace OpenUtau.Cli {
             Assert.Equal(new[] { first + 1, first + 2 }, replies.Skip(1).Take(2).Select(r => r.GetProperty("revision").GetInt64()));
             Assert.Equal(JsonValueKind.Number, replies[0].GetProperty("phoneme_errors").ValueKind);
             Assert.Equal("ambiguous_phonemizer", Code(replies[3]));
+            Assert.Equal("edit_notes", replies[2].GetProperty("undone").GetString());
         }
 
         [Fact]
@@ -297,7 +298,13 @@ namespace OpenUtau.Cli {
                     "{\"op\":\"get\",\"detail\":\"phonemes\"}",
                     "{\"op\":\"edit_notes\",\"notes\":[{\"id\":2,\"lyric\":\"dreams\"}]}",
                     "{\"op\":\"get\",\"detail\":\"phonemes\"}",
-                    "{\"op\":\"render\",\"out\":" + JsonSerializer.Serialize(wav) + ",\"from_tick\":1920,\"to_tick\":2880}") + "\n";
+                    "{\"op\":\"render\",\"out\":" + JsonSerializer.Serialize(wav) + ",\"from_tick\":1920,\"to_tick\":2880}",
+                    "{\"op\":\"load_pitch\"}",
+                    "{\"op\":\"edit_notes\",\"notes\":[{\"id\":3,\"tone\":\"E4\"}]}",
+                    "{\"op\":\"load_pitch\"}",
+                    "{\"op\":\"render\",\"out\":" + JsonSerializer.Serialize(Path.Combine(dir, "stale.wav")) + ",\"from_tick\":1920,\"to_tick\":2880}",
+                    "{\"op\":\"load_pitch\",\"mode\":\"all\"}",
+                    "{\"op\":\"undo\"}") + "\n";
                 var result = CliProcess.RunWithInput(input, "serve", "--singer", singer!, "--seed", "1", "--runner", "cpu");
                 Assert.True(result.ExitCode == 0, result.Stderr);
                 var replies = result.Stdout.Split('\n').Where(l => l.Trim().Length > 0)
@@ -311,6 +318,15 @@ namespace OpenUtau.Cli {
                 Assert.NotEmpty(before);
                 // The edit is phonemized before the next reply: no stale phonemes.
                 Assert.NotEqual(before, after);
+
+                // Pitch written before a note moved is not rewritten by the default mode, and the render says so.
+                string[] Warnings(JsonElement reply) => reply.GetProperty("warnings").EnumerateArray().Select(w => w.GetString()!).ToArray();
+                Assert.Empty(Warnings(replies[4]).Where(w => w.Contains("notes changed")));
+                Assert.True(replies[5].GetProperty("written").GetBoolean());
+                Assert.False(replies[7].GetProperty("written").GetBoolean());
+                Assert.Contains(Warnings(replies[8]), w => w.Contains("notes changed"));
+                Assert.True(replies[9].GetProperty("written").GetBoolean());
+                Assert.Equal("load_pitch", replies[10].GetProperty("undone").GetString());
 
                 // Two beats at 120 bpm.
                 long samples = (new FileInfo(wav).Length - 44) / 2;

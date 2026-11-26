@@ -50,9 +50,9 @@ A request is one line, `{"op": name, ...fields}`; a reply is one line with `ok`,
 | `add_notes`, `edit_notes`, `delete_notes` | `[[lyric, tone, duration], ...]` at a tick or after a note; `{id, lyric?, tone?, tick?, duration?}`; ids |
 | `set_curve` | draw `points`, `clear`, or set the track `default` of an expression such as `pitd` (cents) or `genc`; `stored_points` in the reply counts what the curve keeps, after snapping to its grid |
 | `set_tempo`, `set_track` | tempo; a track's singer and phonemizer (a new singer brings the phonemizer last used with it in the app, else its default, unless one is given) |
-| `load_pitch` | write the model's predicted pitch into `pitd`, as *Load Rendered Pitch* |
-| `render` | wav of the project, or of `from_tick`..`to_tick` only (the file then starts at `from_tick`); under `serve`, warns for a part with no pitch curve, which is sung at plain note pitch until `load_pitch` |
-| `undo`, `redo` | the app's undo stack, the user's edits included |
+| `load_pitch` | write the model's predicted pitch into `pitd`, as *Load Rendered Pitch*; the default `mode` `untuned` skips phrases that already have a curve (`written` is then false), `all` rewrites every phrase and is the one to use after changing notes |
+| `render` | wav of the project, or of `from_tick`..`to_tick` only (the file then starts at `from_tick`); under `serve`, warns for a part with no pitch curve, which is sung at plain note pitch until `load_pitch`, and for a part whose notes changed after its pitch was written; a range ends with the last sound before `to_tick` |
+| `undo`, `redo` | the app's undo stack, the user's edits included; `undone` names the op when it was this session's latest edit, else null |
 | `singers`, `phonemizers`, `expressions` | as the commands of the same name |
 | `shutdown` | ends a `serve` session; refused in the app |
 

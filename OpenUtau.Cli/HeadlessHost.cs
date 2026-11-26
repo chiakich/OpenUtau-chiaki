@@ -242,7 +242,12 @@ namespace OpenUtau.Cli {
             });
         }
 
-        public void SaveProject(UProject project, string path) => Loop.Invoke(() => AgentOps.Save(project, path));
+        public void SaveProject(UProject project, string path) => Loop.Invoke(() => {
+            AgentOps.Save(project, path);
+            foreach (var singer in project.tracks.Select(t => t.Singer).Where(added.Contains).Distinct()) {
+                Warnings.Add($"The project names singer \"{singer.Id}\" by id only, not {singer.Location}: the app opens it with its own singer of that id, if it has one.");
+            }
+        });
 
         // Reads a project and makes it the current document, as File > Open does. configure runs on
         // the project before it is installed, for overrides that are meant to look loaded from the file.
