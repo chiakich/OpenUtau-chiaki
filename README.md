@@ -4,6 +4,8 @@
 
 This repo is a build of [OpenUtau Lunai](https://github.com/keirokeer/OpenUtau-lunai) with Chiaki bundled, so you can install one app and start singing.
 
+It also comes with an [MCP server](#for-ai-agents), so an AI agent such as Claude can write, edit and render a song with any DiffSinger voicebank, on its own or in the project you have open in the app.
+
 ## Download
 
 - **App with Chiaki built in**: [Windows](https://github.com/chiakich/OpenUtau-chiaki/releases/latest/download/OpenUtau-Chiaki-win-x64-Setup.exe), [macOS (Apple Silicon)](https://github.com/chiakich/OpenUtau-chiaki/releases/latest/download/OpenUtau-Chiaki-osx-arm64.dmg), other platforms on the [releases page](https://github.com/chiakich/OpenUtau-chiaki/releases/latest).
@@ -20,6 +22,7 @@ This repo is a build of [OpenUtau Lunai](https://github.com/keirokeer/OpenUtau-l
 
 - **Chiaki voicebank bundled**: stored as a release asset, placed in `Singers/Chiaki` before building, and loaded ahead of any installed copy.
 - **DiffSinger Finnish and Latin phonemizers built in**, so Finnish and Latin (Ecclesiastical) tracks need no extra plugin DLL.
+- **An MCP server and command line for AI agents and scripts**, built from source for now: see [For AI agents](#for-ai-agents).
 - **Singer Hub removed.**
 - **Own identity**: the app is `OpenUtau-Chiaki` with its own data folder, so it can sit next to Lunai.
 - **Updates come from this repo's releases.** On Windows the Velopack updater installs them (it uses a GitHub token from `OPENUTAU_CHIAKI_GITHUB_TOKEN` if one is set); on macOS and Linux it opens the releases page.
@@ -43,27 +46,35 @@ scripts/fetch-voicebank.sh --from ~/Library/OpenUtau/Singers/Chiaki
 
 The build copies `Singers/` next to the executable. To publish a new voicebank, upload a zip whose top folder is `Chiaki` to a new release tag and update `scripts/voicebank.json`.
 
-## Command line
+## For AI agents
 
-`OpenUtau.Cli` runs the app's phonemizer and renderer without the window, for scripts and agents. It prints one JSON object on stdout, reports failures on stderr with a non-zero exit code, and never writes to your preferences or voicebanks.
+`OpenUtau.Cli` is OpenUtau without the window. As a [Model Context Protocol](https://modelcontextprotocol.io) server it gives an agent tools to start a project, add and edit notes and lyrics, pick a singer and phonemizer, draw curves, load the singer's own pitch, render to wav and save. It runs the same code as the app, so what the agent hears is what the app would sing.
+
+It is not in the downloads yet: it needs the .NET 10 SDK and this repo.
 
 ```sh
 dotnet build OpenUtau.Cli/OpenUtau.Cli.csproj
-scripts/openutau-cli.sh ustx score.json --out song.ustx
-scripts/openutau-cli.sh phonemize song.ustx --singer Singers/Chiaki
-scripts/openutau-cli.sh render song.ustx --singer Singers/Chiaki --seed 1 --out song.wav --dump dump/
 ```
+
+```json
+{"mcpServers": {"openutau-chiaki": {
+  "command": "/path/to/OpenUtau-chiaki/scripts/openutau-cli.sh",
+  "args": ["mcp", "--singer", "/path/to/voicebank"]}}}
+```
+
+- **On its own**: the agent keeps a project of its own and writes wav and `.ustx` files. `--singer DIR` adds a voicebank folder that is not installed.
+- **With the app open**: `"args": ["mcp", "--gui"]` works on the project open in the app, once you turn the agent connection on (off by default). You see each edit as it happens, and each one is a step of Undo.
+
+The same requests are available to scripts as JSON lines (`serve`, `send`), and there are one-shot commands that print one JSON object each:
 
 | Command | What it does |
 | --- | --- |
 | `phonemize IN.ustx` | Every phoneme with its note and its start and end, in ticks, milliseconds and model frames: the timing the piano roll shows. |
-| `render IN.ustx --out OUT.wav` | Renders to wav. `--seed` makes it repeatable, `--load-pitch` runs *Load Rendered Pitch* first, `--bpm`, `--tempo-scale` and `--curve velc=150` override the project, and `--dump DIR` saves the inputs and outputs of every DiffSinger model as `.npz`. |
+| `render IN.ustx --out OUT.wav` | Renders to wav; `--seed` makes it repeatable, and `--dump DIR` saves the inputs and outputs of every DiffSinger model. |
 | `ustx SCORE.json --out OUT.ustx` | Writes a project from a JSON score of lyrics, pitches and lengths. |
 | `singers`, `expressions`, `phonemizers` | List the singers, the expressions a singer supports, and the phonemizers. |
 
-For step-by-step work, `serve` keeps a project open and takes edit, query and render requests as JSON lines, `mcp` offers the same as a Model Context Protocol server, and both can instead work on the project open in the app (`send --gui`, `mcp --gui`) once the app is started with `OPENUTAU_AGENT=1`.
-
-`--singer DIR` uses a voicebank folder that is not installed. Setting it up for an agent is in [OpenUtau.Cli/README.md](OpenUtau.Cli/README.md); every option and JSON field is in its [reference](OpenUtau.Cli/REFERENCE.md).
+It never writes to your preferences or voicebanks. Setting it up is in [OpenUtau.Cli/README.md](OpenUtau.Cli/README.md); every option and JSON field is in its [reference](OpenUtau.Cli/REFERENCE.md).
 
 ## Releases
 
