@@ -83,7 +83,9 @@ namespace OpenUtau.UiTest {
                     // The app does not run in the agent's folder, and a missing file is the agent's mistake.
                     var relative = Send(session, "{\"op\":\"open\",\"path\":\"song.ustx\",\"discard_changes\":true}");
                     Assert.Equal("invalid_request", relative.GetProperty("error").GetProperty("code").GetString());
-                    var missing = Send(session, "{\"op\":\"open\",\"path\":\"/nowhere/song.ustx\",\"discard_changes\":true}");
+                    // Built here: a path rooted at "/" is not a full path on Windows.
+                    string nowhere = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"ou-{Guid.NewGuid():N}", "song.ustx");
+                    var missing = Send(session, JsonSerializer.Serialize(new { op = "open", path = nowhere, discard_changes = true }));
                     Assert.Equal("file_not_found", missing.GetProperty("error").GetProperty("code").GetString());
                     // And over the socket the app listens on, from a thread that is not the UI's.
                     string socket = System.IO.Path.Combine(OperatingSystem.IsWindows() ? System.IO.Path.GetTempPath() : "/tmp", $"ou-{Guid.NewGuid():N}.sock");
