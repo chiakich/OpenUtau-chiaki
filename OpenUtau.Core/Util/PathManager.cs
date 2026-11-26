@@ -74,6 +74,7 @@ namespace OpenUtau.Core {
                     }
                 }
             }
+            CachePath = Headless.CachePath ?? CachePath;
         }
 
         public string RootPath { get; private set; }

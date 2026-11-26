@@ -446,6 +446,7 @@ namespace OpenUtau.Core.DiffSinger
                 linguisticOutputs = linguisticModel.Run(linguisticInputs).Cast<NamedOnnxValue>().ToList();
                 linguisticCache?.Save(linguisticOutputs);
             }
+            DiffSingerTap.Report(DiffSingerTap.DurLinguistic, null, linguisticInputs, linguisticOutputs, linguisticCache, source: this, tick: phrase[0][0].position);
             Tensor<float> encoder_out = linguisticOutputs
                 .Where(o => o.Name == "encoder_out")
                 .First()
@@ -500,6 +501,7 @@ namespace OpenUtau.Core.DiffSinger
                 durationOutputs = durationModel.Run(durationInputs).Cast<NamedOnnxValue>().ToList();
                 durationCache?.Save(durationOutputs);
             }
+            DiffSingerTap.Report(DiffSingerTap.Dur, null, durationInputs, durationOutputs, durationCache, source: this, tick: phrase[0][0].position);
             List<double> durationFrames = durationOutputs.First().AsTensor<float>().Select(x=>(double)x).ToList();
             
             //Alignment

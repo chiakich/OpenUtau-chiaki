@@ -184,6 +184,7 @@ namespace OpenUtau.Core.DiffSinger
                     phrase.AddCacheFile(linguisticCache?.Filename);
                 }
             }
+            DiffSingerTap.Report(DiffSingerTap.PitchLinguistic, phrase, linguisticInputs, linguisticOutputs, linguisticCache);
             Tensor<float> encoder_out = linguisticOutputs
                 .Where(o => o.Name == "encoder_out")
                 .First()
@@ -364,6 +365,7 @@ namespace OpenUtau.Core.DiffSinger
             });
             Onnx.VerifyInputNames(pitchModel, pitchInputs);
             var pitchOutputs = pitchModel.Run(pitchInputs);
+            DiffSingerTap.Report(DiffSingerTap.Pitch, phrase, pitchInputs, pitchOutputs);
             var pitch_out = pitchOutputs.First().AsTensor<float>().ToArray();
             var pitchEnd = phrase.timeAxis.MsPosToTickPos(startMs + (totalFrames - 1) * frameMs) - phrase.position;
             if(pitchEnd<=phrase.duration){

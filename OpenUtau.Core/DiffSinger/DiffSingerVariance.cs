@@ -196,6 +196,7 @@ namespace OpenUtau.Core.DiffSinger{
                 linguisticCache?.Save(linguisticOutputs);
                 phrase.AddCacheFile(linguisticCache?.Filename);
             }
+            DiffSingerTap.Report(DiffSingerTap.VarianceLinguistic, phrase, linguisticInputs, linguisticOutputs, linguisticCache);
             Tensor<float> encoder_out = linguisticOutputs
                 .Where(o => o.Name == "encoder_out")
                 .First()
@@ -304,6 +305,7 @@ namespace OpenUtau.Core.DiffSinger{
                 : null;
             var cachedOutputs = resultCache?.Load();
             if (cachedOutputs != null) {
+                DiffSingerTap.Report(DiffSingerTap.Variance, phrase, varianceInputs, cachedOutputs, cached: true);
                 var cachedResult = ParseVarianceResult(cachedOutputs, frameMs, headFrames, tailFrames, totalFrames);
                 if (variancePatchKey.HasValue) {
                     variancePatchStates.Set(
@@ -373,6 +375,7 @@ namespace OpenUtau.Core.DiffSinger{
             });
             Onnx.VerifyInputNames(varianceModel, varianceInputs);
             var varianceOutputs = varianceModel.Run(varianceInputs).Cast<NamedOnnxValue>().ToList();
+            DiffSingerTap.Report(DiffSingerTap.Variance, phrase, varianceInputs, varianceOutputs);
             Tensor<float>? energy_pred = dsConfig.predict_energy
                 ? varianceOutputs
                     .Where(o => o.Name == "energy_pred")

@@ -54,7 +54,7 @@ namespace OpenUtau.UiTest {
                 HeadlessUi.Flush();
                 HeadlessUi.SaveScreenshot(window, "ExpressionsTab");
                 // The graphs share the expressions window, on their own tab.
-                window.FindControl<TabStrip>("Tabs")!.SelectedIndex = 2;
+                window.FindControl<TabControl>("Tabs")!.SelectedItem = window.FindControl<TabItem>("GraphsTab");
                 HeadlessUi.Flush();
                 var editor = window.FindControl<ExpressionGraphEditor>("GraphEditor")!;
                 var canvas = editor.FindControl<ExpressionGraphCanvas>("Canvas")!;
@@ -140,7 +140,7 @@ namespace OpenUtau.UiTest {
             var window = new ExpressionsDialog { Width = 1100, Height = 640 };
             try {
                 window.Show();
-                window.FindControl<TabStrip>("Tabs")!.SelectedIndex = 2;
+                window.FindControl<TabControl>("Tabs")!.SelectedItem = window.FindControl<TabItem>("GraphsTab");
                 HeadlessUi.Flush();
                 var editor = window.FindControl<ExpressionGraphEditor>("GraphEditor")!;
                 var canvas = editor.FindControl<ExpressionGraphCanvas>("Canvas")!;
@@ -174,7 +174,7 @@ namespace OpenUtau.UiTest {
             var window = new ExpressionsDialog { Width = 1100, Height = 640 };
             try {
                 window.Show();
-                window.FindControl<TabStrip>("Tabs")!.SelectedIndex = 2;
+                window.FindControl<TabControl>("Tabs")!.SelectedItem = window.FindControl<TabItem>("GraphsTab");
                 ExpressionGraphEdits.Apply(project, draft => {
                     var graph = new UExpressionGraph { id = "g", name = "Rate", renderer = Renderers.WORLDLINE_R2 };
                     var node = new UGraphNode { id = 1, type = GraphNodeTypes.Slew };
@@ -234,8 +234,8 @@ namespace OpenUtau.UiTest {
             try {
                 dialog.Show();
                 HeadlessUi.Flush();
-                // The renderer's default, then the graphs made for this renderer only.
-                var box = dialog.GetVisualDescendants().OfType<ComboBox>().Single(c => c.IsVisible);
+                // The renderer's default, then the graphs made for this renderer only. The graph's box is the last one.
+                var box = dialog.GetVisualDescendants().OfType<ComboBox>().Last(c => c.IsVisible);
                 Assert.Equal(new[] { $"{ThemeManagerString("tracks.expressiongraph.default")} (Graph A)", "Graph A", "Graph B" },
                     box.Items.Select(i => i!.ToString()));
                 Assert.Equal(0, box.SelectedIndex);

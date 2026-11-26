@@ -259,6 +259,8 @@ namespace OpenUtau.Core.DiffSinger {
             int outDims = dims.Length >= 3 ? dims[2] : defaultBins;
             int nFrames = dims.Length >= 4 ? dims[3] : t;
             uint seed = ctx.NoiseSeed ?? 1u;
+            // Mixed with the phrase's own seed, so that phrases do not all get the same noise.
+            if (Util.Headless.NoiseSeed is uint fixedSeed) { seed = unchecked(fixedSeed * 2654435761u ^ seed) | 1u; }
             var tensor = DiffSingerNoise.Create(ctx.NoiseStage, seed, feats, outDims, nFrames);
             // If ONNX rank/layout differs from the standard 4D tensor, fall back to flat Gaussian fill.
             if (dims.Length != 4 || dims[0] != 1 || dims[1] != feats || dims[2] != outDims || dims[3] != nFrames) {

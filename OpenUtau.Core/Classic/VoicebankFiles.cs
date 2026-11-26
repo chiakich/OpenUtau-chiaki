@@ -34,6 +34,7 @@ namespace OpenUtau.Classic {
         }
 
         public void CopyBackMetaFiles(string source, string temp, IResampler resampler) {
+            if (OpenUtau.Core.Util.Headless.ReadOnlyUserData) { return; } // Fork: the cli leaves voicebanks as they are.
             lock (Renderers.GetCacheLock(temp)) {
                 var metaFiles = GetMetaFiles(source, temp, resampler);
                 metaFiles.ForEach(t => CopyOrStamp(t.Item2, t.Item1, false));

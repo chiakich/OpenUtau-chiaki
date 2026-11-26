@@ -35,6 +35,7 @@ namespace OpenUtau.Core.Util {
         }
 
         public static void Save() {
+            if (Headless.ReadOnlyUserData) { return; }
             EnsureOverlayScrollbars();
             ClampVoiceColorCurveMax();
             string path = PathManager.Inst.PrefsFilePath;
@@ -174,8 +175,8 @@ namespace OpenUtau.Core.Util {
 
         private static void Load() {
             try {
-                PathManager.Inst.TryMigratePortableFromTfmOutputFolders();
-                PathManager.Inst.TryMigrateFromLegacyOpenUtau();
+                if (!Headless.ReadOnlyUserData) PathManager.Inst.TryMigratePortableFromTfmOutputFolders();
+                if (!Headless.ReadOnlyUserData) PathManager.Inst.TryMigrateFromLegacyOpenUtau();
                 if (File.Exists(PathManager.Inst.PrefsFilePath)) {
                     var json = File.ReadAllText(PathManager.Inst.PrefsFilePath, Encoding.UTF8);
                     Default = JsonConvert.DeserializeObject<SerializablePreferences>(json);
@@ -438,6 +439,7 @@ namespace OpenUtau.Core.Util {
             /// <summary>Legacy; migrated to <see cref="RealTimePitchMode"/> on load.</summary>
             public bool RealTimePitchGeneration = false;
             public int RealTimePitchMode = (int)LivePitchMode.Normal;
+            public bool AgentServer = false;
             public bool ShowVibrato = true;
             public bool ShowPitch = true;
             public bool ShowFinalPitch = true;

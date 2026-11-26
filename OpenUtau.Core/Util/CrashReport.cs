@@ -121,6 +121,7 @@ namespace OpenUtau.Core.Util {
             bool writeDump = true,
             string? extra = null,
             IntPtr exceptionPointers = default) {
+            if (Headless.ReadOnlyUserData) { return null; }
             if (Interlocked.Exchange(ref reporting, 1) != 0) {
                 // Nested fault while already reporting — avoid recursion.
                 return null;
@@ -191,6 +192,7 @@ namespace OpenUtau.Core.Util {
         }
 
         static string? TryGetOnnxAttemptPath() {
+            if (Headless.ReadOnlyUserData) { return null; }
             try {
                 string logs = PathManager.Inst.LogsPath;
                 if (string.IsNullOrWhiteSpace(logs)) {

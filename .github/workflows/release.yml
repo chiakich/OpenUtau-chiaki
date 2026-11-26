@@ -166,6 +166,29 @@ jobs:
           -p:UseAppHost=true -p:SelfContained=true -p:OutputPath=../bin/${{ matrix.arch.name }}/
           -p:CFBundleVersion=${{ env.VERSION }} -p:CFBundleShortVersionString=${{ env.VERSION }}
 
+      # Before signing and packing: the command line ships inside each app.
+      - name: Add the command line
+        shell: bash
+        run: scripts/add-cli.sh ${{ matrix.arch.rid }} bin/${{ matrix.arch.name }}
+
+      - name: Check the command line
+        # Only where the runner can run what it built.
+        if: matrix.arch.name == 'win-x64' || matrix.arch.name == 'osx-arm64' || matrix.arch.name == 'linux-x64'
+        shell: bash
+        run: |
+          dir="bin/${{ matrix.arch.name }}"
+          app="$(find "$dir" -maxdepth 2 -name '*.app' -type d | head -n 1)"
+          if [ -n "$app" ]; then dir="$app/Contents/MacOS"; fi
+          "$dir/OpenUtau.Cli" help > cli-check.json
+          "$dir/OpenUtau.Cli" phonemizers >> cli-check.json
+          head -c 400 cli-check.json
+
+      - name: Pack the Claude Desktop extension
+        # The same file for every platform, so one job makes it.
+        if: matrix.arch.name == 'osx-arm64'
+        shell: bash
+        run: scripts/make-mcpb.sh "$VERSION" OpenUtau-Chiaki.mcpb
+
       - name: Write release channel info
         shell: bash
         run: |
@@ -369,6 +392,7 @@ jobs:
             OpenUtau-Chiaki-${{ matrix.arch.name }}.dmg
             OpenUtau-Chiaki-${{ matrix.arch.name }}.tar.gz
             OpenUtau-Chiaki-${{ matrix.arch.linuxarch }}.AppImage
+            OpenUtau-Chiaki.mcpb
           if-no-files-found: error
 
       - name: Create GitHub Release
@@ -385,6 +409,7 @@ jobs:
             OpenUtau-Chiaki-${{ matrix.arch.name }}.dmg
             OpenUtau-Chiaki-${{ matrix.arch.name }}.tar.gz
             OpenUtau-Chiaki-${{ matrix.arch.linuxarch }}.AppImage
+            OpenUtau-Chiaki.mcpb
             Releases/${{ matrix.arch.rid }}/*
           body: |
             ### Downloads
@@ -405,4 +430,6 @@ jobs:
             - Windows settings stay in Documents\OpenUtau-Chiaki.
             - macOS: install from the DMG once; later versions update in-app.
             - Linux: download new builds from Releases.
+            - For AI agents: each build has the MCP server and command line inside, as `OpenUtau.Cli` next to the app's executable (macOS: `/Applications/OpenUtau-Chiaki.app/Contents/MacOS/OpenUtau.Cli`). See the README.
+            - For Claude Desktop: install the app, then open [OpenUtau-Chiaki.mcpb](${{ env.REPO_URL }}/releases/download/${{ needs.prepare.outputs.tag }}/OpenUtau-Chiaki.mcpb) to add the MCP server.
             - macOS builds are signed and notarized when the signing secrets are configured. If an unsigned build says "This app is damaged", run `xattr -rc "/Applications/OpenUtau-Chiaki.app"`.

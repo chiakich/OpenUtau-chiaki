@@ -38,6 +38,20 @@ jobs:
       run: dotnet run --project OpenUtau.UiTest/OpenUtau.UiTest.csproj
       timeout-minutes: 15
 
+    # The release layout without the voicebank: the app published, the command line added next to it, and run from there.
+    - name: package check
+      shell: bash
+      timeout-minutes: 20
+      run: |
+        dotnet publish OpenUtau -c Release -r ${{ matrix.os.arch }} --self-contained true -o bin/pack
+        scripts/add-cli.sh ${{ matrix.os.arch }} bin/pack
+        bin/pack/OpenUtau.Cli help > cli-check.json
+        bin/pack/OpenUtau.Cli phonemizers >> cli-check.json
+        head -c 400 cli-check.json
+        cli=bin/pack/OpenUtau.Cli; if [ -f "$cli.exe" ]; then cli="$cli.exe"; fi
+        echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci","version":"0"}}}' | node OpenUtau.Cli/mcpb/server/launcher.js "--cli=$cli" > mcpb-check.json
+        grep -q openutau-chiaki mcpb-check.json
+
     - name: upload ui screenshots
       if: always()
       uses: actions/upload-artifact@v4

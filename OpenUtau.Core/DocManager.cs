@@ -24,7 +24,7 @@ namespace OpenUtau.Core {
         public bool SkipPhoneme;
     }
 
-    public class DocManager : SingletonBase<DocManager> {
+    public partial class DocManager : SingletonBase<DocManager> {
         DocManager() {
             Project = new UProject();
         }
@@ -126,12 +126,12 @@ namespace OpenUtau.Core {
                 if (File.Exists(builtinPath)) {
                     files.Add(builtinPath);
                 }
-                Directory.CreateDirectory(PathManager.Inst.PluginsPath);
+                if (!readOnlyPluginScan) Directory.CreateDirectory(PathManager.Inst.PluginsPath);
                 string oldBuiltin = Path.Combine(PathManager.Inst.PluginsPath, kBuiltin);
-                if (File.Exists(oldBuiltin)) {
+                if (!readOnlyPluginScan && File.Exists(oldBuiltin)) {
                     File.Delete(oldBuiltin);
                 }
-                SearchPluginInternal(PathManager.Inst.PluginsPath, files);
+                if (Directory.Exists(PathManager.Inst.PluginsPath)) SearchPluginInternal(PathManager.Inst.PluginsPath, files);
             } catch (Exception e) {
                 Log.Error(e, "Failed to search plugins.");
             }
@@ -305,6 +305,7 @@ namespace OpenUtau.Core {
             if (Project == null) {
                 return;
             }
+            if (Util.Headless.ReadOnlyUserData) { return; } // Fork: tests and the cli write nothing by themselves.
             if (undoQueue.LastOrDefault() == autosavedPoint) {
                 Log.Information("Autosave skipped.");
                 return;

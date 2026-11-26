@@ -31,10 +31,13 @@ namespace OpenUtau.UiTest {
             }
             coreInitialized = true;
             UpdaterDialog.CheckForUpdateEnabled = false;
+            // Tests run in the developer's own profile: no saving preferences, no theme hub download.
+            OpenUtau.Core.Util.Headless.ReadOnlyUserData = true;
             ToolsManager.Inst.Initialize();
-            SingerManager.Inst.Initialize();
             DocManager.Inst.Initialize(Thread.CurrentThread, TaskScheduler.FromCurrentSynchronizationContext());
             DocManager.Inst.PostOnUIThread = action => Avalonia.Threading.Dispatcher.UIThread.Post(action);
+            // After DocManager, as SplashWindow does: the search reports duplicate singers through it.
+            SingerManager.Inst.Initialize();
             DocManager.Inst.AddSubscriber(HeadlessUi.Errors);
         }
 

@@ -1,0 +1,54 @@
+{
+  "manifest_version": "0.3",
+  "name": "openutau-chiaki",
+  "display_name": "OpenUtau Chiaki",
+  "version": "0.0.0",
+  "description": "Write, edit and render singing with OpenUtau Chiaki and its DiffSinger voicebanks.",
+  "long_description": "Connects to the MCP server inside an installed OpenUtau Chiaki. An agent can create a project, add and edit notes and lyrics, pick a phonemizer, tune pitch and render audio, either on its own or on the project open in the app. OpenUtau Chiaki must be installed first.",
+  "author": {
+    "name": "chiakich",
+    "url": "https://github.com/chiakich/OpenUtau-chiaki"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chiakich/OpenUtau-chiaki"
+  },
+  "homepage": "https://github.com/chiakich/OpenUtau-chiaki",
+  "documentation": "https://github.com/chiakich/OpenUtau-chiaki/blob/master/OpenUtau.Cli/README.md",
+  "license": "MIT",
+  "keywords": ["openutau", "diffsinger", "singing", "music", "vocal synthesis"],
+  "server": {
+    "type": "node",
+    "entry_point": "server/launcher.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/server/launcher.js",
+        "--cli=${user_config.cli_path}",
+        "--gui=${user_config.gui}"
+      ],
+      "env": {}
+    }
+  },
+  "user_config": {
+    "cli_path": {
+      "type": "file",
+      "title": "OpenUtau.Cli location",
+      "description": "Only needed when OpenUtau Chiaki is not installed in its usual place: the OpenUtau.Cli file next to the app's executable.",
+      "required": false
+    },
+    "gui": {
+      "type": "boolean",
+      "title": "Work on the project open in the app",
+      "description": "Edits show live in OpenUtau Chiaki, which must be running with agent access turned on. Off: the agent works on its own project without a window.",
+      "default": false,
+      "required": false
+    }
+  },
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "node": ">=18.0.0"
+    }
+  }
+}
