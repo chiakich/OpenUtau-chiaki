@@ -1068,7 +1068,7 @@ namespace OpenUtau.Core.Agent {
                     + "A new project's first note is at tick 1920, one 4/4 bar in, which leaves room for the first consonants. "
                     + "Without the app, notes are sung at their plain pitch until load_pitch writes the singer's own into pitd; do it before a render meant for listening, and again after changing notes. "
                     + "There is no vibrato op: draw it into pitd, in cents. "
-                    + "Renders are not seeded here: two renders of the same project can differ slightly. Paths are absolute, or relative to where the session was started.",
+                    + "Two renders of the same project in one session can differ slightly, seeded or not. Paths are absolute, or relative to where the session was started.",
                 ["ops"] = new JsonObject {
                     ["status"] = Op("The open project: tempo, tracks, parts, undo state; in the app also the open part, selection and playhead."),
                     ["new"] = Op("Replace the open project with a new one-track project.",

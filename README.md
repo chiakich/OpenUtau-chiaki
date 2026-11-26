@@ -63,7 +63,7 @@ scripts/openutau-cli.sh render song.ustx --singer Singers/Chiaki --seed 1 --out 
 
 For step-by-step work, `serve` keeps a project open and takes edit, query and render requests as JSON lines, `mcp` offers the same as a Model Context Protocol server, and both can instead work on the project open in the app (`send --gui`, `mcp --gui`) once the app is started with `OPENUTAU_AGENT=1`.
 
-`--singer DIR` uses a voicebank folder that is not installed. Every option, every JSON field and the notes on reproducibility are in [OpenUtau.Cli/README.md](OpenUtau.Cli/README.md).
+`--singer DIR` uses a voicebank folder that is not installed. Setting it up for an agent is in [OpenUtau.Cli/README.md](OpenUtau.Cli/README.md); every option and JSON field is in its [reference](OpenUtau.Cli/REFERENCE.md).
 
 ## Releases
 
