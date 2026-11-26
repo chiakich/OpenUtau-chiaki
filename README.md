@@ -64,6 +64,8 @@ Releases after v1.0.1 carry it inside the app, as `OpenUtau.Cli` next to the app
 | Windows (Setup) | `%LocalAppData%\OpenUtau.Chiaki\current\OpenUtau.Cli.exe` |
 | Windows (Portable), Linux (`.tar.gz`) | `OpenUtau.Cli` in the unpacked folder; the AppImage does not expose it |
 
+For Claude Desktop there is a shortcut: each release has `OpenUtau-Chiaki.mcpb`. Install the app, then open that file (or drag it into Settings → Extensions); it finds the installed `OpenUtau.Cli` by itself and has a switch for working on the project open in the app.
+
 The bundled Chiaki is singer `Chiaki`, and installed singers are available by id. From a checkout, `scripts/openutau-cli.sh` builds and runs it with the .NET 10 SDK instead.
 
 - **On its own**: the agent keeps a project of its own and writes wav and `.ustx` files. `--singer DIR` adds a voicebank folder that is not installed.

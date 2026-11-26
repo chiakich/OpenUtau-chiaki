@@ -48,6 +48,9 @@ jobs:
         bin/pack/OpenUtau.Cli help > cli-check.json
         bin/pack/OpenUtau.Cli phonemizers >> cli-check.json
         head -c 400 cli-check.json
+        cli=bin/pack/OpenUtau.Cli; if [ -f "$cli.exe" ]; then cli="$cli.exe"; fi
+        echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci","version":"0"}}}' | node OpenUtau.Cli/mcpb/server/launcher.js "--cli=$cli" > mcpb-check.json
+        grep -q openutau-chiaki mcpb-check.json
 
     - name: upload ui screenshots
       if: always()

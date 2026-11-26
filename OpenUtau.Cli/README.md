@@ -27,6 +27,8 @@ Developed and tested on macOS (Apple Silicon); the Windows and Linux builds are 
 
 To have the agent work on the project open in the app instead, use `"args": ["mcp", "--gui"]` and turn the app's agent connection on: `"AgentServer": true` in its `prefs.json`, or start it with `OPENUTAU_AGENT=1`. The user sees every edit live, and each request is one step of the app's Undo. The connection is off by default because any process of the same user that reaches the socket (`agent.sock` in the app's data folder, or `OPENUTAU_AGENT_SOCKET`) can edit the open project and write files through save and render.
 
+Claude Desktop can take `OpenUtau-Chiaki.mcpb` from a release instead of the configuration above. It holds no server, only a launcher (`mcpb/server/launcher.js`) that starts the `OpenUtau.Cli` of the installed app: the path in the extension's settings, then `OPENUTAU_CLI`, then the usual install place on macOS and Windows. On Linux the path has to be set. Its switch "Work on the project open in the app" is `--gui`. `scripts/make-mcpb.sh VERSION` packs it.
+
 `scripts/openutau-cli.sh` builds the CLI if it has never been built. It does not notice later source changes: run it once with `OPENUTAU_CLI_REBUILD=1` after pulling. It looks for `dotnet` on `PATH`, then in `~/.dotnet`; `DOTNET=/path/to/dotnet` names another one.
 
 ## What an agent should know
