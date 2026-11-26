@@ -161,7 +161,7 @@ namespace OpenUtau.Core.Agent {
                 ["name"] = part.name,
                 ["position_tick"] = part.position,
                 ["end_tick"] = part.End,
-                ["curve_points"] = curves,
+                ["curve_point_counts"] = curves,
                 ["notes"] = notesJson,
                 ["phonemes"] = phonemesJson,
                 ["phrases"] = phrasesJson,

@@ -119,22 +119,26 @@ namespace OpenUtau.Core.Agent {
             };
         }
 
-        public static JsonArray Phonemizers(USinger? singer) {
+        public static JsonArray Phonemizers(USinger? singer) =>
+            new JsonArray(PhonemizersOf(singer).Select(f => (JsonNode)PhonemizerRow(f)).ToArray());
+
+        public static PhonemizerFactory[] PhonemizersOf(USinger? singer) {
             var factories = singer != null
                 ? PhonemizerFactory.EnumerateForSinger(singer)
                 : PhonemizerFactory.GetAll();
-            return new JsonArray(factories
+            return factories
                 .OrderBy(f => f.tag, StringComparer.Ordinal)
                 .ThenBy(f => f.Id, StringComparer.Ordinal)
-                .Select(f => (JsonNode)new JsonObject {
-                    ["id"] = f.Id,
-                    ["name"] = f.name,
-                    ["tag"] = f.tag,
-                    ["language"] = NullIfEmpty(f.language),
-                    ["author"] = NullIfEmpty(f.author),
-                })
-                .ToArray());
+                .ToArray();
         }
+
+        public static JsonObject PhonemizerRow(PhonemizerFactory f) => new JsonObject {
+            ["id"] = f.Id,
+            ["name"] = f.name,
+            ["tag"] = f.tag,
+            ["language"] = NullIfEmpty(f.language),
+            ["author"] = NullIfEmpty(f.author),
+        };
 
         static string TypeName(UExpressionType type) {
             switch (type) {

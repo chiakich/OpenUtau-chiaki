@@ -304,7 +304,8 @@ namespace OpenUtau.Cli {
                     "{\"op\":\"load_pitch\"}",
                     "{\"op\":\"render\",\"out\":" + JsonSerializer.Serialize(Path.Combine(dir, "stale.wav")) + ",\"from_tick\":1920,\"to_tick\":2880}",
                     "{\"op\":\"load_pitch\",\"mode\":\"all\"}",
-                    "{\"op\":\"undo\"}") + "\n";
+                    "{\"op\":\"undo\"}",
+                    "{\"op\":\"phonemizers\",\"singer\":" + JsonSerializer.Serialize(singer) + ",\"query\":\"english\",\"lyrics\":[\"strange\",\"things\"]}") + "\n";
                 var result = CliProcess.RunWithInput(input, "serve", "--singer", singer!, "--seed", "1", "--runner", "cpu");
                 Assert.True(result.ExitCode == 0, result.Stderr);
                 var replies = result.Stdout.Split('\n').Where(l => l.Trim().Length > 0)
@@ -318,6 +319,13 @@ namespace OpenUtau.Cli {
                 Assert.NotEmpty(before);
                 // The edit is phonemized before the next reply: no stale phonemes.
                 Assert.NotEqual(before, after);
+
+                // A search narrows the singer's phonemizers, and a trial sings the words outside the project.
+                var found = replies[11].GetProperty("phonemizers").EnumerateArray().ToArray();
+                Assert.InRange(found.Length, 1, 5);
+                Assert.Equal(phonemizer, found[0].GetProperty("id").GetString());
+                Assert.Equal(2, found[0].GetProperty("trial").GetProperty("sung").GetInt32());
+                Assert.Equal(replies[10].GetProperty("revision").GetInt64(), replies[11].GetProperty("revision").GetInt64());
 
                 // Pitch written before a note moved is not rewritten by the default mode, and the render says so.
                 string[] Warnings(JsonElement reply) => reply.GetProperty("warnings").EnumerateArray().Select(w => w.GetString()!).ToArray();

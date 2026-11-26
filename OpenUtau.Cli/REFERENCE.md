@@ -53,7 +53,7 @@ A request is one line, `{"op": name, ...fields}`; a reply is one line with `ok`,
 | `load_pitch` | write the model's predicted pitch into `pitd`, as *Load Rendered Pitch*; the default `mode` `untuned` skips phrases that already have a curve (`written` is then false), `all` rewrites every phrase and is the one to use after changing notes |
 | `render` | wav of the project, or of `from_tick`..`to_tick` only (the file then starts at `from_tick`); under `serve`, warns for a part with no pitch curve, which is sung at plain note pitch until `load_pitch`, and for a part whose notes changed after its pitch was written; a range ends with the last sound before `to_tick` |
 | `undo`, `redo` | the app's undo stack, the user's edits included; `undone` names the op when it was this session's latest edit, else null |
-| `singers`, `phonemizers`, `expressions` | as the commands of the same name |
+| `singers`, `phonemizers`, `expressions` | as the commands of the same name; `phonemizers` also takes `query` (words looked for in id, name, tag and language code, best match first) and, with a `singer`, `lyrics`: each listed phonemizer is tried on those words outside the project and gets a `trial` with `sung`, `failed` and example `phonemes` |
 | `shutdown` | ends a `serve` session; refused in the app |
 
 Ticks are 480 per quarter note from the start of the project. A note's `id` stays the same for as long as the project is loaded, through edits and undo.
@@ -80,7 +80,7 @@ Socket paths must be short (104 bytes on macOS). The socket file is readable and
               "phonemizer": "OpenUtau.Core.DiffSinger.DiffSingerEnglishPhonemizer",
               "phonemizer_tag": "English", "renderer": "DIFFSINGER", "muted": false}],
   "parts": [{
-    "index": 0, "track": 0, "name": "Part", "position_tick": 0, "curve_points": {},
+    "index": 0, "track": 0, "name": "Part", "position_tick": 0, "curve_point_counts": {},
     "notes": [{"index": 0, "lyric": "sing", "tone": 60, "tone_name": "C4",
                "tick": 1920, "end_tick": 2400, "ms": 2000, "end_ms": 2500, "phonemes": [0, 1, 2]}],
     "phonemes": [{"index": 0, "phoneme": "en/s", "note": 0, "index_in_note": 0,
@@ -114,7 +114,7 @@ Socket paths must be short (104 bytes on macOS). The socket file is readable and
 | `phrases[].frame_ms`, `head_frames`, `tail_frames`, `total_frames` | DiffSinger only. The frame length, the silent padding before and after the phrase, and the phrase's whole length in frames. |
 | `phrases[].frame0_ms` | When frame 0 of the phrase starts. |
 | `phrases[].segments` | The phrase exactly as tokens with durations: the `SP` padding, each phoneme, and `SP` for any gap between phonemes. `frames` sum to `total_frames`. |
-| `curve_points` | How many points each drawn curve of the part has; `pitd` grows when pitch is loaded. |
+| `curve_point_counts` | How many points each drawn curve of the part has; `pitd` grows when pitch is loaded. |
 | `settings` | The settings in effect: where the preferences came from, runner, steps, depth, phrase merging and the other DiffSinger switches, and the overrides given. |
 | `errors[]` | The phonemes with errors: `part`, `phoneme`, `note`, `lyric`, `message`. |
 | `warnings[]` | Things done differently from what was asked, e.g. a curve the singer does not use. |

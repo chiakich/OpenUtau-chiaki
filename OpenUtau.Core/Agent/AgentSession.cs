@@ -148,6 +148,8 @@ namespace OpenUtau.Core.Agent {
                 .ToList();
         }
 
+        const int MaxTrialLyrics = 40;
+
         int CountPhonemeErrors() {
             var project = host.Invoke(() => DocManager.Inst.Project);
             if (project == null) {
@@ -157,8 +159,10 @@ namespace OpenUtau.Core.Agent {
             var errors = host.Invoke(() => PhonemeErrors(project));
             if (errors.Count > 0) {
                 lock (host.Warnings) {
+                    string used = host.Invoke(() => string.Join(", ", project.tracks.Select(t => t.Phonemizer?.GetType().FullName).Where(n => n != null).Distinct()));
                     host.Warnings.Add($"{errors.Count} phoneme(s) have errors, e.g. {string.Join("; ", errors.Take(3))}. "
-                        + "Reading the notes shows them all; check the lyrics, the track's phonemizer and its singer.");
+                        + $"Reading the notes shows them all. The phonemizer in use is {used}: if it is not the one for the language of the lyrics, "
+                        + "search the phonemizers list with \"singer\" and \"query\" (the language), and add \"lyrics\" to see how the matches sing those words.");
                 }
             }
             return errors.Count;
@@ -200,7 +204,12 @@ namespace OpenUtau.Core.Agent {
                 host.Warnings.Clear();
             }
             reply["warnings"] = warnings;
-            reply["diagnostics"] = new JsonArray(host.TakeDiagnostics().Select(d => (JsonNode)d).ToArray());
+            var diagnostics = host.TakeDiagnostics().AsEnumerable();
+            if (reply["phoneme_errors"] is JsonValue count && count.TryGetValue<int>(out int left) && left == 0) {
+                // Logged by a pass inside the request that a later one replaced.
+                diagnostics = diagnostics.Where(d => !d.StartsWith("phonemizer error"));
+            }
+            reply["diagnostics"] = new JsonArray(diagnostics.Select(d => (JsonNode)d).ToArray());
         }
 
         // ---- Requests ------------------------------------------------------------------------------
@@ -1070,9 +1079,34 @@ namespace OpenUtau.Core.Agent {
 
         JsonObject Phonemizers(Request request) {
             string? singerName = request.Str("singer");
+            string? query = request.Str("query");
+            var lyrics = new List<string>();
+            if (request.TryGet("lyrics", out var lyricsValue)) {
+                if (lyricsValue.ValueKind != JsonValueKind.Array || lyricsValue.EnumerateArray().Any(l => l.ValueKind != JsonValueKind.String)) {
+                    throw Invalid("\"lyrics\" must be an array of strings, one per note.");
+                }
+                lyrics.AddRange(lyricsValue.EnumerateArray().Select(l => l.GetString()!).Take(MaxTrialLyrics));
+            }
             request.Done();
             var singer = singerName == null ? null : Queries.ResolveSinger(host, singerName);
-            return new JsonObject { ["singer_id"] = singer?.Id, ["phonemizers"] = Queries.Phonemizers(singer) };
+            if (lyrics.Count > 0 && (singer == null || !singer.Found)) {
+                throw Invalid("\"lyrics\" needs a \"singer\": the phonemizers are tried with its dictionaries and phonemes.");
+            }
+            var factories = Queries.PhonemizersOf(singer);
+            if (!string.IsNullOrWhiteSpace(query)) {
+                factories = PhonemizerTrial.Search(factories, query).ToArray();
+            }
+            var rows = factories.Select(f => (Factory: f, Row: Queries.PhonemizerRow(f))).ToList();
+            if (lyrics.Count > 0) {
+                foreach (var row in rows) {
+                    row.Row["trial"] = PhonemizerTrial.Try(row.Factory, singer!, lyrics);
+                    row.Row.Remove("author");
+                    row.Row.Remove("language");
+                }
+                // Stable: phonemizers that sing as much keep the order of the search.
+                rows = rows.OrderByDescending(r => r.Row["trial"]!["sung"]!.GetValue<int>()).ToList();
+            }
+            return new JsonObject { ["singer_id"] = singer?.Id, ["phonemizers"] = new JsonArray(rows.Select(r => (JsonNode)r.Row).ToArray()) };
         }
 
         JsonObject Expressions(Request request) {
@@ -1124,6 +1158,7 @@ namespace OpenUtau.Core.Agent {
                     + "Durations: ticks, or a fraction of a whole note like \"1/8\", dotted with a trailing \".\".",
                 ["revisions"] = "\"revision\" goes up by one with every request that changes the project, and with the user's changes in the app. Every op that changes the project takes \"expect_revision\" and fails with code conflict if the project moved on. One such request is one step of undo; load_pitch is one step per part.",
                 ["tips"] = "Refer to singers and phonemizers by id: names and tags are not unique. "
+                    + "A singer's default phonemizer is often not the one for the language of the lyrics: before writing notes, search phonemizers with singer and query (the language). "
                     + "After an op that changes what is sung, the reply's phoneme_errors counts the phonemes that cannot be sung, and a warning shows the first; get lists them all. "
                     + "A lyric the phonemizer does not know can spell its phonemes: \"word[p h o n e m e s]\". "
                     + "A new project's first note is at tick 1920, one 4/4 bar in, which leaves room for the first consonants. "
@@ -1137,7 +1172,7 @@ namespace OpenUtau.Core.Agent {
                     ["new"] = Op("Replace the open project with a new one-track project.",
                         "score: {bpm, singer, phonemizer?, notes?, curves?, name?, time_signature?, start?}",
                         "singer: an installed singer's id, or without the app a voicebank folder",
-                        "phonemizer: id (see phonemizers with the singer); default is the singer's own",
+                        "phonemizer: id, or a tag such as English when only one phonemizer for this singer has it (search phonemizers with singer and query); default is the singer's own, which may be for another language than the lyrics",
                         "notes: as in add_notes, from start on",
                         "curves: {abbr: value for the whole part, or [[tick, value], ...]}",
                         "time_signature: [beats per bar, beat unit], default [4, 4]",
@@ -1174,7 +1209,10 @@ namespace OpenUtau.Core.Agent {
                     ["undo"] = Op("Undo the last change, the user's included: one request of this session, or one edit of the user's. \"undone\" names the op when it was this session's latest edit."),
                     ["redo"] = Op("Redo."),
                     ["singers"] = Op("The installed singers."),
-                    ["phonemizers"] = Op("Phonemizers, or those offered for a singer.", "singer"),
+                    ["phonemizers"] = Op("Phonemizers: all, those offered for a singer, or those a search finds.",
+                        "singer", "query: words to look for in id, name, tag and language code, such as english or FI; lists the phonemizers that match any, best match first",
+                        "lyrics: [word, ...] (needs singer) tries each listed phonemizer on these words without touching the project: \"trial\" has sung (how many), failed, and the phonemes of the first few. "
+                        + "Rule-based phonemizers sing any letters, so read the phonemes: sung alone does not tell the language"),
                     ["expressions"] = Op("The expressions a singer supports, with ranges and defaults.", "singer or track"),
                     ["shutdown"] = Op("End a session that runs without the app."),
                 },

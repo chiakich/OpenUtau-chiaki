@@ -34,6 +34,7 @@ To have the agent work on the project open in the app instead, use `"args": ["mc
 The server says all of this itself, in its instructions and tool descriptions; an agent does not need this file. It is here for the person reading along.
 
 - Refer to singers and phonemizers by id. Names and tags are not unique: a tag shared by several phonemizers is refused unless only one of them fits the singer.
+- A singer's default phonemizer is often not the one for the language of the lyrics. `list_phonemizers` with `singer` and `query` (the language) finds the fitting ones, and with `lyrics` tries them on those words without touching the project.
 - After a request that changes what is sung, the reply's `phoneme_errors` counts the phonemes that cannot be sung and a warning shows the first; `get_notes` lists them all. `render` refuses while there are any.
 - A lyric the phonemizer does not know can spell its phonemes: `word[p h o n e m e s]`. `+` continues the syllable of the note before.
 - A new project's first note is at tick 1920 (one 4/4 bar in), which leaves room for the consonants sung before it. Ticks are 480 per quarter note.

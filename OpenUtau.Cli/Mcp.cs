@@ -67,7 +67,7 @@ namespace OpenUtau.Cli {
             new Tool("undo", "undo", false, Props(("expect_revision", P("integer"))), new string[0]),
             new Tool("redo", "redo", false, Props(("expect_revision", P("integer"))), new string[0]),
             new Tool("list_singers", "singers", true, Props(), new string[0]),
-            new Tool("list_phonemizers", "phonemizers", true, Props(("singer", P("string"))), new string[0]),
+            new Tool("list_phonemizers", "phonemizers", true, Props(("singer", P("string")), ("query", P("string")), ("lyrics", new JsonObject { ["type"] = "array", ["items"] = P("string") })), new string[0]),
             new Tool("list_expressions", "expressions", true, Props(("singer", P("string")), ("track", P("integer"))), new string[0]),
         };
 
