@@ -212,6 +212,8 @@ namespace OpenUtau.Cli {
             var init = replies["1"].GetProperty("result");
             Assert.Equal("2025-03-26", init.GetProperty("protocolVersion").GetString());
             Assert.Equal(JsonValueKind.Object, init.GetProperty("capabilities").GetProperty("tools").ValueKind);
+            // Its own name: this fork's server must not pass for an official one.
+            Assert.Equal("openutau-chiaki", init.GetProperty("serverInfo").GetProperty("name").GetString());
 
             var tools = replies["2"].GetProperty("result").GetProperty("tools").EnumerateArray().ToArray();
             Assert.Contains("get_notes", tools.Select(t => t.GetProperty("name").GetString()));

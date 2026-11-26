@@ -143,7 +143,7 @@ What differs from `serve`: singers are the installed ones (`--singer DIR` does n
 `mcp` is the same session as a [Model Context Protocol](https://modelcontextprotocol.io) server on stdin and stdout, one tool per op (`status`, `new_project`, `open_project`, `save_project`, `get_notes`, `add_notes`, `edit_notes`, `delete_notes`, `set_curve`, `set_tempo`, `set_track`, `load_pitch`, `render`, `undo`, `redo`, `list_singers`, `list_phonemizers`, `list_expressions`). Each tool returns the session's reply as JSON text, and marks it as an error when `ok` is false.
 
 ```json
-{"mcpServers": {"openutau": {
+{"mcpServers": {"openutau-chiaki": {
   "command": "/path/to/OpenUtau/scripts/openutau-cli.sh",
   "args": ["mcp", "--singer", "/path/to/voicebank"]}}}
 ```

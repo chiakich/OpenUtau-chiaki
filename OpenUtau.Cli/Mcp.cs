@@ -197,10 +197,10 @@ namespace OpenUtau.Cli {
                 ["protocolVersion"] = asked != null && KnownProtocols.Contains(asked) ? asked : LatestProtocol,
                 ["capabilities"] = new JsonObject { ["tools"] = new JsonObject() },
                 ["serverInfo"] = new JsonObject {
-                    ["name"] = "openutau",
+                    ["name"] = "openutau-chiaki",
                     ["version"] = typeof(Mcp).Assembly.GetName().Version?.ToString() ?? "0",
                 },
-                ["instructions"] = $"Singing synthesis with OpenUtau and DiffSinger voicebanks. {where} "
+                ["instructions"] = $"Singing synthesis with OpenUtau (the Chiaki fork, not the official app) and DiffSinger voicebanks. {where} "
                     + "Start with status, and list_singers before choosing a singer. Notes have ids; get_notes returns them with the phonemes "
                     + "they are sung with. Every reply is JSON with ok, revision, warnings and diagnostics, and error {code, message} when ok is false. "
                     + $"{help["units"]} {help["revisions"]}",
