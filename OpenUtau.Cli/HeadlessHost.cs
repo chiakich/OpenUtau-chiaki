@@ -282,6 +282,11 @@ namespace OpenUtau.Cli {
             if (!File.Exists(Path.Combine(root, "dsconfig.yaml"))) {
                 return null;
             }
+            // The model it sings with has to be there to be compared.
+            string? acoustic = (singer as OpenUtau.Core.DiffSinger.DiffSingerSinger)?.dsConfig?.acoustic;
+            if (string.IsNullOrEmpty(acoustic) || !File.Exists(Path.Combine(root, acoustic))) {
+                return null;
+            }
             try {
                 using var hash = System.Security.Cryptography.IncrementalHash.CreateHash(System.Security.Cryptography.HashAlgorithmName.SHA256);
                 var files = Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)

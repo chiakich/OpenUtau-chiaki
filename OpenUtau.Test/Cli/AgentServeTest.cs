@@ -243,9 +243,12 @@ namespace OpenUtau.Cli {
             string socket = Path.Combine(OperatingSystem.IsWindows() ? Path.GetTempPath() : "/tmp", $"ou-{Guid.NewGuid():N}.sock");
             try {
                 using (var dead = CliProcess.Start(false, "serve", "--socket", socket)) {
-                    Ready(dead);
-                    dead.Kill(true);
-                    dead.WaitForExit(30000);
+                    try {
+                        Ready(dead);
+                    } finally {
+                        dead.Kill(true);
+                        dead.WaitForExit(30000);
+                    }
                 }
                 Assert.True(File.Exists(socket), "The killed session left no socket file to replace.");
                 using var server = CliProcess.Start(false, "serve", "--socket", socket);
@@ -259,6 +262,32 @@ namespace OpenUtau.Cli {
                     }
                 }
             } finally {
+                File.Delete(socket);
+            }
+        }
+
+        [Fact]
+        public void ALinkToADeadSocketIsLeftAlone() {
+            if (OperatingSystem.IsWindows()) {
+                return;
+            }
+            string socket = Path.Combine("/tmp", $"ou-{Guid.NewGuid():N}.sock");
+            string link = socket + ".link";
+            try {
+                using (var dead = CliProcess.Start(false, "serve", "--socket", socket)) {
+                    try {
+                        Ready(dead);
+                    } finally {
+                        dead.Kill(true);
+                        dead.WaitForExit(30000);
+                    }
+                }
+                File.CreateSymbolicLink(link, socket);
+                var result = CliProcess.RunWithInput(string.Empty, "serve", "--socket", link);
+                Assert.NotEqual(0, result.ExitCode);
+                Assert.Equal(socket, new FileInfo(link).LinkTarget);
+            } finally {
+                File.Delete(link);
                 File.Delete(socket);
             }
         }

@@ -115,12 +115,12 @@ namespace OpenUtau.Core.Agent {
         static bool IsSocketFile(string path) {
             try {
                 if (OperatingSystem.IsWindows()) {
-                    // A socket is a reparse point that links nowhere; a symlink or junction has a target.
-                    return File.GetAttributes(path).HasFlag(FileAttributes.ReparsePoint) && new FileInfo(path).LinkTarget == null;
+                    // Other reparse points are links and cloud placeholders: only the socket tag counts.
+                    return File.GetAttributes(path).HasFlag(FileAttributes.ReparsePoint) && ReparseTag(path) == AfUnixTag;
                 }
-                // .NET does not tell the file type; the shell's test does.
+                // .NET does not tell the file type; the shell's test does. A link to a socket is not ours to delete.
                 var info = new System.Diagnostics.ProcessStartInfo("/bin/sh") { UseShellExecute = false };
-                foreach (string arg in new[] { "-c", "test -S \"$1\"", "sh", path }) {
+                foreach (string arg in new[] { "-c", "test -S \"$1\" && test ! -L \"$1\"", "sh", path }) {
                     info.ArgumentList.Add(arg);
                 }
                 using var test = System.Diagnostics.Process.Start(info);
@@ -131,6 +131,40 @@ namespace OpenUtau.Core.Agent {
             } catch (Exception) {
                 return false;
             }
+        }
+
+        const uint AfUnixTag = 0x80000023;
+
+        [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential, CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+        struct FindData {
+            public uint attributes;
+            public long creationTime;
+            public long lastAccessTime;
+            public long lastWriteTime;
+            public uint sizeHigh;
+            public uint sizeLow;
+            public uint reserved0;
+            public uint reserved1;
+            [System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.ByValTStr, SizeConst = 260)]
+            public string fileName;
+            [System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.ByValTStr, SizeConst = 14)]
+            public string alternateFileName;
+        }
+
+        [System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode, SetLastError = true)]
+        static extern IntPtr FindFirstFileW(string fileName, out FindData data);
+
+        [System.Runtime.InteropServices.DllImport("kernel32.dll")]
+        static extern bool FindClose(IntPtr handle);
+
+        // For a reparse point the find data carries its tag; 0 when it cannot be read.
+        static uint ReparseTag(string path) {
+            IntPtr handle = FindFirstFileW(path, out var data);
+            if (handle == new IntPtr(-1)) {
+                return 0;
+            }
+            FindClose(handle);
+            return data.reserved0;
         }
 
         static bool IsListening(string path) {
