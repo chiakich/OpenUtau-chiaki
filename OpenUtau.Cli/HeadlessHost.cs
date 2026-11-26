@@ -245,9 +245,27 @@ namespace OpenUtau.Cli {
         public void SaveProject(UProject project, string path) => Loop.Invoke(() => {
             AgentOps.Save(project, path);
             foreach (var singer in project.tracks.Select(t => t.Singer).Where(added.Contains).Distinct()) {
-                Warnings.Add($"The project names singer \"{singer.Id}\" by id only, not {singer.Location}: the app opens it with its own singer of that id, if it has one.");
+                var twin = InstalledTwin(singer);
+                Warnings.Add($"The project names singer \"{singer.Id}\" by id only, not {singer.Location}: the app opens it with its own singer of that id, if it has one, which may be another voice. "
+                    + (twin != null
+                        ? $"Installed singer \"{twin.Id}\" is the same voicebank: set_track with singer \"{twin.Id}\" and phonemizer \"{project.tracks.First(t => t.Singer == singer).Phonemizer?.GetType().FullName}\" (a new singer brings its own otherwise), save again, and the app opens the project with this voice."
+                        : "No installed singer is this voicebank; the user has to pick the singer after opening."));
             }
         });
+
+        // The installed copy of a voicebank given as a folder: its id is one the app can resolve.
+        public USinger? InstalledTwin(USinger singer) {
+            SearchInstalledSingers();
+            static byte[]? Config(USinger s) {
+                string file = Path.Combine(s.Location ?? string.Empty, "dsconfig.yaml");
+                return File.Exists(file) ? File.ReadAllBytes(file) : null;
+            }
+            var config = Config(singer);
+            return config == null ? null : SingerManager.Inst.Singers.Values
+                .Where(s => !added.Contains(s) && s.Id != singer.Id && s.Name == singer.Name)
+                .OrderBy(s => s.Id, StringComparer.Ordinal)
+                .FirstOrDefault(s => Config(s) is byte[] other && other.AsSpan().SequenceEqual(config));
+        }
 
         // Reads a project and makes it the current document, as File > Open does. configure runs on
         // the project before it is installed, for overrides that are meant to look loaded from the file.

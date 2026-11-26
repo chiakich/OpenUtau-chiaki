@@ -608,6 +608,11 @@ namespace OpenUtau.Cli {
             if (given.Count > 0) {
                 // Only made available: a new project still names its singer.
                 own += " Voicebank folders given on the command line, by id: " + string.Join(", ", given.Select(s => $"\"{s.Id}\" ({s.Location})")) + ".";
+                foreach (var singer in given) {
+                    if (host.Invoke(() => host.InstalledTwin(singer)) is USinger twin) {
+                        own += $" Installed singer \"{twin.Id}\" is the same voicebank as \"{singer.Id}\": use \"{twin.Id}\" for a project the user will open in the app, which knows singers by id only.";
+                    }
+                }
             }
             using var session = new AgentSession(host);
             new Mcp(session.HandleLine, own)

@@ -41,7 +41,7 @@ The server says all of this itself, in its instructions and tool descriptions; a
 - Without the app, notes are sung at their plain pitch until `load_pitch` writes the singer's own pitch into the `pitd` curve. Do it before a render meant for listening; `render` warns when a part has none.
 - After changing notes, the curve still follows the old ones. `load_pitch` with `"mode": "all"` rewrites it, replacing everything in `pitd`; the default mode skips phrases that already have a curve. `render` warns about a part left that way.
 - There is no vibrato tool: after the last `load_pitch`, read `pitd` over the note with `get_notes` (`"curves": ["pitd"]`, `from_tick`, `to_tick`), add a sine to its values (in cents), and write them all back with `set_curve`.
-- `save_project` names a voicebank folder by its folder name only, and warns so: the app opens the project with its own singer of that id.
+- `save_project` names a voicebank folder by its folder name only, and warns so: the app opens the project with its own singer of that id, which may be another voice. When an installed singer is the same voicebank (same name and `dsconfig.yaml`), the server says so at the start and in that warning, and a project saved with the installed id opens with the right voice.
 - One request that changes the project is one revision and one step of undo (`load_pitch`: one step per part). `expect_revision` refuses a request if the project moved on.
 - Two renders of the same project in one session can differ by a hair, seeded or not.
 
