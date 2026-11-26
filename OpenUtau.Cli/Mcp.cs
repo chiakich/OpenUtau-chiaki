@@ -39,8 +39,8 @@ namespace OpenUtau.Cli {
         // Types only: what each field means is in the tool's description, taken from the session's own help.
         static readonly Tool[] Tools = {
             new Tool("status", "status", true, Props(), new string[0]),
-            new Tool("new_project", "new", false, Props(("score", P("object")), ("discard_changes", P("boolean"))), new[] { "score" }),
-            new Tool("open_project", "open", false, Props(("path", P("string")), ("discard_changes", P("boolean"))), new[] { "path" }),
+            new Tool("new_project", "new", false, Props(("score", P("object")), ("discard_changes", P("boolean")), ("expect_revision", P("integer"))), new[] { "score" }),
+            new Tool("open_project", "open", false, Props(("path", P("string")), ("discard_changes", P("boolean")), ("expect_revision", P("integer"))), new[] { "path" }),
             new Tool("save_project", "save", false, Props(("path", P("string"))), new string[0]),
             new Tool("get_notes", "get", true, Props(("part", P("integer")), ("from_tick", P("integer")), ("to_tick", P("integer")),
                 ("detail", new JsonObject { ["type"] = "string", ["enum"] = new JsonArray("notes", "phonemes", "phrases") }),
@@ -64,8 +64,8 @@ namespace OpenUtau.Cli {
                 ("part", P("integer")), ("expect_revision", P("integer"))), new string[0]),
             new Tool("render", "render", false, Props(("out", P("string")), ("from_tick", P("integer")), ("to_tick", P("integer")),
                 ("track", P("integer")), ("mixdown", P("boolean")), ("allow_errors", P("boolean"))), new[] { "out" }),
-            new Tool("undo", "undo", false, Props(), new string[0]),
-            new Tool("redo", "redo", false, Props(), new string[0]),
+            new Tool("undo", "undo", false, Props(("expect_revision", P("integer"))), new string[0]),
+            new Tool("redo", "redo", false, Props(("expect_revision", P("integer"))), new string[0]),
             new Tool("list_singers", "singers", true, Props(), new string[0]),
             new Tool("list_phonemizers", "phonemizers", true, Props(("singer", P("string"))), new string[0]),
             new Tool("list_expressions", "expressions", true, Props(("singer", P("string")), ("track", P("integer"))), new string[0]),
@@ -203,18 +203,26 @@ namespace OpenUtau.Cli {
                 ["instructions"] = $"Singing synthesis with OpenUtau (the Chiaki fork, not the official app) and DiffSinger voicebanks. {where} "
                     + "Start with status, and list_singers before choosing a singer. Notes have ids; get_notes returns them with the phonemes "
                     + "they are sung with. Every reply is JSON with ok, revision, warnings and diagnostics, and error {code, message} when ok is false. "
-                    + $"{help["units"]} {help["revisions"]}",
+                    + ToolNames($"{help["units"]} {help["revisions"]} {help["tips"]}"),
             };
+        }
+
+        // The session's help speaks of its ops; a tool whose name differs is called by that name here.
+        static string ToolNames(string text) {
+            foreach (var tool in Tools.Where(t => t.Name != t.Op)) {
+                text = System.Text.RegularExpressions.Regex.Replace(text, $@"(?<![\w""])({tool.Op})(?= (lists|shows|with|writes)\b)", tool.Name);
+            }
+            return text;
         }
 
         JsonObject Describe(Tool tool) {
             var op = (JsonObject)help["ops"]![tool.Op]!;
-            var description = new StringBuilder(op["summary"]!.GetValue<string>());
+            var description = new StringBuilder(ToolNames(op["summary"]!.GetValue<string>()));
             foreach (var field in (JsonArray)op["fields"]!) {
-                description.Append("\n- ").Append(field!.GetValue<string>());
+                description.Append("\n- ").Append(ToolNames(field!.GetValue<string>()));
             }
             if (tool.Properties.ContainsKey("expect_revision")) {
-                description.Append("\n- expect_revision: refuse the edit unless the project is still at this revision");
+                description.Append("\n- expect_revision: refuse unless the project is still at this revision");
             }
             var schema = new JsonObject {
                 ["type"] = "object",

@@ -65,7 +65,7 @@ namespace OpenUtau.Core.Agent {
             if (string.IsNullOrEmpty(phonemizerName)) {
                 throw Invalid("phonemizer is required: this singer names no default phonemizer.");
             }
-            var factory = FindPhonemizer(phonemizerName);
+            var factory = FindPhonemizer(phonemizerName, singer, host);
 
             bool hasNotes = score.TryGetProperty("notes", out var notesValue);
             if (hasNotes ? notesValue.ValueKind != JsonValueKind.Array : !allowEmpty) {
@@ -130,8 +130,7 @@ namespace OpenUtau.Core.Agent {
                 return host.AddSingerDirectory(path);
             }
             host.SearchInstalledSingers();
-            var singer = SingerManager.Inst.GetSinger(value)
-                ?? SingerManager.Inst.Singers.Values.FirstOrDefault(s => s.Name == value);
+            var singer = FindSinger(value, host);
             if (singer == null) {
                 host.Warnings.Add($"Singer \"{value}\" is not installed; the project refers to it by this id.");
                 singer = USinger.CreateMissing(value);
@@ -139,15 +138,44 @@ namespace OpenUtau.Core.Agent {
             return singer;
         }
 
-        public static PhonemizerFactory FindPhonemizer(string name) {
+        // By id, else by name. Ids are folder names, and one singer's id can be another's name.
+        public static USinger? FindSinger(string value, IAgentHost host) {
+            var byId = SingerManager.Inst.GetSinger(value);
+            var byName = SingerManager.Inst.Singers.Values.Where(s => s.Name == value && s != byId).ToArray();
+            var singer = byId ?? byName.FirstOrDefault();
+            var others = byName.Where(s => s != singer).ToArray();
+            if (singer != null && others.Length > 0) {
+                host.Warnings.Add($"\"{value}\" is singer id \"{singer.Id}\" at {singer.Location}, and also the name of "
+                    + string.Join(", ", others.Select(s => $"id \"{s.Id}\" at {s.Location}")) + ". Give the id of the one you mean.");
+            }
+            return singer;
+        }
+
+        // An id is exact. A tag or a name can belong to several phonemizers: the singer's own kind decides.
+        public static PhonemizerFactory FindPhonemizer(string name, USinger? singer, IAgentHost host) {
             var all = PhonemizerFactory.GetAll();
+            var offered = singer != null && singer.Found ? PhonemizerFactory.EnumerateForSinger(singer).ToArray() : null;
             var factory = PhonemizerFactory.Get(name)
-                ?? all.FirstOrDefault(f => string.Equals(f.Id, name, StringComparison.OrdinalIgnoreCase))
-                ?? all.FirstOrDefault(f => string.Equals(f.tag, name, StringComparison.OrdinalIgnoreCase))
-                ?? all.FirstOrDefault(f => string.Equals(f.name, name, StringComparison.OrdinalIgnoreCase));
+                ?? all.FirstOrDefault(f => string.Equals(f.Id, name, StringComparison.OrdinalIgnoreCase));
+            if (factory == null) {
+                var matches = all.Where(f => string.Equals(f.tag, name, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(f.name, name, StringComparison.OrdinalIgnoreCase)).ToArray();
+                if (offered != null && matches.Any(offered.Contains)) {
+                    matches = matches.Where(offered.Contains).ToArray();
+                }
+                if (matches.Length > 1) {
+                    throw new AgentException("ambiguous_phonemizer",
+                        $"\"{name}\" is the tag or name of several phonemizers: {string.Join(", ", matches.Select(f => f.Id))}. Give the id.");
+                }
+                factory = matches.FirstOrDefault();
+            }
             if (factory == null) {
                 throw new AgentException("phonemizer_not_found",
                     $"Phonemizer \"{name}\" not found. List them with the phonemizers command.");
+            }
+            if (offered != null && !offered.Contains(factory)) {
+                host.Warnings.Add($"Phonemizer {factory.Id} is not one of those offered for singer \"{singer!.Id}\" ({singer.SingerType}); "
+                    + "its phonemes may all fail. Ask for the phonemizers of this singer to see the fitting ones.");
             }
             return factory;
         }

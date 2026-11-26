@@ -37,8 +37,7 @@ namespace OpenUtau.Core.Agent {
                 return host.AddSingerDirectory(value);
             }
             host.SearchInstalledSingers();
-            var singer = SingerManager.Inst.GetSinger(value)
-                ?? SingerManager.Inst.Singers.Values.FirstOrDefault(s => s.Name == value);
+            var singer = ScoreBuilder.FindSinger(value, host);
             if (singer == null) {
                 throw new AgentException("singer_not_found",
                     $"Singer \"{value}\" is neither a voicebank folder nor an installed singer. List them with the singers command.");

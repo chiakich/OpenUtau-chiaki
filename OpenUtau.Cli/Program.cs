@@ -235,9 +235,8 @@ namespace OpenUtau.Cli {
                 }
             }
             foreach (var (index, name) in options.Phonemizers) {
-                var factory = ScoreBuilder.FindPhonemizer(name);
                 foreach (var track in Tracks(index, "--phonemizer")) {
-                    track.Phonemizer = factory.Create();
+                    track.Phonemizer = ScoreBuilder.FindPhonemizer(name, track.Singer, host).Create();
                 }
             }
             if (options.Bpm.HasValue) {
@@ -604,11 +603,14 @@ namespace OpenUtau.Cli {
             var singers = args.GetAll("singer");
             args.EnsureAllUsed(0);
             using var host = HeadlessHost.Start(hostOptions);
-            foreach (string directory in singers) {
-                host.AddSingerDirectory(directory);
+            var given = singers.Select(host.AddSingerDirectory).ToList();
+            string own = "This server has its own project and no window: save_project and render write the results to files.";
+            if (given.Count > 0) {
+                // Only made available: a new project still names its singer.
+                own += " Voicebank folders given on the command line, by id: " + string.Join(", ", given.Select(s => $"\"{s.Id}\" ({s.Location})")) + ".";
             }
             using var session = new AgentSession(host);
-            new Mcp(session.HandleLine, "This server has its own project and no window: save_project and render write the results to files.")
+            new Mcp(session.HandleLine, own)
                 .Serve(Console.OpenStandardInput(), stdout);
             return 0;
         }

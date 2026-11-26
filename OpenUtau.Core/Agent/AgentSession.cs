@@ -101,6 +101,9 @@ namespace OpenUtau.Core.Agent {
                     }
                     seen = null;
                     result = handler(new Request(root));
+                    if (Rephonemized.Contains(op)) {
+                        result["phoneme_errors"] = CountPhonemeErrors();
+                    }
                 } catch (JsonException e) {
                     error = Invalid($"The request is not valid JSON: {e.Message}");
                 } catch (AgentException e) {
@@ -130,6 +133,42 @@ namespace OpenUtau.Core.Agent {
                 AddMessages(reply);
                 return reply.ToJsonString(Compact);
             }
+        }
+
+        // Ops after which the lyrics are sung differently: their reply says whether they still can be.
+        static readonly HashSet<string> Rephonemized = new HashSet<string> {
+            "new", "open", "add_notes", "edit_notes", "delete_notes", "set_track", "set_tempo", "undo", "redo",
+        };
+
+        static List<string> PhonemeErrors(UProject project) {
+            return project.parts.OfType<UVoicePart>()
+                .SelectMany(p => p.phonemes.Where(ph => ph.Error)
+                    .Select(ph => $"\"{ph.Parent?.lyric}\" at tick {p.position + ph.position}: {ph.ErrorException?.Message ?? "phoneme error"}"))
+                .ToList();
+        }
+
+        int CountPhonemeErrors() {
+            var project = host.Invoke(() => DocManager.Inst.Project);
+            if (project == null) {
+                return 0;
+            }
+            AgentOps.WaitPhonemized(host, project);
+            var errors = host.Invoke(() => PhonemeErrors(project));
+            if (errors.Count > 0) {
+                lock (host.Warnings) {
+                    host.Warnings.Add($"{errors.Count} phoneme(s) have errors, e.g. {string.Join("; ", errors.Take(3))}. "
+                        + "Reading the notes shows them all; check the lyrics, the track's phonemizer and its singer.");
+                }
+            }
+            return errors.Count;
+        }
+
+        // One request is one revision, however many commands it took.
+        void Settle(long before) {
+            if (revision > before) {
+                revision = before + 1;
+            }
+            seen = revision;
         }
 
         void AddMessages(JsonObject reply) {
@@ -341,7 +380,7 @@ namespace OpenUtau.Core.Agent {
                 try {
                     T result = action(project);
                     doc.EndUndoGroup();
-                    seen = revision;
+                    Settle(before);
                     return result;
                 } catch {
                     if (executed > 0) {
@@ -792,7 +831,8 @@ namespace OpenUtau.Core.Agent {
                 return new JsonObject {
                     ["abbr"] = abbr,
                     ["part"] = project.parts.IndexOf(part),
-                    ["points"] = part.curves.FirstOrDefault(c => c.abbr == abbr)?.xs.Count ?? 0,
+                    // Not the number sent: points snap to the curve's grid and those on a straight line go.
+                    ["stored_points"] = part.curves.FirstOrDefault(c => c.abbr == abbr)?.xs.Count ?? 0,
                 };
             });
         }
@@ -818,16 +858,21 @@ namespace OpenUtau.Core.Agent {
                 throw Invalid("Give \"singer\", \"phonemizer\" or both.");
             }
             var singer = singerName == null ? null : Queries.ResolveSinger(host, singerName);
-            var factory = phonemizerName == null ? null : ScoreBuilder.FindPhonemizer(phonemizerName);
             return Edit(request, project => {
                 if (trackIndex < 0 || trackIndex >= project.tracks.Count) {
                     throw Invalid($"The project has no track {trackIndex}.");
                 }
                 var track = project.tracks[trackIndex];
+                var factory = phonemizerName == null ? null : ScoreBuilder.FindPhonemizer(phonemizerName, singer ?? track.Singer, host);
                 if (singer != null) {
                     Exec(new TrackChangeSingerCommand(project, track, singer));
                     // As picking a singer in the app: the phonemizer the user last used with it, else the singer's own.
-                    factory ??= SingerPhonemizer(singer);
+                    if (factory == null) {
+                        factory = SingerPhonemizer(singer);
+                        if (factory != null && factory.type != track.Phonemizer?.GetType()) {
+                            host.Warnings.Add($"The phonemizer is now {factory.Id}, the one this singer was last used with. Pass \"phonemizer\" to choose.");
+                        }
+                    }
                     if (!Renderers.GetSupportedRenderers(singer.SingerType).Contains(track.RendererSettings?.renderer)) {
                         Exec(new TrackChangeRenderSettingCommand(project, track, new URenderSettings {
                             renderer = Renderers.GetDefaultRenderer(singer.SingerType),
@@ -865,7 +910,9 @@ namespace OpenUtau.Core.Agent {
             });
             AgentOps.CheckSingers(host, project);
             AgentOps.WaitPhonemized(host, project);
+            long before = host.Invoke(() => revision);
             AgentOps.LoadRenderedPitch(host, project, mode, part);
+            host.Invoke(() => Settle(before));
             return new JsonObject { ["mode"] = mode };
         }
 
@@ -891,10 +938,18 @@ namespace OpenUtau.Core.Agent {
             AgentOps.WaitPhonemized(host, project);
             var errors = host.Invoke(() => {
                 seen = revision;
-                return project.parts.OfType<UVoicePart>()
-                .SelectMany(p => p.phonemes.Where(ph => ph.Error)
-                    .Select(ph => $"\"{ph.Parent?.lyric}\" at tick {p.position + ph.position}: {ph.ErrorException?.Message ?? "phoneme error"}"))
-                .ToList();
+                // Without the app nothing fills in the pitch as the user's live pitch does.
+                if (host.Kind == "headless") {
+                    for (int i = 0; i < project.parts.Count; i++) {
+                        if (project.parts[i] is UVoicePart p && p.notes.Count > 0 && (track < 0 || p.trackNo == track)
+                            && project.tracks[p.trackNo].Singer is DiffSinger.DiffSingerSinger ds && ds.HasPitchPredictor
+                            && (p.curves.FirstOrDefault(c => c.abbr == Format.Ustx.PITD)?.IsEmpty ?? true)) {
+                            host.Warnings.Add($"Part {i} has no pitch curve: its notes are sung at their plain pitch, which sounds mechanical. "
+                                + "load_pitch first writes the pitch this singer's model predicts.");
+                        }
+                    }
+                }
+                return PhonemeErrors(project);
             });
             if (errors.Count > 0 && !allowErrors) {
                 throw new AgentException("phoneme_errors",
@@ -935,12 +990,13 @@ namespace OpenUtau.Core.Agent {
                 if (!(undo ? doc.GetUndoState(out _) : doc.GetRedoState(out _))) {
                     throw new AgentException(undo ? "nothing_to_undo" : "nothing_to_redo", undo ? "There is nothing to undo." : "There is nothing to redo.");
                 }
+                long before = revision;
                 if (undo) {
                     doc.Undo();
                 } else {
                     doc.Redo();
                 }
-                seen = revision;
+                Settle(before);
                 return new JsonObject { ["can_undo"] = doc.GetUndoState(out _), ["can_redo"] = doc.GetRedoState(out _) };
             });
         }
@@ -1005,11 +1061,24 @@ namespace OpenUtau.Core.Agent {
                     + "A reply has ok, revision, warnings, diagnostics, and error {code, message} when ok is false.",
                 ["units"] = "Ticks: 480 per quarter note, counted from the start of the project. Tones: MIDI numbers or names like \"C4\". "
                     + "Durations: ticks, or a fraction of a whole note like \"1/8\", dotted with a trailing \".\".",
-                ["revisions"] = "\"revision\" goes up with every change, including the user's in the app. Any editing op, and undo, redo, new, open and load_pitch, takes \"expect_revision\" and fails with code conflict if the project moved on.",
+                ["revisions"] = "\"revision\" goes up by one with every request that changes the project, and with the user's changes in the app. Every op that changes the project takes \"expect_revision\" and fails with code conflict if the project moved on. One such request is one step of undo; load_pitch is one step per part.",
+                ["tips"] = "Refer to singers and phonemizers by id: names and tags are not unique. "
+                    + "After an op that changes what is sung, the reply's phoneme_errors counts the phonemes that cannot be sung, and a warning shows the first; get lists them all. "
+                    + "A lyric the phonemizer does not know can spell its phonemes: \"word[p h o n e m e s]\". "
+                    + "A new project's first note is at tick 1920, one 4/4 bar in, which leaves room for the first consonants. "
+                    + "Without the app, notes are sung at their plain pitch until load_pitch writes the singer's own into pitd; do it before a render meant for listening, and again after changing notes. "
+                    + "There is no vibrato op: draw it into pitd, in cents. "
+                    + "Renders are not seeded here: two renders of the same project can differ slightly. Paths are absolute, or relative to where the session was started.",
                 ["ops"] = new JsonObject {
                     ["status"] = Op("The open project: tempo, tracks, parts, undo state; in the app also the open part, selection and playhead."),
                     ["new"] = Op("Replace the open project with a new one-track project.",
-                        "score: {bpm, singer, phonemizer?, notes?, curves?, name?, time_signature?, start?}; singer is an installed singer's id or name, or without the app a voicebank folder",
+                        "score: {bpm, singer, phonemizer?, notes?, curves?, name?, time_signature?, start?}",
+                        "singer: an installed singer's id, or without the app a voicebank folder",
+                        "phonemizer: id (see phonemizers with the singer); default is the singer's own",
+                        "notes: as in add_notes, from start on",
+                        "curves: {abbr: value for the whole part, or [[tick, value], ...]}",
+                        "time_signature: [beats per bar, beat unit], default [4, 4]",
+                        "start: tick of the first note, default 1920",
                         "discard_changes: in the app, required when the open project has unsaved changes"),
                     ["open"] = Op("Open a project file.", "path", "discard_changes"),
                     ["save"] = Op("Save as .ustx.", "path: needed the first time"),
@@ -1024,21 +1093,22 @@ namespace OpenUtau.Core.Agent {
                         "part or track: where; default is the part open in the app, else the first part"),
                     ["edit_notes"] = Op("Change notes.", "notes: [{id, lyric?, tone?, tick?, duration?}]"),
                     ["delete_notes"] = Op("Delete notes.", "ids: [id, ...]"),
-                    ["set_curve"] = Op("Draw, erase or set the resting value of an expression curve (pitd, dyn, genc, velc, ...). The expressions op lists them with their ranges.",
+                    ["set_curve"] = Op("Draw, erase or set the resting value of an expression curve (pitd, dyn, genc, velc, ...). expressions lists them with their ranges; pitd is in cents.",
                         "abbr",
                         "points: [[tick, value], ...] draws straight lines through the points",
                         "clear: true erases the drawn curve, within from_tick..to_tick if given",
                         "default: value the whole track takes wherever no curve is drawn; reset_default: true removes it",
                         "part or track"),
                     ["set_tempo"] = Op("Set the tempo at the start of the project.", "bpm"),
-                    ["set_track"] = Op("Change a track's singer or phonemizer.", "track: default 0", "singer", "phonemizer: id, tag or name; with a singer and none given, the one last used with that singer in the app, else the singer's default"),
+                    ["set_track"] = Op("Change a track's singer or phonemizer.", "track: default 0", "singer: id",
+                        "phonemizer: id; a tag or name works when only one phonemizer for this singer has it. With a singer and none given: the one last used with that singer in the app, else the singer's default"),
                     ["load_pitch"] = Op("Write the pitch the singer's model predicts into the pitd curve, as the app's Load Rendered Pitch.",
                         "mode: untuned (default; only phrases without a drawn pitch) or all", "part"),
-                    ["render"] = Op("Render to wav.",
+                    ["render"] = Op("Render to wav. Refused while phonemes have errors. Without the app, a part with no pitch curve is sung at plain note pitch: see load_pitch.",
                         "out: file path",
                         "from_tick, to_tick: render only this range; the file then starts at from_tick",
                         "track: only this track", "mixdown: one stereo file of all tracks", "allow_errors"),
-                    ["undo"] = Op("Undo the last change, the user's included."),
+                    ["undo"] = Op("Undo the last change, the user's included: one request of this session, or one edit of the user's."),
                     ["redo"] = Op("Redo."),
                     ["singers"] = Op("The installed singers."),
                     ["phonemizers"] = Op("Phonemizers, or those offered for a singer.", "singer"),

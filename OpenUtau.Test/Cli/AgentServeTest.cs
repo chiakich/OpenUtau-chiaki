@@ -91,6 +91,20 @@ namespace OpenUtau.Cli {
         }
 
         [Fact]
+        public void ARequestIsOneRevisionAndSaysWhatCannotBeSung() {
+            var replies = Session(
+                "{\"op\":\"add_notes\",\"notes\":[[\"la\",\"C4\",\"1/4\"],[\"la\",\"D4\",\"1/4\"],[\"la\",\"E4\",\"1/4\"]]}",
+                "{\"op\":\"edit_notes\",\"notes\":[{\"id\":1,\"tone\":\"G4\",\"lyric\":\"a\"},{\"id\":2,\"tone\":\"A4\"},{\"id\":3,\"duration\":\"1/2\"}]}",
+                "{\"op\":\"undo\"}",
+                // A tag several phonemizers share picks none of them.
+                "{\"op\":\"set_track\",\"phonemizer\":\"English\"}");
+            long first = replies[0].GetProperty("revision").GetInt64();
+            Assert.Equal(new[] { first + 1, first + 2 }, replies.Skip(1).Take(2).Select(r => r.GetProperty("revision").GetInt64()));
+            Assert.Equal(JsonValueKind.Number, replies[0].GetProperty("phoneme_errors").ValueKind);
+            Assert.Equal("ambiguous_phonemizer", Code(replies[3]));
+        }
+
+        [Fact]
         public void RevisionsAndValuesAreChecked() {
             string missing = Path.Combine(Path.GetTempPath(), $"never-{Guid.NewGuid():N}.ustx").Replace("\\", "\\\\");
             var replies = Session(
