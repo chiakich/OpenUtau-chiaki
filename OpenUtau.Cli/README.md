@@ -8,14 +8,14 @@ OpenUtau without the window, for agents and scripts. It runs the same `OpenUtau.
 
 ## Set it up for an agent
 
-It needs the .NET 10 SDK and a DiffSinger voicebank folder. Developed and tested on macOS (Apple Silicon).
+Releases after v1.0.1 have it inside the app, as `OpenUtau.Cli` next to the app's executable (the paths are in the [main README](../README.md#for-ai-agents)); use that path as the `command` below, and the app's bundled singers are available too. From a checkout it needs the .NET 10 SDK:
 
 ```sh
 dotnet build OpenUtau.Cli/OpenUtau.Cli.csproj
 scripts/openutau-cli.sh help
 ```
 
-Then add the server to the agent's MCP configuration:
+Developed and tested on macOS (Apple Silicon); the Windows and Linux builds are checked by the release workflow only as far as starting up. Add the server to the agent's MCP configuration:
 
 ```json
 {"mcpServers": {"openutau-chiaki": {
@@ -85,7 +85,7 @@ Options, the score format and every result field are in the [reference](REFERENC
 
 ### Singers
 
-`--singer DIR` loads the voicebank in `DIR` for every track of the project a one-shot command reads (`--singer 1=DIR` for track 1 only). Without it, singers are found where the app finds them, with one exception: the voicebanks the app ships next to its own executable (`Singers/` in this repo) are not visible to the CLI, so pass `--singer Singers/Chiaki` for those.
+`--singer DIR` loads the voicebank in `DIR` for every track of the project a one-shot command reads (`--singer 1=DIR` for track 1 only). Without it, singers are found where the app finds them, with one exception: from a checkout, the voicebanks the app ships next to its own executable (`Singers/` in this repo) are not visible to the CLI, so pass `--singer Singers/Chiaki` for those. The CLI inside a released app sees them.
 
 A project names its singer by id only, and the id is the folder name. `ustx` with `"singer": "/path/to/Chiaki"` writes `singer: Chiaki`, which the app resolves to its bundled `Chiaki`, whatever folder you meant. Always pass `--singer` when the voicebank matters.
 

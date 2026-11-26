@@ -17,6 +17,11 @@ fi
 # Contents/MacOS also holds data files (voicebank, resources); codesign requires each one to be sealed.
 # Nested files first, then the main executable with entitlements, then the bundle.
 find "$APP/Contents/MacOS" -type f ! -path "$MAIN" -print0 | xargs -0 -n 20 -P 8 "${base[@]}"
+# The command line is a second .NET host: without the entitlements the hardened runtime stops it loading the runtime.
+CLI="$APP/Contents/MacOS/OpenUtau.Cli"
+if [ -f "$CLI" ]; then
+  "${base[@]}" --entitlements "$ENTITLEMENTS" "$CLI"
+fi
 "${base[@]}" --entitlements "$ENTITLEMENTS" "$MAIN"
 "${base[@]}" --entitlements "$ENTITLEMENTS" "$APP"
 

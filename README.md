@@ -22,7 +22,7 @@ It also comes with an [MCP server](#for-ai-agents), so an AI agent such as Claud
 
 - **Chiaki voicebank bundled**: stored as a release asset, placed in `Singers/Chiaki` before building, and loaded ahead of any installed copy.
 - **DiffSinger Finnish and Latin phonemizers built in**, so Finnish and Latin (Ecclesiastical) tracks need no extra plugin DLL.
-- **An MCP server and command line for AI agents and scripts**, built from source for now: see [For AI agents](#for-ai-agents).
+- **An MCP server and command line for AI agents and scripts**, inside the app: see [For AI agents](#for-ai-agents).
 - **Singer Hub removed.**
 - **Own identity**: the app is `OpenUtau-Chiaki` with its own data folder, so it can sit next to Lunai.
 - **Updates come from this repo's releases.** On Windows the Velopack updater installs them (it uses a GitHub token from `OPENUTAU_CHIAKI_GITHUB_TOKEN` if one is set); on macOS and Linux it opens the releases page.
@@ -50,17 +50,21 @@ The build copies `Singers/` next to the executable. To publish a new voicebank, 
 
 `OpenUtau.Cli` is OpenUtau without the window. As a [Model Context Protocol](https://modelcontextprotocol.io) server it gives an agent tools to start a project, add and edit notes and lyrics, pick a singer and phonemizer, draw curves, load the singer's own pitch, render to wav and save. It runs the same code as the app, so what the agent hears is what the app would sing.
 
-It is not in the downloads yet: it needs the .NET 10 SDK and this repo.
-
-```sh
-dotnet build OpenUtau.Cli/OpenUtau.Cli.csproj
-```
+Releases after v1.0.1 carry it inside the app, as `OpenUtau.Cli` next to the app's own executable, so there is nothing else to install. Add it to the agent's MCP configuration:
 
 ```json
 {"mcpServers": {"openutau-chiaki": {
-  "command": "/path/to/OpenUtau-chiaki/scripts/openutau-cli.sh",
-  "args": ["mcp", "--singer", "/path/to/voicebank"]}}}
+  "command": "/Applications/OpenUtau-Chiaki.app/Contents/MacOS/OpenUtau.Cli",
+  "args": ["mcp"]}}}
 ```
+
+| | Where it is |
+| --- | --- |
+| macOS | `/Applications/OpenUtau-Chiaki.app/Contents/MacOS/OpenUtau.Cli` |
+| Windows (Setup) | `%LocalAppData%\OpenUtau.Chiaki\current\OpenUtau.Cli.exe` |
+| Windows (Portable), Linux (`.tar.gz`) | `OpenUtau.Cli` in the unpacked folder; the AppImage does not expose it |
+
+The bundled Chiaki is singer `Chiaki`, and installed singers are available by id. From a checkout, `scripts/openutau-cli.sh` builds and runs it with the .NET 10 SDK instead.
 
 - **On its own**: the agent keeps a project of its own and writes wav and `.ustx` files. `--singer DIR` adds a voicebank folder that is not installed.
 - **With the app open**: `"args": ["mcp", "--gui"]` works on the project open in the app, once you turn the agent connection on (off by default). You see each edit as it happens, and each one is a step of Undo.
