@@ -3,6 +3,9 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.VisualTree;
+using OpenUtau.App.Controls;
+using OpenUtau.App.ViewModels;
 using OpenUtau.App.Agent;
 using OpenUtau.App.Views;
 using OpenUtau.Core;
@@ -52,6 +55,12 @@ namespace OpenUtau.UiTest {
                         ui = Send(session, "{\"op\":\"status\"}").GetProperty("ui");
                     } while (ui.GetProperty("part").ValueKind != JsonValueKind.Number && DateTime.UtcNow < shown);
                     Assert.Equal(0, ui.GetProperty("part").GetInt32());
+                    // The editor behind the welcome page is only built by the app's own New.
+                    HeadlessUi.Flush();
+                    Assert.NotEmpty(window.GetVisualDescendants().OfType<TrackHeader>());
+                    var selectors = window.GetVisualDescendants().OfType<ExpSelector>()
+                        .Select(s => Assert.IsType<ExpSelectorViewModel>(s.DataContext).Abbr).ToArray();
+                    Assert.True(selectors.Length > 1 && selectors.Distinct().Count() == selectors.Length, string.Join(",", selectors));
 
                     // One request is one step of the app's own undo.
                     DocManager.Inst.Undo();

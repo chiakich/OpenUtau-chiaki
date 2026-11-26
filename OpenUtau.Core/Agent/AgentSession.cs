@@ -325,6 +325,10 @@ namespace OpenUtau.Core.Agent {
         T Edit<T>(Request request, Func<UProject, T> action) {
             long? expected = request.ExpectRevision;
             return host.Invoke(() => {
+                // A project made here stands for the empty one the agent saw, so the revision stays.
+                long seenBefore = revision;
+                host.EnsureProject();
+                revision = seenBefore;
                 var project = RequireProject();
                 var doc = DocManager.Inst;
                 CheckRevision(expected);

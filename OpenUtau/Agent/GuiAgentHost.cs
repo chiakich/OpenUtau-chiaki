@@ -68,6 +68,7 @@ namespace OpenUtau.App.Agent {
         public void LoadProject(UProject project) {
             Invoke(() => {
                 DocManager.Inst.ExecuteCmd(new LoadProjectNotification(project));
+                DocManager.Inst.ExecuteCmd(new VoiceColorRemappingNotification(-1, true));
                 DocManager.Inst.Recovered = false;
                 // Loading validated against the previous document; phonemize again now that this one is current.
                 project.ValidateFull();
@@ -105,6 +106,14 @@ namespace OpenUtau.App.Agent {
             });
         }
 
+        // As the welcome page's New: the editor's views are only built for a project loaded that way.
+        public void EnsureProject() {
+            if (ViewModel.Page == 0) {
+                ViewModel.NewProject();
+                ViewModel.Page = 1;
+            }
+        }
+
         public void ShowPart(UVoicePart part, int tick) {
             // After the edit that is being made: opening the piano roll takes turns of the UI thread.
             Dispatcher.UIThread.Post(async () => {
@@ -117,10 +126,6 @@ namespace OpenUtau.App.Agent {
         }
 
         public void OnNext(UCommand cmd, bool isUndo) {
-            // An edit made from the welcome page would otherwise stay behind it.
-            if (!(cmd is UNotification) && window.DataContext is MainWindowViewModel viewModel && viewModel.Page == 0) {
-                viewModel.Page = 1;
-            }
             if (cmd is ErrorMessageNotification error) {
                 string message = error.e is MessageCustomizableException mce
                     ? $"{mce.Message} {mce.SubstanceException?.Message}".Trim()

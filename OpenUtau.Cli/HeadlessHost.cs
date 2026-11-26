@@ -60,6 +60,7 @@ namespace OpenUtau.Cli {
         public T Invoke<T>(Func<T> func) => Loop.Invoke(func);
         public System.Text.Json.Nodes.JsonObject? UiState(Func<UNote, int> noteId) => null;
         public void ShowPart(UVoicePart part, int tick) { }
+        public void EnsureProject() { }
 
         HeadlessHost(HostOptions options, string cachePath, bool ownsCache, LogSink sink) {
             this.options = options;
