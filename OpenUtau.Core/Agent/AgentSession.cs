@@ -1103,6 +1103,15 @@ namespace OpenUtau.Core.Agent {
                     row.Row.Remove("author");
                     row.Row.Remove("language");
                 }
+                if (string.IsNullOrWhiteSpace(query)) {
+                    // Every phonemizer of the singer: kept short, and to those that sing something.
+                    rows.RemoveAll(r => r.Row["trial"]!["sung"]!.GetValue<int>() == 0);
+                    foreach (var row in rows) {
+                        row.Row.Remove("name");
+                        ((JsonObject)row.Row["trial"]!).Remove("phonemes");
+                    }
+                    host.Warnings.Add("Without \"query\" the phonemes are left out and phonemizers that sing none of the words are not listed: add \"query\" with the language to see how the matches sing them.");
+                }
                 // Stable: phonemizers that sing as much keep the order of the search.
                 rows = rows.OrderByDescending(r => r.Row["trial"]!["sung"]!.GetValue<int>()).ToList();
             }
@@ -1164,7 +1173,8 @@ namespace OpenUtau.Core.Agent {
                     + "A new project's first note is at tick 1920, one 4/4 bar in, which leaves room for the first consonants. "
                     + "Without the app, notes are sung at their plain pitch until load_pitch writes the singer's own into pitd; do it before a render meant for listening. "
                     + "After changing notes the curve still follows the old ones: load_pitch again with mode all, which replaces everything in pitd. "
-                    + "There is no vibrato op: after the last load_pitch, read pitd with get, add the wobble to its values, and write them back with set_curve, in cents. "
+                    + "There is no vibrato op: after the last load_pitch, get with curves [\"pitd\"] and the note's from_tick and to_tick returns parts[i].curves.pitd as [[tick, cents], ...]; "
+                    + "add depth * sin(2 * pi * rate * seconds) to each value (a tick lasts 60000 / (bpm * 480) ms; about 5.5 Hz and 30 to 50 cents is usual) and write all of them back with set_curve. "
                     + "A voicebank folder is saved in the project by its folder name only; the app opens it as the installed singer of that id. "
                     + "Two renders of the same project in one session can differ slightly, seeded or not. Paths are absolute, or relative to where the session was started.",
                 ["ops"] = new JsonObject {
@@ -1211,7 +1221,7 @@ namespace OpenUtau.Core.Agent {
                     ["singers"] = Op("The installed singers."),
                     ["phonemizers"] = Op("Phonemizers: all, those offered for a singer, or those a search finds.",
                         "singer", "query: words to look for in id, name, tag and language code, such as english or FI; lists the phonemizers that match any, best match first",
-                        "lyrics: [word, ...] (needs singer) tries each listed phonemizer on these words without touching the project: \"trial\" has sung (how many), failed, and the phonemes of the first few. "
+                        "lyrics: [word, ...] (needs singer; use it with query) tries each listed phonemizer on these words without touching the project: \"trial\" has sung (how many), failed, and the phonemes of the first few. "
                         + "Rule-based phonemizers sing any letters, so read the phonemes: sung alone does not tell the language"),
                     ["expressions"] = Op("The expressions a singer supports, with ranges and defaults.", "singer or track"),
                     ["shutdown"] = Op("End a session that runs without the app."),
