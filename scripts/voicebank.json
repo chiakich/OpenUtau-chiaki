@@ -1,6 +1,14 @@
 {
   "name": "Chiaki",
-  "tag": "voicebank-v7",
+  "repo": "chiakic/chiaki-diffsinger",
+  "revision": "v1.6",
   "asset": "Chiaki.zip",
-  "sha256": "20bdc0c4a70580be3697013be54ad895c2e115cc8dea0e924d441d2fa97a8424"
+  "sha256": "6b01a2d7cd6ec8efcea2051813153d603d97ed6d009b884db68f5bced1005522",
+  "vocoder": {
+    "repo": "chiakic/chiaki-vocoder",
+    "revision": "2026.11.1",
+    "asset": "chiaki_vocoder_2026.11.1.onnx",
+    "path": "dsvocoder/chiaki_vocoder_2026.11.1.onnx",
+    "sha256": "dfa8b43e3d0185c90e5bf0bd1fc0e2a623000c29101969cb8dc29e8b168ac375"
+  }
 }

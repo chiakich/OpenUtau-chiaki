@@ -126,8 +126,6 @@ jobs:
       - name: Fetch voicebank
         shell: bash
         run: scripts/fetch-voicebank.sh
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update contributors list
         run: python3 scripts/update-contributors.py
