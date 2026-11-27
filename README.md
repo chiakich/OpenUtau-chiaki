@@ -9,7 +9,7 @@ It also comes with an [MCP server](#for-ai-agents), so an AI agent such as Claud
 ## Download
 
 - **App with Chiaki built in**: [Windows](https://github.com/chiakich/OpenUtau-chiaki/releases/latest/download/OpenUtau-Chiaki-win-x64-Setup.exe), [macOS (Apple Silicon)](https://github.com/chiakich/OpenUtau-chiaki/releases/latest/download/OpenUtau-Chiaki-osx-arm64.dmg), other platforms on the [releases page](https://github.com/chiakich/OpenUtau-chiaki/releases/latest).
-- **Voicebank only**, for an existing OpenUtau: [Chiaki.zip](https://github.com/chiakich/OpenUtau-chiaki/releases/download/voicebank-v7/Chiaki.zip). Drag it into OpenUtau and pick the DiffSinger phonemizer for your language. It is also on [Hugging Face](https://huggingface.co/chiakic/chiaki-diffsinger), with every version tagged.
+- **Voicebank only**, for an existing OpenUtau: [Chiaki.zip](https://huggingface.co/chiakic/chiaki-diffsinger/resolve/main/Chiaki.zip) on [Hugging Face](https://huggingface.co/chiakic/chiaki-diffsinger). Drag it into OpenUtau and pick the DiffSinger phonemizer for your language. It is also on [Hugging Face](https://huggingface.co/chiakic/chiaki-diffsinger), with every version tagged.
 - Demos in every language, the terms of use and the character profile: [chiaki.ch/character/chiaki](https://chiaki.ch/character/chiaki).
 
 ## Languages
@@ -30,7 +30,7 @@ It also comes with an [MCP server](#for-ai-agents), so an AI agent such as Claud
 
 ## Building
 
-The voicebank is not in git. `scripts/voicebank.json` names the release asset and its SHA256; fetch it before building:
+The voicebank is not in git. `scripts/voicebank.json` names the Hugging Face repo, tag and SHA256 of the voicebank ([chiakic/chiaki-diffsinger](https://huggingface.co/chiakic/chiaki-diffsinger)) and of its vocoder ([chiakic/chiaki-vocoder](https://huggingface.co/chiakic/chiaki-vocoder)); fetch them before building:
 
 ```sh
 scripts/fetch-voicebank.sh
@@ -38,13 +38,13 @@ dotnet build OpenUtau/OpenUtau.csproj
 dotnet run --project OpenUtau.Test/OpenUtau.Test.csproj
 ```
 
-The script downloads with `gh`, checks the SHA256, and skips work when `Singers/Chiaki` is already current. To use a local copy instead of downloading:
+The script downloads with `curl`, checks each SHA256, and skips work when `Singers/Chiaki` is already current. To use a local copy instead of downloading:
 
 ```sh
 scripts/fetch-voicebank.sh --from ~/Library/OpenUtau/Singers/Chiaki
 ```
 
-The build copies `Singers/` next to the executable. To publish a new voicebank, upload a zip whose top folder is `Chiaki` to a new release tag and update `scripts/voicebank.json`.
+The build copies `Singers/` next to the executable. To bundle a new voicebank, upload a zip whose top folder is `Chiaki` to the Hugging Face repo under a new tag and update `scripts/voicebank.json`.
 
 ## For AI agents
 
@@ -99,4 +99,4 @@ Based on [OpenUtau Lunai](https://github.com/keirokeer/OpenUtau-lunai) and [Open
 
 The Chiaki voicebank has its own terms of use (`Singers/Chiaki/terms.txt`, also on [chiaki.ch](https://chiaki.ch/character/chiaki)). In short: works made with it may be used and sold commercially, with a credit such as "Vocal: Chiaki"; the voicebank itself may not be redistributed on its own, and models trained on its output are limited to research and non-commercial use.
 
-Its vocoder, `chiaki_vocoder 2026.11`, is an NSF-HiFiGAN trained from scratch for this voicebank and licensed under Apache License 2.0 (`Singers/Chiaki/dsvocoder/LICENSE`, `NOTICE.txt`). The portrait and icon are by shONe, who keeps the copyright. The portrait may be used on pages and works related to this voicebank, such as wiki entries and the cover art or music video of a song made with Chiaki; the icon may not be extracted or reused.
+Its vocoder, `chiaki_vocoder 2026.11.1`, is an NSF-HiFiGAN trained from scratch for this voicebank and licensed under Apache License 2.0 (`Singers/Chiaki/dsvocoder/LICENSE`, `NOTICE.txt`). The portrait and icon are by shONe, who keeps the copyright. The portrait may be used on pages and works related to this voicebank, such as wiki entries and the cover art or music video of a song made with Chiaki; the icon may not be extracted or reused.
